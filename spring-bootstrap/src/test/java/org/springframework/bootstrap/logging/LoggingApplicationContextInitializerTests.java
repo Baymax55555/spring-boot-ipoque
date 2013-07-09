@@ -23,9 +23,9 @@ import java.util.logging.LogManager;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.logging.impl.SLF4JLogFactory;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.bootstrap.context.initializer.LoggingApplicationContextInitializer;
 import org.springframework.context.support.GenericApplicationContext;
@@ -42,6 +42,8 @@ import static org.junit.Assert.assertTrue;
 public class LoggingApplicationContextInitializerTests {
 
 	private LoggingApplicationContextInitializer initializer = new LoggingApplicationContextInitializer();
+
+	private Log logger = new SLF4JLogFactory().getInstance(getClass());
 
 	private PrintStream savedOutput;
 
@@ -69,13 +71,10 @@ public class LoggingApplicationContextInitializerTests {
 	}
 
 	@Test
-	@Ignore
 	public void testDefaultConfigLocation() {
-		// FIXME Fails on CI
 		GenericApplicationContext context = new GenericApplicationContext();
 		this.initializer.initialize(context);
-		Log logger = LogFactory.getLog(LoggingApplicationContextInitializerTests.class);
-		logger.info("Hello world");
+		this.logger.info("Hello world");
 		String output = getOutput().trim();
 		assertTrue("Wrong output:\n" + output, output.contains("Hello world"));
 		assertFalse("Wrong output:\n" + output, output.contains("???"));
@@ -96,8 +95,7 @@ public class LoggingApplicationContextInitializerTests {
 					}
 				});
 		this.initializer.initialize(context);
-		Log logger = LogFactory.getLog(LoggingApplicationContextInitializerTests.class);
-		logger.info("Hello world");
+		this.logger.info("Hello world");
 		String output = getOutput().trim();
 		assertTrue("Wrong output:\n" + output, output.contains("Hello world"));
 		assertFalse("Wrong output:\n" + output, output.contains("???"));
