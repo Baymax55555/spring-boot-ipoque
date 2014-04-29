@@ -156,13 +156,6 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 
 	}
 
-	@Conditional(DataSourceAutoConfiguration.HikariDatabaseCondition.class)
-	@ConditionalOnMissingBean(DataSource.class)
-	@Import(HikariDataSourceConfiguration.class)
-	protected static class HikariConfiguration {
-
-	}
-
 	@Conditional(DataSourceAutoConfiguration.BasicDatabaseCondition.class)
 	@ConditionalOnMissingBean(DataSource.class)
 	@Import(CommonsDataSourceConfiguration.class)
@@ -267,8 +260,6 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 	 */
 	static class BasicDatabaseCondition extends NonEmbeddedDatabaseCondition {
 
-		private final Condition hikariCondition = new HikariDatabaseCondition();
-
 		private final Condition tomcatCondition = new TomcatDatabaseCondition();
 
 		@Override
@@ -279,30 +270,7 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 		@Override
 		public ConditionOutcome getMatchOutcome(ConditionContext context,
 				AnnotatedTypeMetadata metadata) {
-			if (anyMatches(context, metadata, this.hikariCondition, this.tomcatCondition)) {
-				return ConditionOutcome.noMatch("other DataSource");
-			}
-			return super.getMatchOutcome(context, metadata);
-		}
-
-	}
-
-	/**
-	 * {@link Condition} to detect when a Hikari DataSource backed database is used.
-	 */
-	static class HikariDatabaseCondition extends NonEmbeddedDatabaseCondition {
-
-		private final Condition tomcatCondition = new TomcatDatabaseCondition();
-
-		@Override
-		protected String getDataSourceClassName() {
-			return "com.zaxxer.hikari.HikariDataSource";
-		}
-
-		@Override
-		public ConditionOutcome getMatchOutcome(ConditionContext context,
-				AnnotatedTypeMetadata metadata) {
-			if (anyMatches(context, metadata, this.tomcatCondition)) {
+			if (matches(context, metadata, this.tomcatCondition)) {
 				return ConditionOutcome.noMatch("Tomcat DataSource");
 			}
 			return super.getMatchOutcome(context, metadata);
@@ -327,8 +295,6 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 	 */
 	static class EmbeddedDatabaseCondition extends SpringBootCondition {
 
-		private final SpringBootCondition hikariCondition = new HikariDatabaseCondition();
-
 		private final SpringBootCondition tomcatCondition = new TomcatDatabaseCondition();
 
 		private final SpringBootCondition dbcpCondition = new BasicDatabaseCondition();
@@ -336,8 +302,7 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 		@Override
 		public ConditionOutcome getMatchOutcome(ConditionContext context,
 				AnnotatedTypeMetadata metadata) {
-			if (anyMatches(context, metadata, this.hikariCondition, this.tomcatCondition,
-					this.dbcpCondition)) {
+			if (anyMatches(context, metadata, this.tomcatCondition, this.dbcpCondition)) {
 				return ConditionOutcome
 						.noMatch("existing non-embedded database detected");
 			}
@@ -356,8 +321,6 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 	 */
 	static class DatabaseCondition extends SpringBootCondition {
 
-		private final SpringBootCondition hikariCondition = new HikariDatabaseCondition();
-
 		private final SpringBootCondition tomcatCondition = new TomcatDatabaseCondition();
 
 		private final SpringBootCondition dbcpCondition = new BasicDatabaseCondition();
@@ -368,8 +331,8 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 		public ConditionOutcome getMatchOutcome(ConditionContext context,
 				AnnotatedTypeMetadata metadata) {
 
-			if (anyMatches(context, metadata, this.hikariCondition, this.tomcatCondition,
-					this.dbcpCondition, this.embeddedCondition)) {
+			if (anyMatches(context, metadata, this.tomcatCondition, this.dbcpCondition,
+					this.embeddedCondition)) {
 				return ConditionOutcome.match("existing auto database detected");
 			}
 

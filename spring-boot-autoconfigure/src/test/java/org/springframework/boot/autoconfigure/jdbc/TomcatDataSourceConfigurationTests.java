@@ -33,7 +33,6 @@ import org.springframework.util.ReflectionUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -81,9 +80,9 @@ public class TomcatDataSourceConfigurationTests {
 		org.apache.tomcat.jdbc.pool.DataSource ds = this.context
 				.getBean(org.apache.tomcat.jdbc.pool.DataSource.class);
 		assertEquals("jdbc:foo//bar/spam", ds.getUrl());
-		assertTrue(ds.isTestWhileIdle());
-		assertTrue(ds.isTestOnBorrow());
-		assertTrue(ds.isTestOnReturn());
+		assertEquals(true, ds.isTestWhileIdle());
+		assertEquals(true, ds.isTestOnBorrow());
+		assertEquals(true, ds.isTestOnReturn());
 		assertEquals(10000, ds.getTimeBetweenEvictionRunsMillis());
 		assertEquals(12345, ds.getMinEvictableIdleTimeMillis());
 		assertEquals(1234, ds.getMaxWait());

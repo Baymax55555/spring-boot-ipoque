@@ -20,9 +20,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.jar.Manifest;
 
 /**
@@ -169,21 +169,25 @@ class JarURLConnection extends java.net.JarURLConnection {
 		if ((length == 0) || (source.indexOf('%') < 0)) {
 			return source;
 		}
-		ByteArrayOutputStream bos = new ByteArrayOutputStream(length);
-		for (int i = 0; i < length; i++) {
-			int ch = source.charAt(i);
-			if (ch == '%') {
-				if ((i + 2) >= length) {
-					throw new IllegalArgumentException("Invalid encoded sequence \""
-							+ source.substring(i) + "\"");
+		try {
+			ByteArrayOutputStream bos = new ByteArrayOutputStream(length);
+			for (int i = 0; i < length; i++) {
+				int ch = source.charAt(i);
+				if (ch == '%') {
+					if ((i + 2) >= length) {
+						throw new IllegalArgumentException("Invalid encoded sequence \""
+								+ source.substring(i) + "\"");
+					}
+					ch = decodeEscapeSequence(source, i);
+					i += 2;
 				}
-				ch = decodeEscapeSequence(source, i);
-				i += 2;
+				bos.write(ch);
 			}
-			bos.write(ch);
+			return new String(bos.toByteArray(), "UTF-8");
 		}
-		return new String(bos.toByteArray(), Charset.defaultCharset());
-
+		catch (UnsupportedEncodingException ex) {
+			throw new IllegalStateException(ex);
+		}
 	}
 
 	private static char decodeEscapeSequence(String source, int i) {

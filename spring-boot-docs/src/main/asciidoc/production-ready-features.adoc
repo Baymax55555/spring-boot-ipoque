@@ -578,27 +578,16 @@ decrement). Metrics for all HTTP requests are automatically recorded, so if you 
 		"counter.status.401.root": 4,
 		"gauge.response.root": 2,
 		"gauge.response.metrics": 3,
-		"classes": 5808,
-		"classes.loaded": 5808,
-		"classes.unloaded": 0,
-		"heap": 3728384,
-		"heap.committed": 986624,
-		"heap.init": 262144,
-		"heap.used": 52765,
-		"mem": 986624,
-		"mem.free": 933858,
-		"processors": 8,
-		"threads": 15,
-		"threads.deamon": 11,
-		"threads.peak": 15,
-		"uptime": 494836
+		"mem": 466944,
+		"mem.free": 410117,
+		"processors": 8
 	}
 ----
 
-Here we can see basic `memory`, `heap`, `class loading`, `processor` and `thread pool`
-information along with some HTTP metrics. In this instance the `root` (``/'') and `/metrics`
-URLs have returned `HTTP 200` responses `20` and `3` times respectively. It also appears
-that the `root` URL returned `HTTP 401` (unauthorized) `4` times.
+Here we can see basic `memory` and `processor` information along with some HTTP metrics.
+In this instance the `root` (``/'') and `/metrics` URLs have returned `HTTP 200` responses
+`20` and `3` times respectively. It also appears that the `root` URL returned `HTTP 401`
+(unauthorized) `4` times.
 
 The `gauge` shows the last response time for a request. So the last request to `root` took
 `2ms` to respond and the last to `/metrics` took `3ms`.
@@ -746,6 +735,43 @@ By default an `InMemoryTraceRepository` will be used that stores the last 100 ev
 can define your own instance of the `InMemoryTraceRepository` bean if you need to expand
 the capacity. You can also create your own alternative `TraceRepository` implementation
 if needed.
+
+
+
+[[production-ready-error-handling]]
+== Error Handling
+Spring Boot Actuator provides an `/error` mapping by default that handles all errors in a
+sensible way, and it is registered as a ``global'' error page in the servlet container.
+For machine clients it will produce a JSON response with details of the error, the HTTP
+status and the exception message. For browser clients there is a ``whitelabel'' error
+view that renders the same data in HTML format (to customize it just add a `View` that
+resolves to ``error'').
+
+If you want more specific error pages for some conditions, the embedded servlet containers
+support a uniform Java DSL for customizing the error handling. For example:
+
+[source,java,indent=0,subs="verbatim,quotes,attributes"]
+----
+	@Bean
+	public EmbeddedServletContainerCustomizer containerCustomizer(){
+		return new MyCustomizer();
+	}
+
+	// ...
+
+	private static class MyCustomizer implements EmbeddedServletContainerCustomizer {
+
+		@Override
+		public void customize(ConfigurableEmbeddedServletContainer factory) {
+            factory.addErrorPages(new ErrorPage(HttpStatus.BAD_REQUEST, "/400"));
+		}
+
+	}
+----
+
+You can also use regular Spring MVC features like http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#mvc-exception-handlers[`@ExceptionHandler`
+methods] and http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#mvc-ann-controller-advice[`@ControllerAdvice`].
+
 
 
 [[production-ready-process-monitoring]]

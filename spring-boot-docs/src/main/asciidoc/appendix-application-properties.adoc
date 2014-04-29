@@ -68,7 +68,6 @@ content into your application; rather pick only the properties that you need.
 	http.mappers.json-pretty-print=false # pretty print JSON
 	http.mappers.json-sort-keys=false # sort keys
 	spring.mvc.locale= # set fixed locale, e.g. en_UK
-	spring.mvc.message-codes-resolver.format= # PREFIX_ERROR_CODE / POSTFIX_ERROR_CODE
 	spring.view.prefix= # MVC view prefix
 	spring.view.suffix= # ... and suffix
 	spring.resources.cache-period= # cache timeouts in headers sent to browser
@@ -80,22 +79,6 @@ content into your application; rather pick only the properties that you need.
 	spring.thymeleaf.encoding=UTF-8
 	spring.thymeleaf.content-type=text/html # ;charset=<encoding> is added
 	spring.thymeleaf.cache=true # set to false for hot refresh
-
-	# FREEMARKER ({sc-spring-boot-autoconfigure}}/freemarker/FreeMarkerAutoConfiguration.{sc-ext}[FreeMarkerAutoConfiguration])
-	spring.freemarker.allowRequestOverride=false
-	spring.freemarker.allowSessionOverride=false
-	spring.freemarker.cache=true
-	spring.freemarker.checkTemplateLocation=true
-	spring.freemarker.contentType=text/html
-	spring.freemarker.exposeRequestAttributes=false
-	spring.freemarker.exposeSessionAttributes=false
-	spring.freemarker.exposeSpringMacroHelpers=false
-	spring.freemarker.prefix=
-	spring.freemarker.requestContextAttribute=
-	spring.freemarker.suffix=
-	spring.freemarker.templateEncoding=UTF-8
-	spring.freemarker.templateLoaderPath=classpath:/templates/
-	spring.freemarker.viewNames=
 
 	# INTERNATIONALIZATION ({sc-spring-boot-autoconfigure}/MessageSourceAutoConfiguration.{sc-ext}[MessageSourceAutoConfiguration])
 	spring.messages.basename=messages
@@ -188,7 +171,7 @@ content into your application; rather pick only the properties that you need.
 	spring.activemq.pooled=false
 
 	# JMS ({sc-spring-boot-autoconfigure}/jms/JmsTemplateProperties.{sc-ext}[JmsTemplateProperties])
-	spring.jms.pub-sub-domain= # false for queue (default), true for topic
+	spring.jms.pub-sub-domain=
 
 	# SPRING BATCH ({sc-spring-boot-autoconfigure}/batch/BatchDatabaseInitializer.{sc-ext}[BatchDatabaseInitializer])
 	spring.batch.job.names=job1,job2
