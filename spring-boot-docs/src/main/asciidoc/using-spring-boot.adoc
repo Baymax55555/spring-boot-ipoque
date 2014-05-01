@@ -36,9 +36,6 @@ defaults. The parent project provides the following features:
 * UTF-8 source encoding.
 * A Dependency Management section, allowing you to omit `<version>` tags for common
   dependencies.
-* Generally useful test dependencies (http://junit.org/[JUnit],
-  https://code.google.com/p/hamcrest/[Hamcrest],
-  https://code.google.com/p/mockito/[Mockito]).
 * Sensible https://maven.apache.org/plugins/maven-resources-plugin/examples/filter.html[resource filtering].
 * Sensible plugin configuration (http://mojo.codehaus.org/exec-maven-plugin/[exec plugin],
   http://maven.apache.org/surefire/maven-surefire-plugin/[surefire],
@@ -231,6 +228,9 @@ and Hibernate.
 
 |`spring-boot-starter-data-rest`
 |Support for exposing Spring Data repositories over REST via `spring-data-rest-webmvc`.
+
+|`spring-boot-starter-freemarker`
+|Support for the FreeMarker templating engine
 
 |`spring-boot-starter-integration`
 |Support for common `spring-integration` modules.

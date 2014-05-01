@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -29,10 +32,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClas
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.Headers;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
@@ -46,10 +51,13 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.annotation.web.servlet.configuration.EnableWebMvcSecurity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.security.web.header.writers.HstsHeaderWriter;
 import org.springframework.security.web.util.matcher.AnyRequestMatcher;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.support.RequestDataValueProcessor;
 
 /**
@@ -90,14 +98,27 @@ public class SpringBootWebSecurityConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public AuthenticationEventPublisher authenticationEventPublisher() {
-		return new DefaultAuthenticationEventPublisher();
+	public AuthenticationEventPublisher authenticationEventPublisher(
+			ApplicationEventPublisher publisher) {
+		return new DefaultAuthenticationEventPublisher(publisher);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean({ IgnoredPathsWebSecurityConfigurerAdapter.class })
 	public WebSecurityConfigurer<WebSecurity> ignoredPathsWebSecurityConfigurerAdapter() {
 		return new IgnoredPathsWebSecurityConfigurerAdapter();
+	}
+
+	@ControllerAdvice
+	@Order(Ordered.HIGHEST_PRECEDENCE + 10)
+	protected static class SecurityExceptionRethrowingAdvice {
+
+		@ExceptionHandler({ AccessDeniedException.class, AuthenticationException.class })
+		public void handle(HttpServletRequest request, HttpServletResponse response,
+				Exception e) throws Exception {
+			throw e;
+		}
+
 	}
 
 	public static void configureHeaders(HeadersConfigurer<?> configurer,
