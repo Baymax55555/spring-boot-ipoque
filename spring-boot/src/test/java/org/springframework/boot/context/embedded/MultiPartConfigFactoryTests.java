@@ -24,15 +24,15 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 /**
- * Tests for {@link MultipartConfigFactory}.
+ * Tests for {@link MultiPartConfigFactory}.
  * 
  * @author Phillip Webb
  */
-public class MultipartConfigFactoryTests {
+public class MultiPartConfigFactoryTests {
 
 	@Test
 	public void sensibleDefaults() {
-		MultipartConfigFactory factory = new MultipartConfigFactory();
+		MultiPartConfigFactory factory = new MultiPartConfigFactory();
 		MultipartConfigElement config = factory.createMultipartConfig();
 		assertThat(config.getLocation(), equalTo(""));
 		assertThat(config.getMaxFileSize(), equalTo(-1L));
@@ -42,7 +42,7 @@ public class MultipartConfigFactoryTests {
 
 	@Test
 	public void create() throws Exception {
-		MultipartConfigFactory factory = new MultipartConfigFactory();
+		MultiPartConfigFactory factory = new MultiPartConfigFactory();
 		factory.setLocation("loc");
 		factory.setMaxFileSize(1);
 		factory.setMaxRequestSize(2);
@@ -56,7 +56,7 @@ public class MultipartConfigFactoryTests {
 
 	@Test
 	public void createWithStringSizes() throws Exception {
-		MultipartConfigFactory factory = new MultipartConfigFactory();
+		MultiPartConfigFactory factory = new MultiPartConfigFactory();
 		factory.setMaxFileSize("1");
 		factory.setMaxRequestSize("2kB");
 		factory.setFileSizeThreshold("3Mb");
