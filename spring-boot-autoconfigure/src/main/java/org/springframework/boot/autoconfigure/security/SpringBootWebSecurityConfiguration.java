@@ -155,7 +155,7 @@ public class SpringBootWebSecurityConfiguration {
 	}
 
 	// Get the ignored paths in early
-	@Order(SecurityProperties.IGNORED_ORDER)
+	@Order(Ordered.HIGHEST_PRECEDENCE)
 	private static class IgnoredPathsWebSecurityConfigurerAdapter implements
 			WebSecurityConfigurer<WebSecurity> {
 
@@ -203,7 +203,7 @@ public class SpringBootWebSecurityConfiguration {
 
 	@ConditionalOnExpression("${security.basic.enabled:true}")
 	@Configuration
-	@Order(SecurityProperties.BASIC_AUTH_ORDER)
+	@Order(Ordered.LOWEST_PRECEDENCE - 5)
 	protected static class ApplicationWebSecurityConfigurerAdapter extends
 			WebSecurityConfigurerAdapter {
 
