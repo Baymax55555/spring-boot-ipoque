@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javax.servlet.Servlet;
@@ -43,14 +44,16 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.GenericConverter;
-import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.format.Formatter;
 import org.springframework.format.FormatterRegistry;
+import org.springframework.format.datetime.DateFormatter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.DefaultMessageCodesResolver;
+import org.springframework.validation.MessageCodesResolver;
 import org.springframework.web.accept.ContentNegotiationManager;
 import org.springframework.web.context.request.RequestContextListener;
 import org.springframework.web.filter.HiddenHttpMethodFilter;
@@ -75,6 +78,7 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
  * 
  * @author Phillip Webb
  * @author Dave Syer
+ * @author Andy Wilkinson
  */
 @Configuration
 @ConditionalOnWebApplication
@@ -118,15 +122,6 @@ public class WebMvcAutoConfiguration {
 		return new HiddenHttpMethodFilter();
 	}
 
-	public static boolean templateExists(Environment environment,
-			ResourceLoader resourceLoader, String view) {
-		String prefix = environment.getProperty("spring.view.prefix",
-				WebMvcAutoConfiguration.DEFAULT_PREFIX);
-		String suffix = environment.getProperty("spring.view.suffix",
-				WebMvcAutoConfiguration.DEFAULT_SUFFIX);
-		return resourceLoader.getResource(prefix + view + suffix).exists();
-	}
-
 	// Defined as a nested config to ensure WebMvcConfigurerAdapter it not read when not
 	// on the classpath
 	@Configuration
@@ -144,8 +139,14 @@ public class WebMvcAutoConfiguration {
 		@Value("${spring.resources.cachePeriod:}")
 		private Integer cachePeriod;
 
+		@Value("${spring.mvc.message-codes-resolver.format:}")
+		private DefaultMessageCodesResolver.Format messageCodesResolverFormat = null;
+
 		@Value("${spring.mvc.locale:}")
 		private String locale = "";
+
+		@Value("${spring.mvc.date-format:}")
+		private String dateFormat = "";
 
 		@Autowired
 		private ListableBeanFactory beanFactory;
@@ -202,6 +203,22 @@ public class WebMvcAutoConfiguration {
 		@ConditionalOnExpression("'${spring.mvc.locale:}' != ''")
 		public LocaleResolver localeResolver() {
 			return new FixedLocaleResolver(StringUtils.parseLocaleString(this.locale));
+		}
+
+		@Bean
+		@ConditionalOnExpression("'${spring.mvc.date-format:}' != ''")
+		public Formatter<Date> dateFormatter() {
+			return new DateFormatter(this.dateFormat);
+		}
+
+		@Override
+		public MessageCodesResolver getMessageCodesResolver() {
+			if (this.messageCodesResolverFormat != null) {
+				DefaultMessageCodesResolver resolver = new DefaultMessageCodesResolver();
+				resolver.setMessageCodeFormatter(this.messageCodesResolverFormat);
+				return resolver;
+			}
+			return null;
 		}
 
 		@Override

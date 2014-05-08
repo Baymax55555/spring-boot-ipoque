@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.springframework.boot</groupId>
 	<artifactId>spring-boot-build</artifactId>
-	<version>1.0.3.BUILD-SNAPSHOT</version>
+	<version>1.1.0.BUILD-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Spring Boot Build</name>
 	<description>Spring Boot Build</description>
@@ -53,6 +53,7 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-antrun-plugin</artifactId>
 					<version>1.7</version>
 				</plugin>
@@ -72,6 +73,7 @@
 				<module>spring-boot</module>
 				<module>spring-boot-autoconfigure</module>
 				<module>spring-boot-actuator</module>
+				<module>spring-boot-docs</module>
 				<module>spring-boot-starters</module>
 				<module>spring-boot-cli</module>
 			</modules>
@@ -96,6 +98,7 @@
 			<build>
 				<plugins>
 					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-antrun-plugin</artifactId>
 						<dependencies>
 							<dependency>
@@ -150,7 +153,7 @@
 								</configuration>
 							</execution>
 							<execution>
-								<id>fixup-starter-parent</id>
+								<id>fixup-dependencies-pom</id>
 								<phase>verify</phase>
 								<goals>
 									<goal>run</goal>
@@ -158,7 +161,7 @@
 								<inherited>false</inherited>
 								<configuration>
 									<target>
-										<property name="sourceFile" value="spring-boot-starters/spring-boot-starter-parent/pom.xml" />
+										<property name="sourceFile" value="spring-boot-dependencies/pom.xml" />
 										<xslt in="${sourceFile}" out="${sourceFile}.new" force="true">
 											<style>
 												<string><![CDATA[
@@ -174,19 +177,8 @@
 
 	<xsl:template
 		match="m:properties/m:spring-boot.version/text()">
-		<xsl:value-of select="/m:project/m:parent/m:version/text()"/>
+		<xsl:value-of select="/m:project/m:version/text()"/>
 	</xsl:template>
-
-	<xsl:template
-		match="m:dependency[m:groupId='org.springframework.boot']/m:version/text()">
-		<xsl:text>${spring-boot.version}</xsl:text>
-	</xsl:template>
-
-	<xsl:template
-		match="m:plugin[m:groupId='org.springframework.boot']/m:version/text()">
-		<xsl:text>${spring-boot.version}</xsl:text>
-	</xsl:template>
-
 </xsl:stylesheet>
 				]]>
 												</string>
@@ -201,6 +193,7 @@
 						</executions>
 					</plugin>
 					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
 						<configuration>
 							<skip>true</skip>

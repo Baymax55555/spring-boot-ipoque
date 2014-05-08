@@ -35,10 +35,7 @@ defaults. The parent project provides the following features:
 * Java 1.6 as the default compiler level.
 * UTF-8 source encoding.
 * A Dependency Management section, allowing you to omit `<version>` tags for common
-  dependencies.
-* Generally useful test dependencies (http://junit.org/[JUnit],
-  https://code.google.com/p/hamcrest/[Hamcrest],
-  https://code.google.com/p/mockito/[Mockito]).
+  dependencies, inherited from the `spring-boot-dependencies` POM.
 * Sensible https://maven.apache.org/plugins/maven-resources-plugin/examples/filter.html[resource filtering].
 * Sensible plugin configuration (http://mojo.codehaus.org/exec-maven-plugin/[exec plugin],
   http://maven.apache.org/surefire/maven-surefire-plugin/[surefire],
@@ -80,7 +77,7 @@ keep the benefit of the dependency management (but not the plugin management) us
 			<dependency>
 				<!-- Import dependency management from Spring Boot -->
 				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-starter-parent</artifactId>
+				<artifactId>spring-boot-dependencies</artifactId>
 				<version>{spring-boot-version}</version>
 				<type>pom</type>
 		        <scope>import</scope>
@@ -232,11 +229,20 @@ and Hibernate.
 |`spring-boot-starter-data-rest`
 |Support for exposing Spring Data repositories over REST via `spring-data-rest-webmvc`.
 
+|`spring-boot-starter-freemarker`
+|Support for the FreeMarker templating engine
+
 |`spring-boot-starter-integration`
 |Support for common `spring-integration` modules.
 
 |`spring-boot-starter-jdbc`
 |JDBC Database support.
+
+|`spring-boot-starter-flyway`
+|Support for Flyway database migrations.
+
+|`spring-boot-starter-liquibase`
+|Support for Liquibase database migrations.
 
 |`spring-boot-starter-mobile`
 |Support for `spring-mobile`
@@ -447,7 +453,7 @@ you can use the exclude attribute of `@EnableAutoConfiguration` to disable them.
 	import org.springframework.context.annotation.*;
 
 	@Configuration
-	@EnableAutoConfiguration(exclude={EmbeddedDatabaseConfiguration.class})
+	@EnableAutoConfiguration(exclude={DataSourceAutoConfiguration.class})
 	public class MyConfiguration {
 	}
 ----
@@ -518,7 +524,7 @@ http://maven.apache.org/plugins/maven-idea-plugin/[IDEA]; Gradle offers plugins
 for http://www.gradle.org/docs/current/userguide/ide_support.html[various IDEs].
 
 TIP: If you accidentally run a web application twice you will see a ``Port already in
-use'' error. STS users can use the `Relauch` button rather than `Run` to ensure that
+use'' error. STS users can use the `Relaunch` button rather than `Run` to ensure that
 any existing instance is closed.
 
 
