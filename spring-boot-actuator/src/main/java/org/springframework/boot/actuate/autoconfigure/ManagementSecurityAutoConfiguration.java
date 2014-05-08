@@ -44,6 +44,7 @@ import org.springframework.boot.autoconfigure.web.ErrorController;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -105,7 +106,7 @@ public class ManagementSecurityAutoConfiguration {
 	}
 
 	// Get the ignored paths in early
-	@Order(SecurityProperties.IGNORED_ORDER + 1)
+	@Order(Ordered.HIGHEST_PRECEDENCE + 1)
 	private static class IgnoredPathsWebSecurityConfigurerAdapter implements
 			WebSecurityConfigurer<WebSecurity> {
 
@@ -168,7 +169,8 @@ public class ManagementSecurityAutoConfiguration {
 	@ConditionalOnMissingBean({ ManagementWebSecurityConfigurerAdapter.class })
 	@ConditionalOnExpression("${management.security.enabled:true}")
 	@ConditionalOnWebApplication
-	@Order(ManagementServerProperties.BASIC_AUTH_ORDER)
+	// Give user-supplied filters a chance to be last in line
+	@Order(Ordered.LOWEST_PRECEDENCE - 10)
 	protected static class ManagementWebSecurityConfigurerAdapter extends
 			WebSecurityConfigurerAdapter {
 

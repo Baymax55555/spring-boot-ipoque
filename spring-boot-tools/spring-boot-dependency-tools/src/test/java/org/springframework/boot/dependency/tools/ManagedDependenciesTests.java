@@ -16,43 +16,34 @@
 
 package org.springframework.boot.dependency.tools;
 
-import java.io.InputStream;
 import java.util.Iterator;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 /**
- * Tests for {@link PomManagedDependencies}.
+ * Tests for {@link ManagedDependencies}.
  * 
  * @author Phillip Webb
  */
-public class PomManagedDependenciesTests {
+public class ManagedDependenciesTests {
 
-	private PomManagedDependencies dependencies;
+	private ManagedDependencies dependencies;
 
 	@Before
 	public void setup() {
-		InputStream x = getResource("test-effective-pom.xml");
-		InputStream y = getResource("test-dependencies-pom.xml");
-		this.dependencies = new PomManagedDependencies(x, y);
-	}
-
-	private InputStream getResource(String name) {
-		InputStream inputStream = getClass().getResourceAsStream(name);
-		assertNotNull("Unable to read " + name, inputStream);
-		return inputStream;
+		this.dependencies = new ManagedDependencies("test-dependencies-pom.xml",
+				"test-effective-pom.xml");
 	}
 
 	@Test
-	public void springBootVersion() throws Exception {
-		assertThat(this.dependencies.getSpringBootVersion(),
-				equalTo("1.0.0.BUILD-SNAPSHOT"));
+	public void version() throws Exception {
+		assertThat(this.dependencies.getVersion(), equalTo("1.0.0.BUILD-SNAPSHOT"));
 	}
 
 	@Test
@@ -60,8 +51,6 @@ public class PomManagedDependenciesTests {
 		Iterator<Dependency> iterator = this.dependencies.iterator();
 		assertThat(iterator.next().toString(), equalTo("org.sample:sample01:1.0.0"));
 		assertThat(iterator.next().toString(), equalTo("org.sample:sample02:1.0.0"));
-		assertThat(iterator.next().toString(),
-				equalTo("org.springframework.boot:spring-boot:1.0.0.BUILD-SNAPSHOT"));
 		assertThat(iterator.hasNext(), equalTo(false));
 	}
 
@@ -97,6 +86,14 @@ public class PomManagedDependenciesTests {
 		Dependency dependency = this.dependencies.find("org.sample", "sample01");
 		assertThat(dependency.getExclusions().toString(),
 				equalTo("[org.exclude:exclude01]"));
+	}
+
+	@Test
+	public void get() throws Exception {
+		ManagedDependencies dependencies = ManagedDependencies.get();
+		assertThat(dependencies.iterator().hasNext(), equalTo(true));
+		assertThat(dependencies.find("org.springframework", "spring-core"),
+				notNullValue());
 	}
 
 }
