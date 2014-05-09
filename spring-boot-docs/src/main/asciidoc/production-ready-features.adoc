@@ -162,13 +162,9 @@ To provide custom health information you can register a Spring bean that impleme
 	}
 ----
 
-Spring Boot provides a
-{sc-spring-boot-actuator}/health/SimpleDatabaseHealthIndicator.{sc-ext}[`SimpleDatabaseHealthIndicator`]
-implementation that attempts a simple database test as well as implementations for
-Redis and MongoDB.
-
-Spring Boot adds the `HealthIndicator` instances automatically if beans of type `DataSource`,
-`MongoTemplate` or `RedisConnectionFactory` are present in the `ApplicationContext`.
+Spring Boot also provides a
+{sc-spring-boot-actuator}/health/SimpleHealthIndicator.{sc-ext}[`SimpleHealthIndicator`]
+implementation that attempts a simple database test.
 
 
 
@@ -260,9 +256,9 @@ protected. By default ``basic'' authentication will be used with the username `u
 and a generated password (which is printed on the console when the application starts).
 
 TIP: Generated passwords are logged as the application starts. Search for ``Using default
-security password''.
+password for application endpoints''.
 
-You can use Spring properties to change the username and password and to change the
+You can use Spring properties to change the username and passsword and to change the
 security role required to access the endpoints. For example, you might set the following
 in your `application.properties`:
 
@@ -457,9 +453,7 @@ on `org.crsh:crsh.shell.telnet`.
 === Connecting to the remote shell
 By default the remote shell will listen for connections on port `2000`. The default user
 is `user` and the default password will be randomly generated and displayed in the log
-output. If your application is using Spring Security, the shell will use
-<<boot-features-security, the same configuration>> by default. If not, a simple
-authentication will be applied and you should see a message like this:
+output, you should see a message like this:
 
 [indent=0]
 ----
@@ -584,27 +578,16 @@ decrement). Metrics for all HTTP requests are automatically recorded, so if you 
 		"counter.status.401.root": 4,
 		"gauge.response.root": 2,
 		"gauge.response.metrics": 3,
-		"classes": 5808,
-		"classes.loaded": 5808,
-		"classes.unloaded": 0,
-		"heap": 3728384,
-		"heap.committed": 986624,
-		"heap.init": 262144,
-		"heap.used": 52765,
-		"mem": 986624,
-		"mem.free": 933858,
-		"processors": 8,
-		"threads": 15,
-		"threads.deamon": 11,
-		"threads.peak": 15,
-		"uptime": 494836
+		"mem": 466944,
+		"mem.free": 410117,
+		"processors": 8
 	}
 ----
 
-Here we can see basic `memory`, `heap`, `class loading`, `processor` and `thread pool`
-information along with some HTTP metrics. In this instance the `root` (``/'') and `/metrics`
-URLs have returned `HTTP 200` responses `20` and `3` times respectively. It also appears
-that the `root` URL returned `HTTP 401` (unauthorized) `4` times.
+Here we can see basic `memory` and `processor` information along with some HTTP metrics.
+In this instance the `root` (``/'') and `/metrics` URLs have returned `HTTP 200` responses
+`20` and `3` times respectively. It also appears that the `root` URL returned `HTTP 401`
+(unauthorized) `4` times.
 
 The `gauge` shows the last response time for a request. So the last request to `root` took
 `2ms` to respond and the last to `/metrics` took `3ms`.
@@ -752,6 +735,43 @@ By default an `InMemoryTraceRepository` will be used that stores the last 100 ev
 can define your own instance of the `InMemoryTraceRepository` bean if you need to expand
 the capacity. You can also create your own alternative `TraceRepository` implementation
 if needed.
+
+
+
+[[production-ready-error-handling]]
+== Error Handling
+Spring Boot Actuator provides an `/error` mapping by default that handles all errors in a
+sensible way, and it is registered as a ``global'' error page in the servlet container.
+For machine clients it will produce a JSON response with details of the error, the HTTP
+status and the exception message. For browser clients there is a ``whitelabel'' error
+view that renders the same data in HTML format (to customize it just add a `View` that
+resolves to ``error'').
+
+If you want more specific error pages for some conditions, the embedded servlet containers
+support a uniform Java DSL for customizing the error handling. For example:
+
+[source,java,indent=0,subs="verbatim,quotes,attributes"]
+----
+	@Bean
+	public EmbeddedServletContainerCustomizer containerCustomizer(){
+		return new MyCustomizer();
+	}
+
+	// ...
+
+	private static class MyCustomizer implements EmbeddedServletContainerCustomizer {
+
+		@Override
+		public void customize(ConfigurableEmbeddedServletContainer factory) {
+            factory.addErrorPages(new ErrorPage(HttpStatus.BAD_REQUEST, "/400"));
+		}
+
+	}
+----
+
+You can also use regular Spring MVC features like http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#mvc-exception-handlers[`@ExceptionHandler`
+methods] and http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#mvc-ann-controller-advice[`@ControllerAdvice`].
+
 
 
 [[production-ready-process-monitoring]]

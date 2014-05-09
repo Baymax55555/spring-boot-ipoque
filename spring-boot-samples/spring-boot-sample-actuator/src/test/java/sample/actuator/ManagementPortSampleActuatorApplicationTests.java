@@ -80,7 +80,7 @@ public class ManagementPortSampleActuatorApplicationTests {
 		ResponseEntity<String> entity = new TestRestTemplate().getForEntity(
 				"http://localhost:" + this.managementPort + "/health", String.class);
 		assertEquals(HttpStatus.OK, entity.getStatusCode());
-		assertEquals("{\"status\":\"ok\"}", entity.getBody());
+		assertEquals("ok", entity.getBody());
 	}
 
 	@Test

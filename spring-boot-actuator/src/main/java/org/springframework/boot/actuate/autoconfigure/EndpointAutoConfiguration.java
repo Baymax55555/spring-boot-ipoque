@@ -20,6 +20,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.sql.DataSource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.endpoint.AutoConfigurationReportEndpoint;
@@ -36,6 +38,9 @@ import org.springframework.boot.actuate.endpoint.RequestMappingEndpoint;
 import org.springframework.boot.actuate.endpoint.ShutdownEndpoint;
 import org.springframework.boot.actuate.endpoint.TraceEndpoint;
 import org.springframework.boot.actuate.endpoint.VanillaPublicMetrics;
+import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.actuate.health.SimpleHealthIndicator;
+import org.springframework.boot.actuate.health.VanillaHealthIndicator;
 import org.springframework.boot.actuate.metrics.reader.MetricReader;
 import org.springframework.boot.actuate.metrics.repository.InMemoryMetricRepository;
 import org.springframework.boot.actuate.trace.InMemoryTraceRepository;
@@ -62,10 +67,15 @@ import org.springframework.web.servlet.handler.AbstractHandlerMethodMapping;
  * @author Dave Syer
  * @author Phillip Webb
  * @author Greg Turnquist
- * @author Chiristian Dupuis
  */
 @Configuration
 public class EndpointAutoConfiguration {
+
+	@Autowired(required = false)
+	private HealthIndicator<? extends Object> healthIndicator;
+
+	@Autowired(required = false)
+	private DataSource dataSource;
 
 	@Autowired
 	private InfoPropertiesConfiguration properties;
@@ -87,8 +97,18 @@ public class EndpointAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public HealthEndpoint healthEndpoint() {
-		return new HealthEndpoint();
+	public HealthEndpoint<Object> healthEndpoint() {
+		if (this.healthIndicator == null) {
+			if (this.dataSource == null) {
+				this.healthIndicator = new VanillaHealthIndicator();
+			}
+			else {
+				SimpleHealthIndicator healthIndicator = new SimpleHealthIndicator();
+				healthIndicator.setDataSource(this.dataSource);
+				this.healthIndicator = healthIndicator;
+			}
+		}
+		return new HealthEndpoint<Object>(this.healthIndicator);
 	}
 
 	@Bean
