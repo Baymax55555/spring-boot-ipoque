@@ -16,12 +16,11 @@
 
 package org.springframework.boot.autoconfigure;
 
-import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-import org.springframework.boot.SimpleMainTests;
-import org.springframework.boot.context.embedded.jetty.JettyEmbeddedServletContainerFactoryTests;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurationTests;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurationTests;
 
 /**
  * A test suite for probing weird ordering problems in the tests.
@@ -29,8 +28,9 @@ import org.springframework.boot.context.embedded.jetty.JettyEmbeddedServletConta
  * @author Dave Syer
  */
 @RunWith(Suite.class)
-@SuiteClasses({ SimpleMainTests.class, JettyEmbeddedServletContainerFactoryTests.class })
-@Ignore
+@SuiteClasses({ HibernateJpaAutoConfigurationTests.class,
+		LiquibaseAutoConfigurationTests.class })
+// @Ignore
 public class AdhocTestSuite {
 
 }

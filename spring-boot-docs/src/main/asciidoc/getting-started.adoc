@@ -147,6 +147,12 @@ endif::[]
 	</project>
 ----
 
+TIP: The `spring-boot-starter-parent` is a great way to use Spring Boot, but it might
+not be suitable all of the time. Sometimes you may need to inherit from a different
+parent POM, or you might just not like our default settings. See
+<<using-boot-maven-without-a-parent>> for an alternative solution that uses an `import`
+scope.
+
 
 
 [[getting-started-gradle-installation]]
@@ -157,7 +163,7 @@ installed you can follow the instructions at http://www.gradle.org/.
 Spring Boot dependencies can be declared using the `org.springframework.boot` `group`.
 Typically your project will declare dependencies to one or more
 <<using-spring-boot.adoc#using-boot-starter-poms, ``Starter POMs''>>. Spring Boot
-provides a useful <<build-tool-plugins.adoc#build-tool-plugins-gradle, Gradle plugin>>
+provides a useful <<build-tool-plugins.adoc#build-tool-plugins-gradle-plugin, Gradle plugin>>
 that can be used to simplify dependency declarations and to create executable jars.
 
 .Gradle Wrapper
@@ -203,7 +209,7 @@ endif::release[]
 
 	dependencies {
 		compile("org.springframework.boot:spring-boot-starter-web")
-		testCompile("junit:junit")
+		testCompile("org.springframework.boot:spring-boot-starter-test")
 	}
 ----
 
@@ -477,16 +483,11 @@ currently have.
 	$ mvn dependency:tree
 
 	[INFO] com.example:myproject:jar:0.0.1-SNAPSHOT
-	[INFO] +- junit:junit:jar:4.11:test
-	[INFO] |  \- org.hamcrest:hamcrest-core:jar:1.3:test
-	[INFO] +- org.mockito:mockito-core:jar:1.9.5:test
-	[INFO] |  \- org.objenesis:objenesis:jar:1.0:test
-	[INFO] \- org.hamcrest:hamcrest-library:jar:1.3:test
 ----
 
 The `mvn dependency:tree` command prints tree representation of your project dependencies.
-You can see that `spring-boot-starter-parent` has already provided some useful test
-dependencies. Let's edit our `pom.xml` and add the `spring-boot-starter-web` dependency
+You can see that `spring-boot-starter-parent` provides no
+dependenciesby itself. Let's edit our `pom.xml` and add the `spring-boot-starter-web` dependency
 just below the `parent` section:
 
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
@@ -658,6 +659,11 @@ To create an executable jar we need to add the `spring-boot-maven-plugin` to our
 		</plugins>
 	</build>
 ----
+
+NOTE: The `spring-boot-starter-parent` POM includes `<executions>` configuration to
+bind the `repackage` goal. If you are not using the parent POM you will need to declare
+this configuration yourself. See the {spring-boot-maven-plugin-site}/usage.html[plugin
+documentation] for details.
 
 Save your `pom.xml` and run `mvn package` from the command line:
 
