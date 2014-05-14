@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.test.EnvironmentTestUtils;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
@@ -28,10 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * Tests for {@link RedisAutoConfiguration}.
- * 
  * @author Dave Syer
- * @author Christian Dupuis
  */
 public class RedisAutoConfigurationTests {
 
@@ -54,22 +51,8 @@ public class RedisAutoConfigurationTests {
 		this.context.register(RedisAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class);
 		this.context.refresh();
-		assertEquals("foo", this.context.getBean(JedisConnectionFactory.class)
+		assertEquals("foo", this.context.getBean(LettuceConnectionFactory.class)
 				.getHostName());
-	}
-
-	@Test
-	public void testRedisConfigurationWithPool() throws Exception {
-		this.context = new AnnotationConfigApplicationContext();
-		EnvironmentTestUtils.addEnvironment(this.context, "spring.redis.host:foo");
-		EnvironmentTestUtils.addEnvironment(this.context, "spring.redis.pool.max-idle:1");
-		this.context.register(RedisAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class);
-		this.context.refresh();
-		assertEquals("foo", this.context.getBean(JedisConnectionFactory.class)
-				.getHostName());
-		assertEquals(1, this.context.getBean(JedisConnectionFactory.class)
-				.getPoolConfig().getMaxIdle());
 	}
 
 }

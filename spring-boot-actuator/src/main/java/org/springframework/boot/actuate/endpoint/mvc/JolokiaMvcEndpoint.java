@@ -36,7 +36,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.ServletContextAware;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.ServletWrappingController;
-import org.springframework.web.util.UrlPathHelper;
 
 /**
  * {@link MvcEndpoint} to expose Jolokia.
@@ -125,18 +124,15 @@ public class JolokiaMvcEndpoint implements MvcEndpoint, InitializingBean,
 	private static class PathStripper extends HttpServletRequestWrapper {
 
 		private final String path;
-		private final UrlPathHelper urlPathHelper;
 
 		public PathStripper(HttpServletRequest request, String path) {
 			super(request);
 			this.path = path;
-			this.urlPathHelper = new UrlPathHelper();
 		}
 
 		@Override
 		public String getPathInfo() {
-			String value = this.urlPathHelper.decodeRequestString(
-					(HttpServletRequest) getRequest(), super.getRequestURI());
+			String value = super.getRequestURI();
 			if (value.contains(this.path)) {
 				value = value.substring(value.indexOf(this.path) + this.path.length());
 			}
@@ -149,6 +145,6 @@ public class JolokiaMvcEndpoint implements MvcEndpoint, InitializingBean,
 			}
 			return value;
 		}
-	}
 
+	}
 }
