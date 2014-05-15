@@ -128,7 +128,7 @@ public class AuthenticationManagerConfiguration extends
 
 			User user = AuthenticationManagerConfiguration.this.security.getUser();
 			if (user.isDefaultPassword()) {
-				logger.info("\n\nUsing default security password: "
+				logger.info("\n\nUsing default password for application endpoints: "
 						+ user.getPassword() + "\n\n");
 			}
 

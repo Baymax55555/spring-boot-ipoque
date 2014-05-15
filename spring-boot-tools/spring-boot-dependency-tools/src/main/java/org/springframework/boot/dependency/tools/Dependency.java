@@ -149,7 +149,7 @@ public final class Dependency {
 	/**
 	 * A dependency exclusion.
 	 */
-	public static final class Exclusion {
+	public final static class Exclusion {
 
 		private final String groupId;
 
