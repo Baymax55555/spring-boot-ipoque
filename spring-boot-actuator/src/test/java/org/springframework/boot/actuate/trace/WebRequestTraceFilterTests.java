@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package org.springframework.boot.actuate.trace;
 import java.util.Map;
 
 import org.junit.Test;
-import org.springframework.boot.autoconfigure.web.DefaultErrorAttributes;
+import org.springframework.boot.actuate.web.BasicErrorController;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for {@link WebRequestTraceFilter}.
- *
+ * 
  * @author Dave Syer
  */
 public class WebRequestTraceFilterTests {
@@ -76,7 +76,7 @@ public class WebRequestTraceFilterTests {
 
 	@Test
 	public void filterHasError() {
-		this.filter.setErrorAttributes(new DefaultErrorAttributes());
+		this.filter.setErrorController(new BasicErrorController());
 		MockHttpServletRequest request = new MockHttpServletRequest("GET", "/foo");
 		MockHttpServletResponse response = new MockHttpServletResponse();
 		response.setStatus(500);

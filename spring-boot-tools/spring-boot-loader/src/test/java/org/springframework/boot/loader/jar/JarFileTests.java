@@ -91,8 +91,6 @@ public class JarFileTests {
 		URLClassLoader urlClassLoader = new URLClassLoader(new URL[] { jarUrl });
 		assertThat(urlClassLoader.getResource("special/\u00EB.dat"), notNullValue());
 		assertThat(urlClassLoader.getResource("d/9.dat"), notNullValue());
-		jarFile.close();
-		urlClassLoader.close();
 	}
 
 	@Test
@@ -135,7 +133,6 @@ public class JarFileTests {
 		URLClassLoader urlClassLoader = new URLClassLoader(
 				new URL[] { this.jarFile.getUrl() });
 		assertThat(urlClassLoader.getResource("special/\u00EB.dat"), notNullValue());
-		urlClassLoader.close();
 	}
 
 	@Test
@@ -368,6 +365,5 @@ public class JarFileTests {
 						jarEntry.getCertificates());
 			}
 		}
-		jarFile.close();
 	}
 }
