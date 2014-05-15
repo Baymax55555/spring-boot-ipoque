@@ -87,15 +87,10 @@ public class BasicBatchConfigurer implements BatchConfigurer {
 	}
 
 	@PostConstruct
-	public void initialize() {
-		try {
-			this.transactionManager = createTransactionManager();
-			this.jobRepository = createJobRepository();
-			this.jobLauncher = createJobLauncher();
-		}
-		catch (Exception ex) {
-			throw new IllegalStateException("Unable to initialize Spring Batch", ex);
-		}
+	public void initialize() throws Exception {
+		this.transactionManager = createTransactionManager();
+		this.jobRepository = createJobRepository();
+		this.jobLauncher = createJobLauncher();
 	}
 
 	private JobLauncher createJobLauncher() throws Exception {

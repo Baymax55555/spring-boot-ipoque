@@ -28,7 +28,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.springframework.jdbc.support.MetaDataAccessException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -59,9 +58,10 @@ public class BatchDatabaseInitializer implements EnvironmentAware {
 	}
 
 	@PostConstruct
-	protected void initialize() {
+	protected void initialize() throws Exception {
 		if (this.enabled) {
-			String platform = getDatabaseType();
+			String platform = DatabaseType.fromMetaData(this.dataSource).toString()
+					.toLowerCase();
 			if ("hsql".equals(platform)) {
 				platform = "hsqldb";
 			}
@@ -75,15 +75,6 @@ public class BatchDatabaseInitializer implements EnvironmentAware {
 			populator.addScript(this.resourceLoader.getResource(schemaLocation));
 			populator.setContinueOnError(true);
 			DatabasePopulatorUtils.execute(populator, this.dataSource);
-		}
-	}
-
-	private String getDatabaseType() {
-		try {
-			return DatabaseType.fromMetaData(this.dataSource).toString().toLowerCase();
-		}
-		catch (MetaDataAccessException ex) {
-			throw new IllegalStateException("Unable to detect database type", ex);
 		}
 	}
 

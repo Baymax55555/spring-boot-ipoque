@@ -52,7 +52,7 @@ content into your application; rather pick only the properties that you need.
 	# EMBEDDED SERVER CONFIGURATION ({sc-spring-boot-autoconfigure}/web/ServerProperties.{sc-ext}[ServerProperties])
 	server.port=8080
 	server.address= # bind to a specific NIC
-	server.session-timeout= # session timeout in sections
+	server.session-timeout= # session timeout in seconds
 	server.context-path= # the context path, defaults to '/'
 	server.servlet-path= # the servlet path, defaults to '/'
 	server.tomcat.access-log-pattern= # log pattern of the access log
@@ -68,9 +68,12 @@ content into your application; rather pick only the properties that you need.
 	http.mappers.json-pretty-print=false # pretty print JSON
 	http.mappers.json-sort-keys=false # sort keys
 	spring.mvc.locale= # set fixed locale, e.g. en_UK
+	spring.mvc.date-format= # set fixed date format, e.g. dd/MM/yyyy
+	spring.mvc.message-codes-resolver-format= # PREFIX_ERROR_CODE / POSTFIX_ERROR_CODE
 	spring.view.prefix= # MVC view prefix
 	spring.view.suffix= # ... and suffix
 	spring.resources.cache-period= # cache timeouts in headers sent to browser
+	spring.resources.add-mappings=true # if default mappings should be added
 
 	# THYMELEAF ({sc-spring-boot-autoconfigure}/thymeleaf/ThymeleafAutoConfiguration.{sc-ext}[ThymeleafAutoConfiguration])
 	spring.thymeleaf.prefix=classpath:/templates/
@@ -79,6 +82,22 @@ content into your application; rather pick only the properties that you need.
 	spring.thymeleaf.encoding=UTF-8
 	spring.thymeleaf.content-type=text/html # ;charset=<encoding> is added
 	spring.thymeleaf.cache=true # set to false for hot refresh
+
+	# FREEMARKER ({sc-spring-boot-autoconfigure}}/freemarker/FreeMarkerAutoConfiguration.{sc-ext}[FreeMarkerAutoConfiguration])
+	spring.freemarker.allowRequestOverride=false
+	spring.freemarker.allowSessionOverride=false
+	spring.freemarker.cache=true
+	spring.freemarker.checkTemplateLocation=true
+	spring.freemarker.contentType=text/html
+	spring.freemarker.exposeRequestAttributes=false
+	spring.freemarker.exposeSessionAttributes=false
+	spring.freemarker.exposeSpringMacroHelpers=false
+	spring.freemarker.prefix=
+	spring.freemarker.requestContextAttribute=
+	spring.freemarker.suffix=
+	spring.freemarker.templateEncoding=UTF-8
+	spring.freemarker.templateLoaderPath=classpath:/templates/
+	spring.freemarker.viewNames=
 
 	# INTERNATIONALIZATION ({sc-spring-boot-autoconfigure}/MessageSourceAutoConfiguration.{sc-ext}[MessageSourceAutoConfiguration])
 	spring.messages.basename=messages
@@ -141,6 +160,21 @@ content into your application; rather pick only the properties that you need.
 	spring.jpa.hibernate.naming-strategy= # naming classname
 	spring.jpa.hibernate.ddl-auto= # defaults to create-drop for embedded dbs
 
+	# FLYWAY ({sc-spring-boot-autoconfigure}/flyway/FlywayProperties.{sc-ext}[FlywayProperties])
+	flyway.locations=classpath:db/migrations # locations of migrations scripts
+	flyway.schemas= # schemas to update
+	flyway.initVersion= 1 # version to start migration
+	flyway.prefix=V
+	flyway.suffix=.sql
+	flyway.enabled=true
+
+	# LIQUIBASE ({sc-spring-boot-autoconfigure}/liquibase/LiquibaseProperties.{sc-ext}[LiquibaseProperties])
+	liquibase.change-log=classpath:/db/changelog/db.changelog-master.yaml
+	liquibase.contexts= # runtime contexts to use
+	liquibase.default-schema= # default database schema to use
+	liquibase.drop-first=false
+	liquibase.enabled=true
+
 	# JMX
 	spring.jmx.enabled=true # Expose MBeans from Spring
 
@@ -152,7 +186,6 @@ content into your application; rather pick only the properties that you need.
 	spring.rabbitmq.password= # login password
 	spring.rabbitmq.virtualhost=
 	spring.rabbitmq.dynamic=
-
 
 	# REDIS ({sc-spring-boot-autoconfigure}/redis/RedisProperties.{sc-ext}[RedisProperties])
 	spring.redis.host=localhost # server host
@@ -167,11 +200,11 @@ content into your application; rather pick only the properties that you need.
 	spring.activemq.broker-url=tcp://localhost:61616 # connection URL
     spring.activemq.user=
     spring.activemq.password=
-	spring.activemq.in-memory=true
+	spring.activemq.in-memory=true # broker kind to create if no broker-url is specified
 	spring.activemq.pooled=false
 
 	# JMS ({sc-spring-boot-autoconfigure}/jms/JmsTemplateProperties.{sc-ext}[JmsTemplateProperties])
-	spring.jms.pub-sub-domain=
+	spring.jms.pub-sub-domain= # false for queue (default), true for topic
 
 	# SPRING BATCH ({sc-spring-boot-autoconfigure}/batch/BatchDatabaseInitializer.{sc-ext}[BatchDatabaseInitializer])
 	spring.batch.job.names=job1,job2
