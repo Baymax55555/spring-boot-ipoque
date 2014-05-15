@@ -29,9 +29,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClas
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.Headers;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -90,9 +90,8 @@ public class SpringBootWebSecurityConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public AuthenticationEventPublisher authenticationEventPublisher(
-			ApplicationEventPublisher publisher) {
-		return new DefaultAuthenticationEventPublisher(publisher);
+	public AuthenticationEventPublisher authenticationEventPublisher() {
+		return new DefaultAuthenticationEventPublisher();
 	}
 
 	@Bean
@@ -135,7 +134,7 @@ public class SpringBootWebSecurityConfiguration {
 	}
 
 	// Get the ignored paths in early
-	@Order(SecurityProperties.IGNORED_ORDER)
+	@Order(Ordered.HIGHEST_PRECEDENCE)
 	private static class IgnoredPathsWebSecurityConfigurerAdapter implements
 			WebSecurityConfigurer<WebSecurity> {
 
@@ -183,7 +182,7 @@ public class SpringBootWebSecurityConfiguration {
 
 	@ConditionalOnExpression("${security.basic.enabled:true}")
 	@Configuration
-	@Order(SecurityProperties.BASIC_AUTH_ORDER)
+	@Order(Ordered.LOWEST_PRECEDENCE - 5)
 	protected static class ApplicationWebSecurityConfigurerAdapter extends
 			WebSecurityConfigurerAdapter {
 

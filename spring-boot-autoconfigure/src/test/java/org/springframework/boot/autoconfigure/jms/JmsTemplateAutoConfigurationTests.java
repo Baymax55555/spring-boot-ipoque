@@ -36,7 +36,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for {@link JmsTemplateAutoConfiguration}.
- *
+ * 
  * @author Greg Turnquist
  */
 public class JmsTemplateAutoConfigurationTests {
@@ -55,7 +55,10 @@ public class JmsTemplateAutoConfigurationTests {
 		assertNotNull(jmsTemplate);
 		assertNotNull(connectionFactory);
 		assertEquals(jmsTemplate.getConnectionFactory(), connectionFactory);
-		assertEquals("vm://localhost", ((ActiveMQConnectionFactory) jmsTemplate.getConnectionFactory()).getBrokerURL());
+		assertEquals(
+				((ActiveMQConnectionFactory) jmsTemplate.getConnectionFactory())
+						.getBrokerURL(),
+				"vm://localhost");
 	}
 
 	@Test
@@ -91,23 +94,23 @@ public class JmsTemplateAutoConfigurationTests {
 	}
 
 	@Test
-	public void testPubSubDisabledByDefault() {
+	public void testPubSubEnabledByDefault() {
 		this.context = new AnnotationConfigApplicationContext();
 		this.context
 				.register(TestConfiguration.class, JmsTemplateAutoConfiguration.class);
 		this.context.refresh();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
-		assertFalse(jmsTemplate.isPubSubDomain());
+		assertTrue(jmsTemplate.isPubSubDomain());
 	}
 
 	@Test
-	public void testJmsTemplatePostProcessedSoThatPubSubIsTrue() {
+	public void testJmsTemplatePostProcessedSoThatPubSubIsFalse() {
 		this.context = new AnnotationConfigApplicationContext();
 		this.context.register(TestConfiguration4.class,
 				JmsTemplateAutoConfiguration.class);
 		this.context.refresh();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
-		assertTrue(jmsTemplate.isPubSubDomain());
+		assertFalse(jmsTemplate.isPubSubDomain());
 	}
 
 	@Test
@@ -141,8 +144,10 @@ public class JmsTemplateAutoConfigurationTests {
 		assertNotNull(jmsTemplate);
 		assertNotNull(connectionFactory);
 		assertEquals(jmsTemplate.getConnectionFactory(), connectionFactory);
-		assertEquals("tcp://localhost:61616",
-					 ((ActiveMQConnectionFactory) jmsTemplate.getConnectionFactory()).getBrokerURL());
+		assertEquals(
+				((ActiveMQConnectionFactory) jmsTemplate.getConnectionFactory())
+						.getBrokerURL(),
+				"tcp://localhost:61616");
 	}
 
 	@Test
@@ -160,8 +165,10 @@ public class JmsTemplateAutoConfigurationTests {
 		assertNotNull(jmsTemplate);
 		assertNotNull(connectionFactory);
 		assertEquals(jmsTemplate.getConnectionFactory(), connectionFactory);
-		assertEquals("tcp://remote-host:10000",
-					 ((ActiveMQConnectionFactory) jmsTemplate.getConnectionFactory()).getBrokerURL());
+		assertEquals(
+				((ActiveMQConnectionFactory) jmsTemplate.getConnectionFactory())
+						.getBrokerURL(),
+				"tcp://remote-host:10000");
 	}
 
 	@Test
@@ -255,7 +262,7 @@ public class JmsTemplateAutoConfigurationTests {
 				throws BeansException {
 			if (bean.getClass().isAssignableFrom(JmsTemplate.class)) {
 				JmsTemplate jmsTemplate = (JmsTemplate) bean;
-				jmsTemplate.setPubSubDomain(true);
+				jmsTemplate.setPubSubDomain(false);
 			}
 			return bean;
 		}
