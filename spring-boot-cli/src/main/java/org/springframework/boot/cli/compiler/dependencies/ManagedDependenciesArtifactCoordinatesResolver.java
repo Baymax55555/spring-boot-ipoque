@@ -18,7 +18,6 @@ package org.springframework.boot.cli.compiler.dependencies;
 
 import org.springframework.boot.dependency.tools.Dependency;
 import org.springframework.boot.dependency.tools.ManagedDependencies;
-import org.springframework.boot.dependency.tools.VersionManagedDependencies;
 
 /**
  * {@link ArtifactCoordinatesResolver} backed by {@link ManagedDependencies}.
@@ -31,10 +30,10 @@ public class ManagedDependenciesArtifactCoordinatesResolver implements
 	private final ManagedDependencies dependencies;
 
 	public ManagedDependenciesArtifactCoordinatesResolver() {
-		this(new VersionManagedDependencies());
+		this(ManagedDependencies.get());
 	}
 
-	public ManagedDependenciesArtifactCoordinatesResolver(ManagedDependencies dependencies) {
+	ManagedDependenciesArtifactCoordinatesResolver(ManagedDependencies dependencies) {
 		this.dependencies = dependencies;
 	}
 
@@ -54,7 +53,7 @@ public class ManagedDependenciesArtifactCoordinatesResolver implements
 		if (artifactId != null) {
 			if (artifactId.startsWith("spring-boot")) {
 				return new Dependency("org.springframework.boot", artifactId,
-						this.dependencies.getSpringBootVersion());
+						this.dependencies.getVersion());
 			}
 			return this.dependencies.find(artifactId);
 		}

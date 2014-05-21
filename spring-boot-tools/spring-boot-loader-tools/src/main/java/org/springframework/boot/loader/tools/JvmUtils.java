@@ -17,7 +17,6 @@
 package org.springframework.boot.loader.tools;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
@@ -43,7 +42,7 @@ abstract class JvmUtils {
 		String javaHome = getJavaHome();
 		for (String location : TOOLS_LOCATIONS) {
 			try {
-				URL url = new URL(javaHome + "/" + location);
+				URL url = new URL("file://" + javaHome + "/" + location);
 				if (new File(url.toURI()).exists()) {
 					return url;
 				}
@@ -56,13 +55,7 @@ abstract class JvmUtils {
 	}
 
 	private static String getJavaHome() {
-		try {
-			return new File(System.getProperty("java.home")).toURI().toURL()
-					.toExternalForm();
-		}
-		catch (MalformedURLException e) {
-			throw new IllegalStateException("Cannot locate java.home", e);
-		}
+		return System.getProperty("java.home");
 	}
 
 }
