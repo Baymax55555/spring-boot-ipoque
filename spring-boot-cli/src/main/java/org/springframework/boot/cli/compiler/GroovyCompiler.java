@@ -43,8 +43,6 @@ import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.ASTTransformationVisitor;
-import org.springframework.boot.cli.compiler.dependencies.ArtifactCoordinatesResolver;
-import org.springframework.boot.cli.compiler.dependencies.ManagedDependenciesArtifactCoordinatesResolver;
 import org.springframework.boot.cli.compiler.grape.AetherGrapeEngine;
 import org.springframework.boot.cli.compiler.grape.AetherGrapeEngineFactory;
 import org.springframework.boot.cli.compiler.grape.GrapeEngineInstaller;
@@ -71,8 +69,6 @@ import org.springframework.boot.cli.util.ResourceUtils;
  */
 public class GroovyCompiler {
 
-	private final ArtifactCoordinatesResolver coordinatesResolver;
-
 	private final GroovyCompilerConfiguration configuration;
 
 	private final ExtendedGroovyClassLoader loader;
@@ -90,10 +86,10 @@ public class GroovyCompiler {
 		this.configuration = configuration;
 		this.loader = createLoader(configuration);
 
-		this.coordinatesResolver = new ManagedDependenciesArtifactCoordinatesResolver();
+		DependencyResolutionContext resolutionContext = new DependencyResolutionContext();
 
 		AetherGrapeEngine grapeEngine = AetherGrapeEngineFactory.create(this.loader,
-				configuration.getRepositoryConfiguration());
+				configuration.getRepositoryConfiguration(), resolutionContext);
 
 		GrapeEngineInstaller.install(grapeEngine);
 
@@ -108,12 +104,13 @@ public class GroovyCompiler {
 		}
 
 		this.transformations = new ArrayList<ASTTransformation>();
+		this.transformations.add(new GrabMetadataTransformation(resolutionContext));
 		this.transformations.add(new DependencyAutoConfigurationTransformation(
-				this.loader, this.coordinatesResolver, this.compilerAutoConfigurations));
+				this.loader, resolutionContext, this.compilerAutoConfigurations));
 		this.transformations.add(new GroovyBeansTransformation());
 		if (this.configuration.isGuessDependencies()) {
 			this.transformations.add(new ResolveDependencyCoordinatesTransformation(
-					this.coordinatesResolver));
+					resolutionContext));
 		}
 	}
 

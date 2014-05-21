@@ -32,8 +32,8 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -64,7 +64,7 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 		}
 		catch (BeanCreationException ex) {
 			BindException bex = (BindException) ex.getRootCause();
-			assertTrue(1 == bex.getErrorCount());
+			assertEquals(1, bex.getErrorCount());
 		}
 	}
 
@@ -78,7 +78,7 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 		}
 		catch (BeanCreationException ex) {
 			BindException bex = (BindException) ex.getRootCause();
-			assertTrue(1 == bex.getErrorCount());
+			assertEquals(1, bex.getErrorCount());
 		}
 	}
 
@@ -92,7 +92,7 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 		}
 		catch (BeanCreationException ex) {
 			BindException bex = (BindException) ex.getRootCause();
-			assertTrue(2 == bex.getErrorCount());
+			assertEquals(2, bex.getErrorCount());
 		}
 	}
 
