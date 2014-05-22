@@ -36,16 +36,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
-import org.springframework.boot.bind.RelaxedPropertyResolver;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.env.Environment;
 import org.springframework.core.io.Resource;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -55,7 +54,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -66,7 +64,8 @@ import org.springframework.util.StringUtils;
  */
 @Configuration
 @ConditionalOnClass(EmbeddedDatabaseType.class)
-public class DataSourceAutoConfiguration implements EnvironmentAware {
+@EnableConfigurationProperties(DataSourceProperties.class)
+public class DataSourceAutoConfiguration {
 
 	private static Log logger = LogFactory.getLog(DataSourceAutoConfiguration.class);
 
@@ -78,34 +77,29 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 	@Autowired
 	private ApplicationContext applicationContext;
 
-	private RelaxedPropertyResolver datasourceProperties;
-
-	@Override
-	public void setEnvironment(Environment environment) {
-		this.datasourceProperties = new RelaxedPropertyResolver(environment,
-				CONFIGURATION_PREFIX + ".");
-	}
+	@Autowired
+	private DataSourceProperties properties;
 
 	@PostConstruct
 	protected void initialize() {
-		boolean initialize = this.datasourceProperties.getProperty("initialize",
-				Boolean.class, true);
+		boolean initialize = this.properties.isInitialize();
 		if (this.dataSource == null || !initialize) {
 			logger.debug("No DataSource found so not initializing");
 			return;
 		}
 
-		String schema = this.datasourceProperties.getProperty("schema");
+		String schema = this.properties.getSchema();
 		if (schema == null) {
-			schema = "classpath*:schema-"
-					+ this.datasourceProperties.getProperty("platform", "all")
-					+ ".sql,classpath*:schema.sql,classpath*:data.sql";
+			String platform = this.properties.getPlatform();
+			schema = "classpath*:schema-" + platform + ".sql,";
+			schema += "classpath*:schema.sql,";
+			schema += "classpath*:data-" + platform + ".sql,";
+			schema += "classpath*:data.sql";
 		}
 
 		List<Resource> resources = getSchemaResources(schema);
 
-		boolean continueOnError = this.datasourceProperties.getProperty(
-				"continueOnError", Boolean.class, false);
+		boolean continueOnError = this.properties.isContinueOnError();
 		boolean exists = false;
 		ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
 		for (Resource resource : resources) {
@@ -115,7 +109,7 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 				populator.setContinueOnError(continueOnError);
 			}
 		}
-		populator.setSeparator(this.datasourceProperties.getProperty("separator", ";"));
+		populator.setSeparator(this.properties.getSeparator());
 
 		if (exists) {
 			DatabasePopulatorUtils.execute(populator, this.dataSource);
@@ -161,17 +155,24 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 
 	}
 
-	@Conditional(DataSourceAutoConfiguration.TomcatDatabaseCondition.class)
+	@Conditional(DataSourceAutoConfiguration.NonEmbeddedDatabaseCondition.class)
 	@ConditionalOnMissingBean(DataSource.class)
-	@Import(TomcatDataSourceConfiguration.class)
-	protected static class TomcatConfiguration {
+	protected static class NonEmbeddedConfiguration {
 
-	}
+		@Autowired
+		private DataSourceProperties properties;
 
-	@Conditional(DataSourceAutoConfiguration.BasicDatabaseCondition.class)
-	@ConditionalOnMissingBean(DataSource.class)
-	@Import(CommonsDataSourceConfiguration.class)
-	protected static class DbcpConfiguration {
+		@ConfigurationProperties(prefix = DataSourceAutoConfiguration.CONFIGURATION_PREFIX)
+		@Bean
+		public DataSource dataSource() {
+			DataSourceBuilder factory = DataSourceBuilder
+					.create(this.properties.getClassLoader())
+					.driverClassName(this.properties.getDriverClassName())
+					.url(this.properties.getUrl())
+					.username(this.properties.getUsername())
+					.password(this.properties.getPassword());
+			return factory.build();
+		}
 
 	}
 
@@ -199,35 +200,18 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 	/**
 	 * Base {@link Condition} for non-embedded database checks.
 	 */
-	static abstract class NonEmbeddedDatabaseCondition extends SpringBootCondition {
-
-		protected abstract String getDataSourceClassName();
+	static class NonEmbeddedDatabaseCondition extends SpringBootCondition {
 
 		@Override
 		public ConditionOutcome getMatchOutcome(ConditionContext context,
 				AnnotatedTypeMetadata metadata) {
 
-			if (!ClassUtils.isPresent(getDataSourceClassName(), context.getClassLoader())) {
-				return ConditionOutcome.noMatch(getDataSourceClassName()
-						+ " DataSource class not found");
+			ClassLoader dataSourceClassLoader = getDataSourceClassLoader(context);
+			if (dataSourceClassLoader != null) {
+				return ConditionOutcome.match("Supported DataSource class found");
 			}
 
-			String driverClassName = getDriverClassName(context.getEnvironment(),
-					getDataSourceClassLoader(context));
-			if (driverClassName == null) {
-				return ConditionOutcome.noMatch("no database driver");
-			}
-
-			String url = getUrl(context.getEnvironment(), context.getClassLoader());
-			if (url == null) {
-				return ConditionOutcome.noMatch("no database URL");
-			}
-
-			if (ClassUtils.isPresent(driverClassName, context.getClassLoader())) {
-				return ConditionOutcome.match("found database driver " + driverClassName);
-			}
-
-			return ConditionOutcome.noMatch("missing database driver " + driverClassName);
+			return ConditionOutcome.noMatch("missing supported DataSource");
 		}
 
 		/**
@@ -235,69 +219,12 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 		 * the driver class can actually be loaded by the data source.
 		 */
 		private ClassLoader getDataSourceClassLoader(ConditionContext context) {
-			try {
-				Class<?> dataSourceClass = ClassUtils.forName(getDataSourceClassName(),
-						context.getClassLoader());
-				return dataSourceClass.getClassLoader();
+			Class<?> dataSourceClass = new DataSourceBuilder(context.getClassLoader())
+					.findType();
+			if (dataSourceClass == null) {
+				return null;
 			}
-			catch (ClassNotFoundException ex) {
-				throw new IllegalStateException(ex);
-			}
-		}
-
-		private String getDriverClassName(Environment environment, ClassLoader classLoader) {
-			String driverClassName = environment == null ? null : environment
-					.getProperty(CONFIGURATION_PREFIX + ".driverClassName");
-			if (driverClassName == null) {
-				driverClassName = EmbeddedDatabaseConnection.get(classLoader)
-						.getDriverClassName();
-			}
-			return driverClassName;
-		}
-
-		private String getUrl(Environment environment, ClassLoader classLoader) {
-			String url = (environment == null ? null : environment
-					.getProperty(CONFIGURATION_PREFIX + ".url"));
-			if (url == null) {
-				url = EmbeddedDatabaseConnection.get(classLoader).getUrl();
-			}
-			return url;
-		}
-
-	}
-
-	/**
-	 * {@link Condition} to detect when a commons-dbcp {@code BasicDataSource} backed
-	 * database is used.
-	 */
-	static class BasicDatabaseCondition extends NonEmbeddedDatabaseCondition {
-
-		private final Condition tomcatCondition = new TomcatDatabaseCondition();
-
-		@Override
-		protected String getDataSourceClassName() {
-			return "org.apache.commons.dbcp.BasicDataSource";
-		}
-
-		@Override
-		public ConditionOutcome getMatchOutcome(ConditionContext context,
-				AnnotatedTypeMetadata metadata) {
-			if (matches(context, metadata, this.tomcatCondition)) {
-				return ConditionOutcome.noMatch("Tomcat DataSource");
-			}
-			return super.getMatchOutcome(context, metadata);
-		}
-
-	}
-
-	/**
-	 * {@link Condition} to detect when a Tomcat DataSource backed database is used.
-	 */
-	static class TomcatDatabaseCondition extends NonEmbeddedDatabaseCondition {
-
-		@Override
-		protected String getDataSourceClassName() {
-			return "org.apache.tomcat.jdbc.pool.DataSource";
+			return dataSourceClass.getClassLoader();
 		}
 
 	}
@@ -307,14 +234,12 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 	 */
 	static class EmbeddedDatabaseCondition extends SpringBootCondition {
 
-		private final SpringBootCondition tomcatCondition = new TomcatDatabaseCondition();
-
-		private final SpringBootCondition dbcpCondition = new BasicDatabaseCondition();
+		private final SpringBootCondition nonEmbedded = new NonEmbeddedDatabaseCondition();
 
 		@Override
 		public ConditionOutcome getMatchOutcome(ConditionContext context,
 				AnnotatedTypeMetadata metadata) {
-			if (anyMatches(context, metadata, this.tomcatCondition, this.dbcpCondition)) {
+			if (anyMatches(context, metadata, this.nonEmbedded)) {
 				return ConditionOutcome
 						.noMatch("existing non-embedded database detected");
 			}
@@ -333,9 +258,7 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 	 */
 	static class DatabaseCondition extends SpringBootCondition {
 
-		private final SpringBootCondition tomcatCondition = new TomcatDatabaseCondition();
-
-		private final SpringBootCondition dbcpCondition = new BasicDatabaseCondition();
+		private final SpringBootCondition nonEmbedded = new NonEmbeddedDatabaseCondition();
 
 		private final SpringBootCondition embeddedCondition = new EmbeddedDatabaseCondition();
 
@@ -343,8 +266,7 @@ public class DataSourceAutoConfiguration implements EnvironmentAware {
 		public ConditionOutcome getMatchOutcome(ConditionContext context,
 				AnnotatedTypeMetadata metadata) {
 
-			if (anyMatches(context, metadata, this.tomcatCondition, this.dbcpCondition,
-					this.embeddedCondition)) {
+			if (anyMatches(context, metadata, this.nonEmbedded, this.embeddedCondition)) {
 				return ConditionOutcome.match("existing auto database detected");
 			}
 
