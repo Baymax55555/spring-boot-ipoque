@@ -115,7 +115,7 @@ public abstract class ResourceUtils {
 						continue;
 					}
 				}
-				result.add(absolutePath(resource));
+				result.add(resource.getURL().toExternalForm());
 			}
 		}
 		return result;
@@ -127,17 +127,10 @@ public abstract class ResourceUtils {
 		List<String> childFiles = new ArrayList<String>();
 		for (Resource child : children) {
 			if (!child.getFile().isDirectory()) {
-				childFiles.add(absolutePath(child));
+				childFiles.add(child.getURL().toExternalForm());
 			}
 		}
 		return childFiles;
-	}
-
-	private static String absolutePath(Resource resource) throws IOException {
-		if (!resource.getURI().getScheme().equals("file")) {
-			return resource.getURL().toExternalForm();
-		}
-		return resource.getFile().getAbsoluteFile().toURI().toString();
 	}
 
 	private static String stripLeadingSlashes(String path) {
