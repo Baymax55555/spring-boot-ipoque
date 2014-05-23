@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,17 +42,17 @@ public class DependencyCustomizer {
 
 	private final ClassNode classNode;
 
-	private final DependencyResolutionContext dependencyResolutionContext;
+	private final ArtifactCoordinatesResolver coordinatesResolver;
 
 	/**
 	 * Create a new {@link DependencyCustomizer} instance.
 	 * @param loader
 	 */
 	public DependencyCustomizer(GroovyClassLoader loader, ModuleNode moduleNode,
-			DependencyResolutionContext dependencyResolutionContext) {
+			ArtifactCoordinatesResolver coordinatesResolver) {
 		this.loader = loader;
 		this.classNode = moduleNode.getClasses().get(0);
-		this.dependencyResolutionContext = dependencyResolutionContext;
+		this.coordinatesResolver = coordinatesResolver;
 	}
 
 	/**
@@ -62,7 +62,7 @@ public class DependencyCustomizer {
 	protected DependencyCustomizer(DependencyCustomizer parent) {
 		this.loader = parent.loader;
 		this.classNode = parent.classNode;
-		this.dependencyResolutionContext = parent.dependencyResolutionContext;
+		this.coordinatesResolver = parent.coordinatesResolver;
 	}
 
 	public String getVersion(String artifactId) {
@@ -71,8 +71,7 @@ public class DependencyCustomizer {
 	}
 
 	public String getVersion(String artifactId, String defaultVersion) {
-		String version = this.dependencyResolutionContext
-				.getArtifactCoordinatesResolver().getVersion(artifactId);
+		String version = this.coordinatesResolver.getVersion(artifactId);
 		if (version == null) {
 			version = defaultVersion;
 		}
@@ -202,11 +201,9 @@ public class DependencyCustomizer {
 	 */
 	public DependencyCustomizer add(String module, boolean transitive) {
 		if (canAdd()) {
-			ArtifactCoordinatesResolver artifactCoordinatesResolver = this.dependencyResolutionContext
-					.getArtifactCoordinatesResolver();
 			this.classNode.addAnnotation(createGrabAnnotation(
-					artifactCoordinatesResolver.getGroupId(module), module,
-					artifactCoordinatesResolver.getVersion(module), transitive));
+					this.coordinatesResolver.getGroupId(module), module,
+					this.coordinatesResolver.getVersion(module), transitive));
 		}
 		return this;
 	}

@@ -114,7 +114,7 @@ public class BasicBatchConfigurer implements BatchConfigurer {
 		}
 		factory.setTransactionManager(getTransactionManager());
 		factory.afterPropertiesSet();
-		return factory.getObject();
+		return (JobRepository) factory.getObject();
 	}
 
 	protected PlatformTransactionManager createTransactionManager() {

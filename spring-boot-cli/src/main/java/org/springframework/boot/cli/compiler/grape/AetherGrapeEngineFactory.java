@@ -26,6 +26,7 @@ import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;
+import org.eclipse.aether.graph.Dependency;
 import org.eclipse.aether.impl.DefaultServiceLocator;
 import org.eclipse.aether.internal.impl.DefaultRepositorySystem;
 import org.eclipse.aether.repository.RemoteRepository;
@@ -35,7 +36,6 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
-import org.springframework.boot.cli.compiler.DependencyResolutionContext;
 
 /**
  * Utility class to create a pre-configured {@link AetherGrapeEngine}.
@@ -45,8 +45,7 @@ import org.springframework.boot.cli.compiler.DependencyResolutionContext;
 public abstract class AetherGrapeEngineFactory {
 
 	public static AetherGrapeEngine create(GroovyClassLoader classLoader,
-			List<RepositoryConfiguration> repositoryConfigurations,
-			DependencyResolutionContext dependencyResolutionContext) {
+			List<RepositoryConfiguration> repositoryConfigurations) {
 
 		RepositorySystem repositorySystem = createServiceLocator().getService(
 				RepositorySystem.class);
@@ -64,9 +63,12 @@ public abstract class AetherGrapeEngineFactory {
 		new DefaultRepositorySystemSessionAutoConfiguration().apply(
 				repositorySystemSession, repositorySystem);
 
+		List<Dependency> managedDependencies = new ManagedDependenciesFactory()
+				.getManagedDependencies();
+
 		return new AetherGrapeEngine(classLoader, repositorySystem,
 				repositorySystemSession, createRepositories(repositoryConfigurations),
-				dependencyResolutionContext);
+				managedDependencies);
 	}
 
 	private static ServiceLocator createServiceLocator() {
