@@ -19,7 +19,6 @@ package org.springframework.boot.autoconfigure.amqp;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 /**
  * Tests for {@link RabbitProperties}.
@@ -46,7 +45,7 @@ public class RabbitPropertiesTests {
 	@Test
 	public void addressesDoubleValued() {
 		this.properties.setAddresses("myhost:9999,otherhost:1111");
-		assertNull(this.properties.getHost());
+		assertEquals(null, this.properties.getHost());
 		assertEquals(9999, this.properties.getPort());
 	}
 
