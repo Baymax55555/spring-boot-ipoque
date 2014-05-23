@@ -74,6 +74,8 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 	private static final String[] VALIDATOR_CLASSES = { "javax.validation.Validator",
 			"javax.validation.ValidatorFactory" };
 
+	private ConfigurationBeanFactoryMetaData beans = new ConfigurationBeanFactoryMetaData();
+
 	private PropertySources propertySources;
 
 	private Validator validator;
@@ -130,6 +132,13 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 	 */
 	public void setConversionService(ConversionService conversionService) {
 		this.conversionService = conversionService;
+	}
+
+	/**
+	 * @param beans the bean meta data to set
+	 */
+	public void setBeanMetaDataStore(ConfigurationBeanFactoryMetaData beans) {
+		this.beans = beans;
 	}
 
 	@Override
@@ -277,6 +286,11 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 		if (annotation != null || bean instanceof ConfigurationPropertiesHolder) {
 			postProcessBeforeInitialization(bean, beanName, annotation);
 		}
+		annotation = this.beans.findFactoryAnnotation(beanName,
+				ConfigurationProperties.class);
+		if (annotation != null) {
+			postProcessBeforeInitialization(bean, beanName, annotation);
+		}
 		return bean;
 	}
 
@@ -353,7 +367,7 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 	}
 
 	private ConversionService getDefaultConversionService() {
-		if (!this.initialized && this.beanFactory instanceof ListableBeanFactory) {
+		if (!this.initialized) {
 			for (Converter<?, ?> converter : ((ListableBeanFactory) this.beanFactory)
 					.getBeansOfType(Converter.class).values()) {
 				this.defaultConversionService.addConverter(converter);
