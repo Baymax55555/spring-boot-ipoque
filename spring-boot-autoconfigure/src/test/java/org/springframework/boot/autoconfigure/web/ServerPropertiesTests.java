@@ -59,26 +59,6 @@ public class ServerPropertiesTests {
 	}
 
 	@Test
-	public void testServletPathAsMapping() throws Exception {
-		RelaxedDataBinder binder = new RelaxedDataBinder(this.properties, "server");
-		binder.bind(new MutablePropertyValues(Collections.singletonMap(
-				"server.servletPath", "/foo/*")));
-		assertFalse(binder.getBindingResult().hasErrors());
-		assertEquals("/foo/*", this.properties.getServletMapping());
-		assertEquals("/foo", this.properties.getServletPrefix());
-	}
-
-	@Test
-	public void testServletPathAsPrefix() throws Exception {
-		RelaxedDataBinder binder = new RelaxedDataBinder(this.properties, "server");
-		binder.bind(new MutablePropertyValues(Collections.singletonMap(
-				"server.servletPath", "/foo")));
-		assertFalse(binder.getBindingResult().hasErrors());
-		assertEquals("/foo/*", this.properties.getServletMapping());
-		assertEquals("/foo", this.properties.getServletPrefix());
-	}
-
-	@Test
 	public void testTomcatBinding() throws Exception {
 		Map<String, String> map = new HashMap<String, String>();
 		map.put("server.tomcat.access_log_pattern", "%h %t '%r' %s %b");
@@ -115,15 +95,6 @@ public class ServerPropertiesTests {
 		new RelaxedDataBinder(this.properties, "server").bind(new MutablePropertyValues(
 				map));
 		assertEquals("US-ASCII", this.properties.getTomcat().getUriEncoding());
-	}
-
-	@Test
-	public void testCustomizeTomcatHeaderSize() throws Exception {
-		Map<String, String> map = new HashMap<String, String>();
-		map.put("server.tomcat.maxHttpHeaderSize", "9999");
-		new RelaxedDataBinder(this.properties, "server").bind(new MutablePropertyValues(
-				map));
-		assertEquals(9999, this.properties.getTomcat().getMaxHttpHeaderSize());
 	}
 
 }

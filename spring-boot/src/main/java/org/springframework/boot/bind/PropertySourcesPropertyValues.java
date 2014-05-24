@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,10 +88,8 @@ public class PropertySourcesPropertyValues implements PropertyValues {
 						catch (RuntimeException ex) {
 							// Probably could not resolve placeholders, ignore it here
 						}
-						if (!this.propertyValues.containsKey(propertyName)) {
-							this.propertyValues.put(propertyName, new PropertyValue(
-									propertyName, value));
-						}
+						this.propertyValues.put(propertyName, new PropertyValue(
+								propertyName, value));
 					}
 				}
 			}
@@ -101,13 +99,13 @@ public class PropertySourcesPropertyValues implements PropertyValues {
 				for (String propertyName : exacts) {
 					Object value;
 					value = source.getProperty(propertyName);
-					if (value != null && !this.propertyValues.containsKey(propertyName)) {
+					if (value != null) {
 						this.propertyValues.put(propertyName, new PropertyValue(
 								propertyName, value));
 						continue;
 					}
 					value = source.getProperty(propertyName.toUpperCase());
-					if (value != null && !this.propertyValues.containsKey(propertyName)) {
+					if (value != null) {
 						this.propertyValues.put(propertyName, new PropertyValue(
 								propertyName, value));
 						continue;

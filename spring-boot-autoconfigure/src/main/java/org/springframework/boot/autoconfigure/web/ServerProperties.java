@@ -28,7 +28,6 @@ import org.apache.catalina.valves.AccessLogValve;
 import org.apache.catalina.valves.RemoteIpValve;
 import org.apache.coyote.AbstractProtocol;
 import org.apache.coyote.ProtocolHandler;
-import org.apache.coyote.http11.AbstractHttp11Protocol;
 import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizerBeanPostProcessor;
@@ -77,33 +76,6 @@ public class ServerProperties implements EmbeddedServletContainerCustomizer {
 
 	public String getServletPath() {
 		return this.servletPath;
-	}
-
-	public String getServletMapping() {
-		if (this.servletPath.equals("") || this.servletPath.equals("/")) {
-			return "/";
-		}
-		if (this.servletPath.contains("*")) {
-			if (this.servletPath.endsWith("*")) {
-				return this.servletPath;
-			}
-			return this.servletPath;
-		}
-		if (this.servletPath.endsWith("/")) {
-			return this.servletPath + "*";
-		}
-		return this.servletPath + "/*";
-	}
-
-	public String getServletPrefix() {
-		String result = this.servletPath;
-		if (result.contains("*")) {
-			result = result.substring(0, result.indexOf("*"));
-		}
-		if (result.endsWith("/")) {
-			result = result.substring(0, result.length() - 1);
-		}
-		return result;
 	}
 
 	public void setServletPath(String servletPath) {
@@ -174,8 +146,6 @@ public class ServerProperties implements EmbeddedServletContainerCustomizer {
 
 		private int maxThreads = 0; // Number of threads in protocol handler
 
-		private int maxHttpHeaderSize = 0; // bytes
-
 		private String uriEncoding;
 
 		public int getMaxThreads() {
@@ -184,14 +154,6 @@ public class ServerProperties implements EmbeddedServletContainerCustomizer {
 
 		public void setMaxThreads(int maxThreads) {
 			this.maxThreads = maxThreads;
-		}
-
-		public int getMaxHttpHeaderSize() {
-			return this.maxHttpHeaderSize;
-		}
-
-		public void setMaxHttpHeaderSize(int maxHttpHeaderSize) {
-			this.maxHttpHeaderSize = maxHttpHeaderSize;
 		}
 
 		public boolean getAccessLogEnabled() {
@@ -285,19 +247,6 @@ public class ServerProperties implements EmbeddedServletContainerCustomizer {
 				});
 			}
 
-			if (this.maxHttpHeaderSize > 0) {
-				factory.addConnectorCustomizers(new TomcatConnectorCustomizer() {
-					@Override
-					public void customize(Connector connector) {
-						ProtocolHandler handler = connector.getProtocolHandler();
-						if (handler instanceof AbstractHttp11Protocol) {
-							AbstractHttp11Protocol protocol = (AbstractHttp11Protocol) handler;
-							protocol.setMaxHttpHeaderSize(Tomcat.this.maxHttpHeaderSize);
-						}
-					}
-				});
-			}
-
 			if (this.accessLogEnabled) {
 				AccessLogValve valve = new AccessLogValve();
 				String accessLogPattern = getAccessLogPattern();
@@ -315,6 +264,17 @@ public class ServerProperties implements EmbeddedServletContainerCustomizer {
 			}
 		}
 
+	}
+
+	public String getServletPrefix() {
+		String result = this.servletPath;
+		if (result.contains("*")) {
+			result = result.substring(0, result.indexOf("*"));
+		}
+		if (result.endsWith("/")) {
+			result = result.substring(0, result.length() - 1);
+		}
+		return result;
 	}
 
 	public String[] getPathsArray(Collection<String> paths) {

@@ -22,7 +22,6 @@ import org.junit.Test;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.TestAutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.data.alt.CityMongoDbRepository;
-import org.springframework.boot.autoconfigure.data.alt.CitySolrRepository;
 import org.springframework.boot.autoconfigure.data.jpa.City;
 import org.springframework.boot.autoconfigure.data.jpa.CityRepository;
 import org.springframework.boot.autoconfigure.jdbc.EmbeddedDataSourceConfiguration;
@@ -82,9 +81,7 @@ public class JpaRepositoriesAutoConfigurationTests {
 	}
 
 	@Configuration
-	@EnableJpaRepositories(basePackageClasses = org.springframework.boot.autoconfigure.data.alt.CityJpaRepository.class, excludeFilters = {
-			@Filter(type = FilterType.ASSIGNABLE_TYPE, value = CityMongoDbRepository.class),
-			@Filter(type = FilterType.ASSIGNABLE_TYPE, value = CitySolrRepository.class) })
+	@EnableJpaRepositories(basePackageClasses = org.springframework.boot.autoconfigure.data.alt.CityJpaRepository.class, excludeFilters = { @Filter(type = FilterType.ASSIGNABLE_TYPE, value = CityMongoDbRepository.class) })
 	@TestAutoConfigurationPackage(City.class)
 	protected static class CustomConfiguration {
 
