@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,8 +63,7 @@ public class SpringBootCompilerAutoConfiguration extends CompilerAutoConfigurati
 				"org.springframework.core.annotation.Order",
 				"org.springframework.core.io.ResourceLoader",
 				"org.springframework.boot.CommandLineRunner",
-				"org.springframework.boot.autoconfigure.EnableAutoConfiguration",
-				"org.springframework.boot.groovy.GrabMetadata");
+				"org.springframework.boot.autoconfigure.EnableAutoConfiguration");
 		imports.addStarImports("org.springframework.stereotype",
 				"org.springframework.scheduling.annotation");
 	}

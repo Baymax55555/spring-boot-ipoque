@@ -17,7 +17,6 @@
 package org.springframework.boot.autoconfigure.web;
 
 import java.lang.reflect.Field;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -26,14 +25,12 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.joda.time.DateTime;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration.WebMvcAutoConfigurationAdapter;
 import org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizerBeanPostProcessor;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
@@ -43,7 +40,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.format.support.FormattingConversionService;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -63,8 +59,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -155,20 +149,6 @@ public class WebMvcAutoConfigurationTests {
 				equalTo((Resource) new ClassPathResource("/foo/")));
 	}
 
-	@Test
-	public void resourceHandlerMappingDisabled() throws Exception {
-		this.context = new AnnotationConfigEmbeddedWebApplicationContext();
-		EnvironmentTestUtils.addEnvironment(this.context,
-				"spring.resources.add-mappings:false");
-		this.context.register(Config.class, WebMvcAutoConfiguration.class,
-				HttpMessageConvertersAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class);
-		this.context.refresh();
-		Map<String, List<Resource>> mappingLocations = getMappingLocations();
-		assertThat(mappingLocations.size(), equalTo(0));
-	}
-
-	@Test
 	public void noLocaleResolver() throws Exception {
 		this.context = new AnnotationConfigEmbeddedWebApplicationContext();
 		this.context.register(AllResources.class, Config.class,
@@ -200,81 +180,20 @@ public class WebMvcAutoConfigurationTests {
 		assertThat(locale.toString(), equalTo("en_UK"));
 	}
 
-	@Test
-	public void noDateFormat() throws Exception {
-		this.context = new AnnotationConfigEmbeddedWebApplicationContext();
-		this.context.register(AllResources.class, Config.class,
-				WebMvcAutoConfiguration.class,
-				HttpMessageConvertersAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class);
-		this.context.refresh();
-		FormattingConversionService cs = this.context
-				.getBean(FormattingConversionService.class);
-		Date date = new DateTime(1988, 6, 25, 20, 30).toDate();
-		// formatting cs should use simple toString()
-		assertThat(cs.convert(date, String.class), equalTo(date.toString()));
-	}
-
-	@Test
-	public void overrideDateFormat() throws Exception {
-		this.context = new AnnotationConfigEmbeddedWebApplicationContext();
-		// set fixed date format
-		EnvironmentTestUtils.addEnvironment(this.context,
-				"spring.mvc.dateFormat:dd*MM*yyyy");
-		this.context.register(AllResources.class, Config.class,
-				WebMvcAutoConfiguration.class,
-				HttpMessageConvertersAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class);
-		this.context.refresh();
-		FormattingConversionService cs = this.context
-				.getBean(FormattingConversionService.class);
-		Date date = new DateTime(1988, 6, 25, 20, 30).toDate();
-		assertThat(cs.convert(date, String.class), equalTo("25*06*1988"));
-	}
-
-	@Test
-	public void noMessageCodesResolver() throws Exception {
-		this.context = new AnnotationConfigEmbeddedWebApplicationContext();
-		this.context.register(AllResources.class, Config.class,
-				WebMvcAutoConfiguration.class,
-				HttpMessageConvertersAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class);
-		this.context.refresh();
-		assertNull(this.context.getBean(WebMvcAutoConfigurationAdapter.class)
-				.getMessageCodesResolver());
-	}
-
-	@Test
-	public void overrideMessageCodesFormat() throws Exception {
-		this.context = new AnnotationConfigEmbeddedWebApplicationContext();
-		EnvironmentTestUtils.addEnvironment(this.context,
-				"spring.mvc.messageCodesResolverFormat:POSTFIX_ERROR_CODE");
-		this.context.register(AllResources.class, Config.class,
-				WebMvcAutoConfiguration.class,
-				HttpMessageConvertersAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class);
-		this.context.refresh();
-		assertNotNull(this.context.getBean(WebMvcAutoConfigurationAdapter.class)
-				.getMessageCodesResolver());
-	}
-
 	@SuppressWarnings("unchecked")
 	protected Map<String, List<Resource>> getMappingLocations()
 			throws IllegalAccessException {
-		HandlerMapping mapping = (HandlerMapping) this.context
+		SimpleUrlHandlerMapping mapping = (SimpleUrlHandlerMapping) this.context
 				.getBean("resourceHandlerMapping");
+		Field locationsField = ReflectionUtils.findField(
+				ResourceHttpRequestHandler.class, "locations");
+		locationsField.setAccessible(true);
 		Map<String, List<Resource>> mappingLocations = new LinkedHashMap<String, List<Resource>>();
-		if (mapping instanceof SimpleUrlHandlerMapping) {
-			Field locationsField = ReflectionUtils.findField(
-					ResourceHttpRequestHandler.class, "locations");
-			locationsField.setAccessible(true);
-			for (Map.Entry<String, Object> entry : ((SimpleUrlHandlerMapping) mapping)
-					.getHandlerMap().entrySet()) {
-				ResourceHttpRequestHandler handler = (ResourceHttpRequestHandler) entry
-						.getValue();
-				mappingLocations.put(entry.getKey(),
-						(List<Resource>) locationsField.get(handler));
-			}
+		for (Map.Entry<String, Object> entry : mapping.getHandlerMap().entrySet()) {
+			ResourceHttpRequestHandler handler = (ResourceHttpRequestHandler) entry
+					.getValue();
+			mappingLocations.put(entry.getKey(),
+					(List<Resource>) locationsField.get(handler));
 		}
 		return mappingLocations;
 	}

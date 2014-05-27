@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-tools</artifactId>
-		<version>1.1.0.BUILD-SNAPSHOT</version>
+		<version>1.0.3.BUILD-SNAPSHOT</version>
 	</parent>
 	<artifactId>spring-boot-loader</artifactId>
 	<name>Spring Boot Loader</name>
@@ -47,7 +47,6 @@
 			<build>
 				<plugins>
 					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-invoker-plugin</artifactId>
 						<configuration>
 							<cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>

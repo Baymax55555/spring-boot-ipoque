@@ -80,21 +80,10 @@ public class SpringApplicationBuilder {
 	private boolean registerShutdownHookApplied;
 
 	public SpringApplicationBuilder(Object... sources) {
-		this.application = createSpringApplication(sources);
+		this.application = new SpringApplication(sources);
 	}
 
-    /**
-     * Creates a new {@link org.springframework.boot.SpringApplication} instances from the given sources. Subclasses may
-     * override in order to provide a custom subclass of {@link org.springframework.boot.SpringApplication}
-     *
-     * @param sources The sources
-     * @return The {@link org.springframework.boot.SpringApplication} instance
-     */
-    protected SpringApplication createSpringApplication(Object... sources) {
-        return new SpringApplication(sources);
-    }
-
-    /**
+	/**
 	 * Accessor for the current application context.
 	 * @return the current application context (or null if not yet running)
 	 */
