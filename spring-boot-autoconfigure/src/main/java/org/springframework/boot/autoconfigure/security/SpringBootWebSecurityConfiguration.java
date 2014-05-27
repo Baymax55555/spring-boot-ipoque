@@ -28,10 +28,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.Headers;
+import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -90,8 +91,9 @@ public class SpringBootWebSecurityConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public AuthenticationEventPublisher authenticationEventPublisher() {
-		return new DefaultAuthenticationEventPublisher();
+	public AuthenticationEventPublisher authenticationEventPublisher(
+			ApplicationEventPublisher publisher) {
+		return new DefaultAuthenticationEventPublisher(publisher);
 	}
 
 	@Bean
@@ -134,12 +136,15 @@ public class SpringBootWebSecurityConfiguration {
 	}
 
 	// Get the ignored paths in early
-	@Order(Ordered.HIGHEST_PRECEDENCE)
+	@Order(SecurityProperties.IGNORED_ORDER)
 	private static class IgnoredPathsWebSecurityConfigurerAdapter implements
 			WebSecurityConfigurer<WebSecurity> {
 
 		@Autowired
 		private SecurityProperties security;
+
+		@Autowired
+		private ServerProperties server;
 
 		@Override
 		public void configure(WebSecurity builder) throws Exception {
@@ -149,7 +154,8 @@ public class SpringBootWebSecurityConfiguration {
 		public void init(WebSecurity builder) throws Exception {
 			IgnoredRequestConfigurer ignoring = builder.ignoring();
 			List<String> ignored = getIgnored(this.security);
-			ignoring.antMatchers(ignored.toArray(new String[0]));
+			String[] paths = this.server.getPathsArray(ignored);
+			ignoring.antMatchers(paths);
 		}
 
 	}
@@ -182,7 +188,7 @@ public class SpringBootWebSecurityConfiguration {
 
 	@ConditionalOnExpression("${security.basic.enabled:true}")
 	@Configuration
-	@Order(Ordered.LOWEST_PRECEDENCE - 5)
+	@Order(SecurityProperties.BASIC_AUTH_ORDER)
 	protected static class ApplicationWebSecurityConfigurerAdapter extends
 			WebSecurityConfigurerAdapter {
 
