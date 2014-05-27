@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,8 @@ package org.springframework.boot.actuate.health;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 /**
  * Tests for {@link VanillaHealthIndicator}.
@@ -30,7 +31,7 @@ public class VanillaHealthIndicatorTests {
 	@Test
 	public void ok() throws Exception {
 		VanillaHealthIndicator healthIndicator = new VanillaHealthIndicator();
-		assertEquals(Status.UP, healthIndicator.health().getStatus());
+		assertThat(healthIndicator.health(), equalTo("ok"));
 	}
 
 }
