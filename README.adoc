@@ -66,26 +66,7 @@ Having trouble with Spring Boot, We'd like to help!
   you are just starting out with Spring, try one of the http://spring.io/guides[guides].
 * Ask a questions - we monitor http://stackoverflow.com[stackoverflow.com] for questions
   tagged with http://stackoverflow.com/tags/spring-boot[`spring-boot`].
-* Report bugs with Spring Boot at https://github.com/spring-projects/spring-boot/issues[github.com/spring-projects/spring-boot/issues].
-
-
-
-== Reporting Issues
-Spring Boot uses GitHub's integrated issue tracking system to record bugs and feature
-requests. If you want to raise an issue, please follow the recommendations bellow:
-
-* Before you log a bug, please https://github.com/spring-projects/spring-boot/search?type=Issues[search the issue tracker]
-  to see if someone has already reported the problem.
-* If the issue doesn't already exist, https://github.com/spring-projects/spring-boot/issues/new[create a new issue].
-* Please provide as much information as possible with the issue report, we like to know
-  the version of Spring Boot that you are using, as well as your Operating System and
-  JVM version.
-* If you need to paste code, or include a stack trace use Markdown ++$$```$$++ escapes
-  before and after your text.
-* If possible try to create a test-case or project that replicates the issue. You can
-  submit sample projects as pull-requests against the
-  https://github.com/spring-projects/spring-boot-issues[spring-boot-issues] GitHub
-  project. Use the issue number for the name of your project.
+* Report bugs with Spring Boot at https://github.com/spring-projects/spring-boot/issues.
 
 
 
@@ -101,10 +82,7 @@ v3.0.5 or above. You also need JDK 1.7 (although Boot applications can run on Ja
 ----
 
 NOTE: You may need to increase the amount of memory available to Maven by setting
-a `MAVEN_OPTS` environment variable with the value `-Xmx512m -XX:MaxPermSize=128m`. Remember
-to set the corresponding property in your IDE as well if you are building and running
-tests there (e.g. in Eclipse go to `Preferences->Java->Installed JREs` and edit the
-JRE definition so that all processes are launched with those arguments).
+a `MAVEN_OPTS` environment variable with the value `-Xmx512m -XX:MaxPermSize=128m`
 
 _Also see link:CONTRIBUTING.adoc[CONTRIBUTING.adoc] if you wish to submit pull requests,
 and in particular please fill out the

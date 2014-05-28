@@ -20,6 +20,7 @@ import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyClassLoader.ClassCollector;
 import groovy.lang.GroovyCodeSource;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URL;
@@ -42,6 +43,8 @@ import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.ASTTransformationVisitor;
+import org.springframework.boot.cli.compiler.dependencies.ArtifactCoordinatesResolver;
+import org.springframework.boot.cli.compiler.dependencies.ManagedDependenciesArtifactCoordinatesResolver;
 import org.springframework.boot.cli.compiler.grape.AetherGrapeEngine;
 import org.springframework.boot.cli.compiler.grape.AetherGrapeEngineFactory;
 import org.springframework.boot.cli.compiler.grape.GrapeEngineInstaller;
@@ -68,6 +71,8 @@ import org.springframework.boot.cli.util.ResourceUtils;
  */
 public class GroovyCompiler {
 
+	private final ArtifactCoordinatesResolver coordinatesResolver;
+
 	private final GroovyCompilerConfiguration configuration;
 
 	private final ExtendedGroovyClassLoader loader;
@@ -85,10 +90,10 @@ public class GroovyCompiler {
 		this.configuration = configuration;
 		this.loader = createLoader(configuration);
 
-		DependencyResolutionContext resolutionContext = new DependencyResolutionContext();
+		this.coordinatesResolver = new ManagedDependenciesArtifactCoordinatesResolver();
 
 		AetherGrapeEngine grapeEngine = AetherGrapeEngineFactory.create(this.loader,
-				configuration.getRepositoryConfiguration(), resolutionContext);
+				configuration.getRepositoryConfiguration());
 
 		GrapeEngineInstaller.install(grapeEngine);
 
@@ -103,13 +108,12 @@ public class GroovyCompiler {
 		}
 
 		this.transformations = new ArrayList<ASTTransformation>();
-		this.transformations.add(new GrabMetadataTransformation(resolutionContext));
 		this.transformations.add(new DependencyAutoConfigurationTransformation(
-				this.loader, resolutionContext, this.compilerAutoConfigurations));
+				this.loader, this.coordinatesResolver, this.compilerAutoConfigurations));
 		this.transformations.add(new GroovyBeansTransformation());
 		if (this.configuration.isGuessDependencies()) {
 			this.transformations.add(new ResolveDependencyCoordinatesTransformation(
-					resolutionContext));
+					this.coordinatesResolver));
 		}
 	}
 
@@ -181,7 +185,13 @@ public class GroovyCompiler {
 		for (String source : sources) {
 			List<String> paths = ResourceUtils.getUrls(source, this.loader);
 			for (String path : paths) {
-				compilationUnit.addSource(new URL(path));
+				URL url = new URL(path);
+				if ("file".equals(url.getProtocol())) {
+					compilationUnit.addSource(new File(url.getFile()));
+				}
+				else {
+					compilationUnit.addSource(url);
+				}
 			}
 		}
 
@@ -191,8 +201,8 @@ public class GroovyCompiler {
 		for (Object loadedClass : collector.getLoadedClasses()) {
 			classes.add((Class<?>) loadedClass);
 		}
-		ClassNode mainClassNode = getMainClass(compilationUnit);
-
+		ClassNode mainClassNode = (ClassNode) compilationUnit.getAST().getClasses()
+				.get(0);
 		Class<?> mainClass = null;
 		for (Class<?> loadedClass : classes) {
 			if (mainClassNode.getName().equals(loadedClass.getName())) {
@@ -265,7 +275,6 @@ public class GroovyCompiler {
 				throws CompilationFailedException {
 
 			ImportCustomizer importCustomizer = new ImportCustomizer();
-			ClassNode mainClassNode = getMainClass(source.getAST().getClasses());
 
 			// Additional auto configuration
 			for (CompilerAutoConfiguration autoConfiguration : GroovyCompiler.this.compilerAutoConfigurations) {
@@ -274,7 +283,8 @@ public class GroovyCompiler {
 						autoConfiguration.applyImports(importCustomizer);
 						importCustomizer.call(source, context, classNode);
 					}
-					if (classNode.equals(mainClassNode)) {
+					if (source.getAST().getClasses().size() > 0
+							&& classNode.equals(source.getAST().getClasses().get(0))) {
 						autoConfiguration.applyToMainClass(GroovyCompiler.this.loader,
 								GroovyCompiler.this.configuration, context, source,
 								classNode);
@@ -287,25 +297,6 @@ public class GroovyCompiler {
 			}
 			importCustomizer.call(source, context, classNode);
 		}
-
-	}
-
-	@SuppressWarnings("unchecked")
-	private static ClassNode getMainClass(CompilationUnit source) {
-		return getMainClass((List<ClassNode>) source.getAST().getClasses());
-	}
-
-	private static ClassNode getMainClass(List<ClassNode> classes) {
-		for (ClassNode node : classes) {
-			if (AstUtils.hasAtLeastOneAnnotation(node, "Enable*AutoConfiguration")) {
-				return null; // No need to enhance this
-			}
-			if (AstUtils.hasAtLeastOneAnnotation(node, "*Controller", "Configuration",
-					"Component", "*Service", "Repository", "Enable*")) {
-				return node;
-			}
-		}
-		return classes.isEmpty() ? null : classes.get(0);
 
 	}
 

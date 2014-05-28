@@ -54,7 +54,6 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 
 /**
  * Tests for {@link RelaxedDataBinder}.
@@ -73,13 +72,6 @@ public class RelaxedDataBinderTests {
 		VanillaTarget target = new VanillaTarget();
 		bind(target, "foo: bar");
 		assertEquals("bar", target.getFoo());
-	}
-
-	@Test
-	public void testBindChars() throws Exception {
-		VanillaTarget target = new VanillaTarget();
-		bind(target, "bar: foo");
-		assertEquals("foo", new String(target.getBar()));
 	}
 
 	@Test
@@ -186,7 +178,7 @@ public class RelaxedDataBinderTests {
 		BindingResult result = bind(binder, target, "foo: bar\n" + "value: 123\n"
 				+ "bar: spam");
 		assertEquals(123, target.getValue());
-		assertNull(target.getFoo());
+		assertEquals(null, target.getFoo());
 		assertEquals(0, result.getErrorCount());
 	}
 
@@ -664,21 +656,11 @@ public class RelaxedDataBinderTests {
 
 		private String foo;
 
-		private char[] bar;
-
 		private int value;
 
 		private String foo_bar;
 
 		private String fooBaz;
-
-		public char[] getBar() {
-			return this.bar;
-		}
-
-		public void setBar(char[] bar) {
-			this.bar = bar;
-		}
 
 		public int getValue() {
 			return this.value;

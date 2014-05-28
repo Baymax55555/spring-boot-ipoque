@@ -21,16 +21,11 @@ import javax.sql.DataSource;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.junit.Test;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.EnvironmentTestUtils;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for {@link CommonsDataSourceConfiguration}.
@@ -67,9 +62,9 @@ public class CommonsDataSourceConfigurationTests {
 		this.context.refresh();
 		BasicDataSource ds = this.context.getBean(BasicDataSource.class);
 		assertEquals("jdbc:foo//bar/spam", ds.getUrl());
-		assertTrue(ds.getTestWhileIdle());
-		assertTrue(ds.getTestOnBorrow());
-		assertTrue(ds.getTestOnReturn());
+		assertEquals(true, ds.getTestWhileIdle());
+		assertEquals(true, ds.getTestOnBorrow());
+		assertEquals(true, ds.getTestOnReturn());
 		assertEquals(10000, ds.getTimeBetweenEvictionRunsMillis());
 		assertEquals(12345, ds.getMinEvictableIdleTimeMillis());
 		assertEquals(1234, ds.getMaxWait());
@@ -85,18 +80,6 @@ public class CommonsDataSourceConfigurationTests {
 		assertEquals(GenericObjectPool.DEFAULT_MIN_EVICTABLE_IDLE_TIME_MILLIS,
 				ds.getMinEvictableIdleTimeMillis());
 		assertEquals(GenericObjectPool.DEFAULT_MAX_WAIT, ds.getMaxWait());
-	}
-
-	@Configuration
-	@EnableConfigurationProperties
-	protected static class CommonsDataSourceConfiguration {
-
-		@Bean
-		@ConfigurationProperties(prefix = DataSourceAutoConfiguration.CONFIGURATION_PREFIX)
-		public DataSource dataSource() {
-			return DataSourceBuilder.create().type(BasicDataSource.class).build();
-		}
-
 	}
 
 }
