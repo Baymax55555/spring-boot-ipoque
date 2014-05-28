@@ -29,10 +29,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.mongodb.Mongo;
+import com.mongodb.MongoClientOptions;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for Mongo.
- *
+ * 
  * @author Dave Syer
  * @author Oliver Gierke
  * @author Phillip Webb
@@ -44,6 +45,9 @@ public class MongoAutoConfiguration {
 
 	@Autowired
 	private MongoProperties properties;
+
+	@Autowired(required = false)
+	private MongoClientOptions options;
 
 	private Mongo mongo;
 
@@ -57,7 +61,7 @@ public class MongoAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public Mongo mongo() throws UnknownHostException {
-		this.mongo = this.properties.createMongoClient();
+		this.mongo = this.properties.createMongoClient(this.options);
 		return this.mongo;
 	}
 
