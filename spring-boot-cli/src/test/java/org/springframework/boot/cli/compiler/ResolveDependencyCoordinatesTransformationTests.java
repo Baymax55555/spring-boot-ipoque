@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 the original author or authors.
+ * Copyright 2012-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,8 +64,11 @@ public final class ResolveDependencyCoordinatesTransformationTests {
 
 	private final ArtifactCoordinatesResolver coordinatesResolver = mock(ArtifactCoordinatesResolver.class);
 
-	private final ASTTransformation transformation = new ResolveDependencyCoordinatesTransformation(
+	private final DependencyResolutionContext resolutionContext = new DependencyResolutionContext(
 			this.coordinatesResolver);
+
+	private final ASTTransformation transformation = new ResolveDependencyCoordinatesTransformation(
+			this.resolutionContext);
 
 	@Before
 	public void setupExpectations() {

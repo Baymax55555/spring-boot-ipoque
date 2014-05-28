@@ -18,6 +18,8 @@ package org.springframework.boot.cli.compiler.dependencies;
 
 import org.springframework.boot.dependency.tools.Dependency;
 import org.springframework.boot.dependency.tools.ManagedDependencies;
+import org.springframework.boot.dependency.tools.VersionManagedDependencies;
+import org.springframework.util.StringUtils;
 
 /**
  * {@link ArtifactCoordinatesResolver} backed by {@link ManagedDependencies}.
@@ -30,10 +32,10 @@ public class ManagedDependenciesArtifactCoordinatesResolver implements
 	private final ManagedDependencies dependencies;
 
 	public ManagedDependenciesArtifactCoordinatesResolver() {
-		this(ManagedDependencies.get());
+		this(new VersionManagedDependencies());
 	}
 
-	ManagedDependenciesArtifactCoordinatesResolver(ManagedDependencies dependencies) {
+	public ManagedDependenciesArtifactCoordinatesResolver(ManagedDependencies dependencies) {
 		this.dependencies = dependencies;
 	}
 
@@ -49,11 +51,21 @@ public class ManagedDependenciesArtifactCoordinatesResolver implements
 		return (dependency == null ? null : dependency.getVersion());
 	}
 
+	@Override
+	public String getArtifactId(String artifactId) {
+		Dependency dependency = find(artifactId);
+		return (dependency == null ? null : dependency.getArtifactId());
+	}
+
 	private Dependency find(String artifactId) {
+		if (StringUtils.countOccurrencesOf(artifactId, ":") == 2) {
+			String[] tokens = artifactId.split(":");
+			return new Dependency(tokens[0], tokens[1], tokens[2]);
+		}
 		if (artifactId != null) {
 			if (artifactId.startsWith("spring-boot")) {
 				return new Dependency("org.springframework.boot", artifactId,
-						this.dependencies.getVersion());
+						this.dependencies.getSpringBootVersion());
 			}
 			return this.dependencies.find(artifactId);
 		}
