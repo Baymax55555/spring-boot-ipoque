@@ -45,7 +45,7 @@ public class GrabCommand extends OptionParsingCommand {
 	private static final class GrabOptionHandler extends CompilerOptionHandler {
 
 		@Override
-		protected ExitStatus run(OptionSet options) throws Exception {
+		protected void run(OptionSet options) throws Exception {
 			SourceOptions sourceOptions = new SourceOptions(options);
 
 			List<RepositoryConfiguration> repositoryConfiguration = RepositoryConfigurationFactory
@@ -60,7 +60,6 @@ public class GrabCommand extends OptionParsingCommand {
 
 			GroovyCompiler groovyCompiler = new GroovyCompiler(configuration);
 			groovyCompiler.compile(sourceOptions.getSourcesArray());
-			return ExitStatus.OK;
 		}
 
 	}

@@ -111,13 +111,6 @@ public class SpringApplicationTests {
 	}
 
 	@Test
-	public void sourcesMustBeAccessible() throws Exception {
-		this.thrown.expect(IllegalStateException.class);
-		this.thrown.expectMessage("Cannot load configuration");
-		new SpringApplication(InaccessibleConfiguration.class).run();
-	}
-
-	@Test
 	public void disableBanner() throws Exception {
 		SpringApplication application = spy(new SpringApplication(ExampleConfig.class));
 		application.setWebEnvironment(false);
@@ -130,8 +123,8 @@ public class SpringApplicationTests {
 	public void customBanner() throws Exception {
 		SpringApplication application = spy(new SpringApplication(ExampleConfig.class));
 		application.setWebEnvironment(false);
-		application.run("--banner.location=classpath:test-banner.txt");
-		verify(application, never()).printBanner();
+		application.run();
+		verify(application).printBanner();
 	}
 
 	@Test
@@ -276,7 +269,7 @@ public class SpringApplicationTests {
 	}
 
 	@Test
-	public void propertiesFileEnhancesEnvironment() throws Exception {
+	public void proprtiesFileEnhancesEnvironment() throws Exception {
 		SpringApplication application = new SpringApplication(ExampleConfig.class);
 		application.setWebEnvironment(false);
 		ConfigurableEnvironment environment = new StandardEnvironment();
@@ -473,14 +466,6 @@ public class SpringApplicationTests {
 			}
 		}
 		return false;
-	}
-
-	@Configuration
-	protected static class InaccessibleConfiguration {
-
-		private InaccessibleConfiguration() {
-		}
-
 	}
 
 	public static class SpyApplicationContext extends AnnotationConfigApplicationContext {

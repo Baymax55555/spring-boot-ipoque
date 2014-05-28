@@ -25,18 +25,15 @@ import javax.servlet.ServletContext;
 
 import org.apache.tomcat.JarScanner;
 import org.apache.tomcat.JarScannerCallback;
-import org.apache.tomcat.util.scan.StandardJarScanner;
 import org.springframework.util.Assert;
 
 /**
- * {@link JarScanner} decorator allowing alternative default jar pattern matching. This
- * class extends {@link StandardJarScanner} rather than implementing the
- * {@link JarScanner} due to API changes introduced in Tomcat 8.
+ * {@link JarScanner} decorator allowing alternative default jar pattern matching.
  * 
  * @author Phillip Webb
  * @see #apply(TomcatEmbeddedContext, String)
  */
-class SkipPatternJarScanner extends StandardJarScanner {
+class SkipPatternJarScanner implements JarScanner {
 
 	private final JarScanner jarScanner;
 
@@ -61,9 +58,7 @@ class SkipPatternJarScanner extends StandardJarScanner {
 	 * @param pattern the jar skip pattern or {@code null} for defaults
 	 */
 	public static void apply(TomcatEmbeddedContext context, String pattern) {
-		SkipPatternJarScanner scanner = new SkipPatternJarScanner(
-				context.getJarScanner(), pattern);
-		context.setJarScanner(scanner);
+		context.setJarScanner(new SkipPatternJarScanner(context.getJarScanner(), pattern));
 	}
 
 	private static class SkipPattern {

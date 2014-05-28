@@ -58,7 +58,7 @@ public class RabbitAutoconfigurationTests {
 		assertNotNull(connectionFactory);
 		assertNotNull(amqpAdmin);
 		assertEquals(rabbitTemplate.getConnectionFactory(), connectionFactory);
-		assertEquals("localhost", connectionFactory.getHost());
+		assertEquals(connectionFactory.getHost(), "localhost");
 	}
 
 	@Test
@@ -72,9 +72,9 @@ public class RabbitAutoconfigurationTests {
 		this.context.refresh();
 		CachingConnectionFactory connectionFactory = this.context
 				.getBean(CachingConnectionFactory.class);
-		assertEquals("remote-server", connectionFactory.getHost());
-		assertEquals(9000, connectionFactory.getPort());
-		assertEquals("/vhost", connectionFactory.getVirtualHost());
+		assertEquals(connectionFactory.getHost(), "remote-server");
+		assertEquals(connectionFactory.getPort(), 9000);
+		assertEquals(connectionFactory.getVirtualHost(), "/vhost");
 	}
 
 	@Test
@@ -86,7 +86,7 @@ public class RabbitAutoconfigurationTests {
 		this.context.refresh();
 		CachingConnectionFactory connectionFactory = this.context
 				.getBean(CachingConnectionFactory.class);
-		assertEquals("/", connectionFactory.getVirtualHost());
+		assertEquals(connectionFactory.getVirtualHost(), "/");
 	}
 
 	@Test
@@ -98,7 +98,7 @@ public class RabbitAutoconfigurationTests {
 		this.context.refresh();
 		CachingConnectionFactory connectionFactory = this.context
 				.getBean(CachingConnectionFactory.class);
-		assertEquals("/foo", connectionFactory.getVirtualHost());
+		assertEquals(connectionFactory.getVirtualHost(), "/foo");
 	}
 
 	@Test
@@ -110,7 +110,7 @@ public class RabbitAutoconfigurationTests {
 		this.context.refresh();
 		CachingConnectionFactory connectionFactory = this.context
 				.getBean(CachingConnectionFactory.class);
-		assertEquals("/", connectionFactory.getVirtualHost());
+		assertEquals(connectionFactory.getVirtualHost(), "/");
 	}
 
 	@Test
@@ -122,8 +122,8 @@ public class RabbitAutoconfigurationTests {
 		CachingConnectionFactory connectionFactory = this.context
 				.getBean(CachingConnectionFactory.class);
 		assertEquals(rabbitTemplate.getConnectionFactory(), connectionFactory);
-		assertEquals("otherserver", connectionFactory.getHost());
-		assertEquals(8001, connectionFactory.getPort());
+		assertEquals(connectionFactory.getHost(), "otherserver");
+		assertEquals(connectionFactory.getPort(), 8001);
 	}
 
 	@Test

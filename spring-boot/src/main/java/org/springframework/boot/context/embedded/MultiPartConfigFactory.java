@@ -32,7 +32,7 @@ import org.springframework.util.Assert;
  * 
  * @author Phillip Webb
  */
-public class MultipartConfigFactory {
+public class MultiPartConfigFactory {
 
 	private String location;
 

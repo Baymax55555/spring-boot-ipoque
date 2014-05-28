@@ -28,15 +28,14 @@ import org.springframework.boot.actuate.metrics.writer.Delta;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.BoundZSetOperations;
 import org.springframework.data.redis.core.RedisOperations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.Assert;
 
 /**
  * A {@link MetricRepository} implementation for a redis backend. Metric values are stored
- * as zset values plus a regular hash value for the timestamp, both against a key composed
- * of the metric name prefixed with a constant (default "spring.metrics."). If you have
- * multiple metrics repositories all point at the same instance of Redis, it may be useful
- * to change the prefix to be unique (but not if you want them to contribute to the same
- * metrics).
+ * as regular hash values against a key composed of the metric name prefixed with a
+ * constant (default "spring.metrics.").
  * 
  * @author Dave Syer
  */
@@ -52,9 +51,14 @@ public class RedisMetricRepository implements MetricRepository {
 
 	private final RedisOperations<String, String> redisOperations;
 
+	private final ValueOperations<String, Long> longOperations;
+
 	public RedisMetricRepository(RedisConnectionFactory redisConnectionFactory) {
 		Assert.notNull(redisConnectionFactory, "RedisConnectionFactory must not be null");
 		this.redisOperations = RedisUtils.stringTemplate(redisConnectionFactory);
+		RedisTemplate<String, Long> longRedisTemplate = RedisUtils.createRedisTemplate(
+				redisConnectionFactory, Long.class);
+		this.longOperations = longRedisTemplate.opsForValue();
 		this.zSetOperations = this.redisOperations.boundZSetOps(this.key);
 	}
 
@@ -71,7 +75,7 @@ public class RedisMetricRepository implements MetricRepository {
 
 	/**
 	 * The redis key to use to store the index of other keys. The redis store will hold a
-	 * zset under this key. Defaults to "keys.spring.metrics". Read operations, especially
+	 * zset under this key. Defaults to "keys.spring.metrics". REad operations, especially
 	 * {@link #findAll()} and {@link #count()}, will be much more efficient if the key is
 	 * unique to the {@link #setPrefix(String) prefix} of this repository.
 	 * @param key the key to set
@@ -85,7 +89,7 @@ public class RedisMetricRepository implements MetricRepository {
 	public Metric<?> findOne(String metricName) {
 		String redisKey = keyFor(metricName);
 		String raw = this.redisOperations.opsForValue().get(redisKey);
-		return deserialize(redisKey, raw, this.zSetOperations.score(redisKey));
+		return deserialize(redisKey, raw);
 	}
 
 	@Override
@@ -98,8 +102,7 @@ public class RedisMetricRepository implements MetricRepository {
 		List<Metric<?>> result = new ArrayList<Metric<?>>(keys.size());
 		List<String> values = this.redisOperations.opsForValue().multiGet(keys);
 		for (String v : values) {
-			String key = keysIt.next();
-			Metric<?> value = deserialize(key, v, this.zSetOperations.score(key));
+			Metric<?> value = deserialize(keysIt.next(), v);
 			if (value != null) {
 				result.add(value);
 			}
@@ -118,19 +121,15 @@ public class RedisMetricRepository implements MetricRepository {
 		String name = delta.getName();
 		String key = keyFor(name);
 		trackMembership(key);
-		double value = this.zSetOperations.incrementScore(key, delta.getValue()
-				.doubleValue());
-		String raw = serialize(new Metric<Double>(name, value, delta.getTimestamp()));
-		this.redisOperations.opsForValue().set(key, raw);
+		this.longOperations.increment(key, delta.getValue().longValue());
 	}
 
 	@Override
 	public void set(Metric<?> value) {
+		String raw = serialize(value);
 		String name = value.getName();
 		String key = keyFor(name);
 		trackMembership(key);
-		this.zSetOperations.add(key, value.getValue().doubleValue());
-		String raw = serialize(value);
 		this.redisOperations.opsForValue().set(key, raw);
 	}
 
@@ -142,16 +141,18 @@ public class RedisMetricRepository implements MetricRepository {
 		}
 	}
 
-	private Metric<?> deserialize(String redisKey, String v, Double value) {
+	private Metric<?> deserialize(String redisKey, String v) {
 		if (redisKey == null || v == null || !redisKey.startsWith(this.prefix)) {
 			return null;
 		}
-		Date timestamp = new Date(Long.valueOf(v));
+		String[] vals = v.split("@");
+		Double value = Double.valueOf(vals[0]);
+		Date timestamp = vals.length > 1 ? new Date(Long.valueOf(vals[1])) : new Date();
 		return new Metric<Double>(nameFor(redisKey), value, timestamp);
 	}
 
 	private String serialize(Metric<?> entity) {
-		return String.valueOf(entity.getTimestamp().getTime());
+		return String.valueOf(entity.getValue()) + "@" + entity.getTimestamp().getTime();
 	}
 
 	private String keyFor(String name) {
@@ -163,7 +164,7 @@ public class RedisMetricRepository implements MetricRepository {
 	}
 
 	private void trackMembership(String redisKey) {
-		this.zSetOperations.incrementScore(redisKey, 0.0D);
+		this.zSetOperations.add(redisKey, 0.0D);
 	}
 
 }

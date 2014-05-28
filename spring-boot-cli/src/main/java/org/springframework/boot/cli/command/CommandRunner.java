@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.boot.cli.command.Command.ExitStatus;
 import org.springframework.boot.cli.util.Log;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -167,9 +166,8 @@ public class CommandRunner implements Iterable<Command> {
 			System.setProperty("debug", "true");
 		}
 		try {
-			ExitStatus result = run(argsWithoutDebugFlags);
-			// The caller will hang up if it gets a non-zero status
-			return result==null ? 0 : result.isHangup() ? (result.getCode()>0 ? result.getCode() : 1) : 0;
+			run(argsWithoutDebugFlags);
+			return 0;
 		}
 		catch (NoArgumentsException ex) {
 			showUsage();
@@ -199,7 +197,7 @@ public class CommandRunner implements Iterable<Command> {
 	 * @param args the arguments
 	 * @throws Exception
 	 */
-	protected ExitStatus run(String... args) throws Exception {
+	protected void run(String... args) throws Exception {
 		if (args.length == 0) {
 			throw new NoArgumentsException();
 		}
@@ -211,7 +209,7 @@ public class CommandRunner implements Iterable<Command> {
 		}
 		beforeRun(command);
 		try {
-			return command.run(commandArguments);
+			command.run(commandArguments);
 		}
 		finally {
 			afterRun(command);

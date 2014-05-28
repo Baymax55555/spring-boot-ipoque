@@ -20,7 +20,6 @@ import java.util.Date;
 import java.util.Map;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -75,9 +74,8 @@ public class SampleMethodSecurityApplication extends WebMvcConfigurerAdapter {
 
 	@Order(Ordered.HIGHEST_PRECEDENCE)
 	@Configuration
-	protected static class AuthenticationSecurity extends
-			GlobalAuthenticationConfigurerAdapter {
-
+	protected static class AuthenticationSecurity extends GlobalAuthenticationConfigurerAdapter {
+		
 		@Override
 		public void init(AuthenticationManagerBuilder auth) throws Exception {
 			// @formatter:off
@@ -87,8 +85,8 @@ public class SampleMethodSecurityApplication extends WebMvcConfigurerAdapter {
 			// @formatter:on
 		}
 	}
-
-	@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
+	
+	@Order(Ordered.LOWEST_PRECEDENCE - 8)
 	protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
 
 		@Override

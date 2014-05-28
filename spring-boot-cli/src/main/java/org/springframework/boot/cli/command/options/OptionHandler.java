@@ -38,7 +38,6 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpecBuilder;
 
-import org.springframework.boot.cli.command.Command.ExitStatus;
 import org.springframework.boot.cli.command.OptionParsingCommand;
 
 /**
@@ -81,7 +80,7 @@ public class OptionHandler {
 		this.closure = closure;
 	}
 
-	public final ExitStatus run(String... args) throws Exception {
+	public final void run(String... args) throws Exception {
 		String[] argsToUse = args.clone();
 		for (int i = 0; i < argsToUse.length; i++) {
 			if ("-cp".equals(argsToUse[i])) {
@@ -89,29 +88,18 @@ public class OptionHandler {
 			}
 		}
 		OptionSet options = getParser().parse(args);
-		return run(options);
+		run(options);
 	}
 
 	/**
 	 * Run the command using the specified parsed {@link OptionSet}.
 	 * @param options the parsed option set
-	 * @return an ExitStatus
 	 * @throws Exception
 	 */
-	protected ExitStatus run(OptionSet options) throws Exception {
+	protected void run(OptionSet options) throws Exception {
 		if (this.closure != null) {
-			Object result = this.closure.call(options);
-			if (result instanceof ExitStatus) {
-				return (ExitStatus) result;
-			}
-			if (result instanceof Boolean) {
-				return (Boolean) result ? ExitStatus.OK : ExitStatus.ERROR;
-			}
-			if (result instanceof Integer) {
-				return new ExitStatus((Integer) result, "Finished");
-			}
+			this.closure.call(options);
 		}
-		return ExitStatus.OK;
 	}
 
 	public String getHelp() {
