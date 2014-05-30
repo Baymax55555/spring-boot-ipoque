@@ -35,7 +35,7 @@ public class PromptCommand extends AbstractCommand {
 	}
 
 	@Override
-	public ExitStatus run(String... strings) throws Exception {
+	public void run(String... strings) throws Exception {
 		if (strings.length > 0) {
 			for (String string : strings) {
 				this.prompts.pushPrompt(string + " ");
@@ -44,7 +44,6 @@ public class PromptCommand extends AbstractCommand {
 		else {
 			this.prompts.popPrompt();
 		}
-		return ExitStatus.OK;
 	}
 
 }

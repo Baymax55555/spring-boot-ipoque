@@ -31,7 +31,8 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.bind.PropertiesConfigurationFactory;
+import org.springframework.boot.bind.PropertySourcesPropertyValues;
+import org.springframework.boot.bind.RelaxedDataBinder;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.boot.context.event.ApplicationPreparedEvent;
 import org.springframework.boot.env.EnumerableCompositePropertySource;
@@ -53,7 +54,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.springframework.validation.BindException;
 
 /**
  * {@link ApplicationListener} that configures the context environment by loading
@@ -152,7 +152,12 @@ public class ConfigFileApplicationListener implements
 			ResourceLoader resourceLoader) {
 		RandomValuePropertySource.addToEnvironment(environment);
 		try {
+			PropertySource<?> defaultProperties = environment.getPropertySources()
+					.remove(DEFAULT_PROPERTIES);
 			new Loader(environment, resourceLoader).load();
+			if (defaultProperties != null) {
+				environment.getPropertySources().addLast(defaultProperties);
+			}
 		}
 		catch (IOException ex) {
 			throw new IllegalStateException("Unable to load configuration files", ex);
@@ -166,17 +171,9 @@ public class ConfigFileApplicationListener implements
 	 */
 	protected void bindToSpringApplication(ConfigurableEnvironment environment,
 			SpringApplication application) {
-		PropertiesConfigurationFactory<SpringApplication> binder = new PropertiesConfigurationFactory<SpringApplication>(
-				application);
-		binder.setTargetName("spring.main");
+		RelaxedDataBinder binder = new RelaxedDataBinder(application, "spring.main");
 		binder.setConversionService(this.conversionService);
-		binder.setPropertySources(environment.getPropertySources());
-		try {
-			binder.bindPropertiesToTarget();
-		}
-		catch (BindException ex) {
-			throw new IllegalStateException("Cannot bind to SpringApplication", ex);
-		}
+		binder.bind(new PropertySourcesPropertyValues(environment.getPropertySources()));
 	}
 
 	/**
@@ -291,12 +288,7 @@ public class ConfigFileApplicationListener implements
 				// Pre-existing active profiles set via Environment.setActiveProfiles()
 				// are additional profiles and config files are allowed to add more if
 				// they want to, so don't call addActiveProfiles() here.
-				List<String> list = new ArrayList<String>(Arrays.asList(this.environment
-						.getActiveProfiles()));
-				// Reverse them so the order is the same as from getProfilesForValue()
-				// (last one wins when properties are eventually resolved)
-				Collections.reverse(list);
-				this.profiles.addAll(list);
+				this.profiles.addAll(Arrays.asList(this.environment.getActiveProfiles()));
 			}
 
 			// The default profile for these purposes is represented as null. We add it
@@ -451,7 +443,6 @@ public class ConfigFileApplicationListener implements
 			for (PropertySource<?> item : sources) {
 				reorderedSources.add(item);
 			}
-			// Maybe we should add before the DEFAULT_PROPERTIES if it exists?
 			this.environment.getPropertySources().addLast(
 					new ConfigurationPropertySources(reorderedSources));
 		}

@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.springframework.boot.cli.command.jar.JarCommand;
 import org.springframework.boot.cli.infrastructure.CommandLineInvoker;
 import org.springframework.boot.cli.infrastructure.CommandLineInvoker.Invocation;
-import org.springframework.boot.loader.tools.JavaExecutable;
+import org.springframework.boot.cli.util.JavaExecutable;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -80,7 +80,5 @@ public class JarCommandIT {
 		assertThat(invocation.getStandardOutput(), containsString("/static/static.txt"));
 		assertThat(invocation.getStandardOutput(),
 				containsString("/templates/template.txt"));
-		assertThat(invocation.getStandardOutput(),
-				containsString("Goodbye Mama"));
 	}
 }

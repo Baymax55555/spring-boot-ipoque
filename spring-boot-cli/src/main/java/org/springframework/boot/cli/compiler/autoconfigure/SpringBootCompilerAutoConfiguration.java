@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.springframework.boot.cli.compiler.autoconfigure;
 import groovy.lang.GroovyClassLoader;
 
 import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.CompilationFailedException;
@@ -64,12 +63,7 @@ public class SpringBootCompilerAutoConfiguration extends CompilerAutoConfigurati
 				"org.springframework.core.annotation.Order",
 				"org.springframework.core.io.ResourceLoader",
 				"org.springframework.boot.CommandLineRunner",
-				"org.springframework.boot.context.properties.ConfigurationProperties",
-				"org.springframework.boot.context.properties.EnableConfigurationProperties",
-				"org.springframework.boot.autoconfigure.EnableAutoConfiguration",
-				"org.springframework.boot.context.properties.ConfigurationProperties",
-				"org.springframework.boot.context.properties.EnableConfigurationProperties",
-				"org.springframework.boot.groovy.GrabMetadata");
+				"org.springframework.boot.autoconfigure.EnableAutoConfiguration");
 		imports.addStarImports("org.springframework.stereotype",
 				"org.springframework.scheduling.annotation");
 	}
@@ -84,9 +78,16 @@ public class SpringBootCompilerAutoConfiguration extends CompilerAutoConfigurati
 	private void addEnableAutoConfigurationAnnotation(SourceUnit source,
 			ClassNode classNode) {
 		if (!hasEnableAutoConfigureAnnotation(classNode)) {
-			AnnotationNode annotationNode = new AnnotationNode(
-					ClassHelper.make("EnableAutoConfiguration"));
-			classNode.addAnnotation(annotationNode);
+			try {
+				Class<?> annotationClass = source.getClassLoader().loadClass(
+						"org.springframework.boot.autoconfigure.EnableAutoConfiguration");
+				AnnotationNode annotationNode = new AnnotationNode(new ClassNode(
+						annotationClass));
+				classNode.addAnnotation(annotationNode);
+			}
+			catch (ClassNotFoundException ex) {
+				throw new IllegalStateException(ex);
+			}
 		}
 	}
 
