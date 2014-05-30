@@ -85,7 +85,7 @@ public class RunCommand extends OptionParsingCommand {
 		}
 
 		@Override
-		protected synchronized ExitStatus run(OptionSet options) throws Exception {
+		protected synchronized void run(OptionSet options) throws Exception {
 
 			if (this.runner != null) {
 				throw new RuntimeException(
@@ -105,8 +105,6 @@ public class RunCommand extends OptionParsingCommand {
 			this.runner = new SpringApplicationRunner(configuration,
 					sourceOptions.getSourcesArray(), sourceOptions.getArgsArray());
 			this.runner.compileAndRun();
-			
-			return ExitStatus.OK;
 		}
 
 		/**

@@ -47,12 +47,6 @@ By default `INFO` logging messages will be shown, including some relevant startu
 such as the user that launched the application.
 
 
-[[boot-features-banner]]
-=== Customizing the Banner
-The banner that is printed on start up can be changed by adding a `banner.txt` file
-to your classpath, or by setting `banner.location` to the location of such a file.
-If the file has an unusual encoding you can set `banner.encoding` (default is UTF-8).
-
 
 [[boot-features-customizing-spring-application]]
 === Customizing SpringApplication
@@ -693,7 +687,7 @@ The following items are output:
 
 [[boot-features-logging-console-output]]
 === Console output
-The default log configuration will echo messages to the console as they are written. By
+The default log configuration will echo messages to the console as they written. By
 default `ERROR`, `WARN` and `INFO` level messages are logged. To also log `DEBUG` level
 messages to the console you can start your application with a `--debug` flag.
 
@@ -723,10 +717,7 @@ As with console output, `ERROR`, `WARN` and `INFO` level messages are logged by 
 The various logging systems can be activated by including the appropriate libraries on
 the classpath, and further customized by providing a suitable configuration file in the
 root of the classpath, or in a location specified by the Spring `Environment` property
-`logging.config`. (Note however that since logging is initialized *before* the `ApplicationContext
-is created, it isn't possible to control logging from `@PropertySources` in Spring
-`@Configuration` files.  System properties and the conventional Spring Boot external
-configuration files work just fine.)
+`logging.config`.
 
 Depending on your logging system, the following files will be loaded:
 
@@ -834,7 +825,6 @@ The auto-configuration adds the following features on top of Spring's defaults:
 * Support for serving static resources, including support for WebJars (see below).
 * Automatic registration of `Converter`, `GenericConverter`, `Formatter` beans.
 * Support for `HttpMessageConverters` (see below).
-* Automatic registration of `MessageCodeResolver` (see below)
 * Static `index.html` support.
 * Custom `Favicon` support.
 
@@ -873,20 +863,13 @@ If you need to add or customize converters you can use Spring Boot's
 	}
 ----
 
-[[boot-features-spring-message-codes]]
-==== MessageCodesResolver
-Spring MVC has a strategy for generating error codes for rendering error messages
-from binding errors: `MessageCodesResolver`. Spring Boot will create one for you if
-you set the `spring.mvc.message-codes-resolver.format` property `PREFIX_ERROR_CODE` or
-`POSTFIX_ERROR_CODE` (see the enumeration in `DefaultMessageCodesResolver.Format`).
-
 
 
 [[boot-features-spring-mvc-static-content]]
 ==== Static Content
 By default Spring Boot will serve static content from a folder called `/static` (or
 `/public` or `/resources` or `/META-INF/resources`) in the classpath or from the root
-of the `ServletContext`.  It uses the `ResourceHttpRequestHandler` from Spring MVC so you
+of the `ServeltContext`.  It uses the `ResourceHttpRequestHandler` from Spring MVC so you
 can modify that behavior by adding your own `WebMvcConfigurerAdapter` and overriding the
 `addResourceHandlers` method.
 
@@ -908,63 +891,19 @@ and it will be silently ignored by most build tools if you generate a jar.
 
 [[boot-features-spring-mvc-template-engines]]
 ==== Template engines
-
 As well as REST web services, you can also use Spring MVC to serve dynamic HTML content.
-Spring MVC supports a variety of templating technologies including Velocity, FreeMarker
+Spring MVC supports a variety of templating technologies including: velocity, freemarker,
 and JSPs. Many other templating engines also ship their own Spring MVC integrations.
 
-Spring Boot includes auto-configuration support for the following templating engines:
-
- * http://freemarker.org/docs/[FreeMarker]
- * http://beta.groovy-lang.org/docs/groovy-2.3.0/html/documentation/markup-template-engine.html[Groovy]
- * http://www.thymeleaf.org[Thymeleaf]
- * http://velocity.apache.org[Velocity]
-
-When you're using one of these templating engines with the default configuration, your templates
-will be picked up automatically from `src/main/resources/templates`.
+Spring Boot includes auto-configuration support for the Thymeleaf templating engine.
+Thymeleaf is an XML/XHTML/HTML5 template engine that can work both in web and non-web
+environments. It allows you to create natural templates that can be correctly displayed
+by browsers and therefore work also as static prototypes. Thymeleaf templates will be
+picked up automatically from `src/main/resources/templates`.
 
 TIP: JSPs should be avoided if possible, there are several
 <<boot-features-jsp-limitations, known limitations>> when using them with embedded
 servlet containers.
-
-
-
-[[boot-features-error-handling]]
-==== Error Handling
-Spring Boot provides an `/error` mapping by default that handles all errors in a
-sensible way, and it is registered as a ``global'' error page in the servlet container.
-For machine clients it will produce a JSON response with details of the error, the HTTP
-status and the exception message. For browser clients there is a ``whitelabel'' error
-view that renders the same data in HTML format (to customize it just add a `View` that
-resolves to ``error''). To replace the default behaviour completely you can implement
-`ErrorController` and register a bean definition of that type, or simply add a bean
-of type `ErrorAttributes` to use the existing mechanism but replace the contents.
-
-If you want more specific error pages for some conditions, the embedded servlet containers
-support a uniform Java DSL for customizing the error handling. For example:
-
-[source,java,indent=0,subs="verbatim,quotes,attributes"]
-----
-	@Bean
-	public EmbeddedServletContainerCustomizer containerCustomizer(){
-		return new MyCustomizer();
-	}
-
-	// ...
-
-	private static class MyCustomizer implements EmbeddedServletContainerCustomizer {
-
-		@Override
-		public void customize(ConfigurableEmbeddedServletContainer factory) {
-            factory.addErrorPages(new ErrorPage(HttpStatus.BAD_REQUEST, "/400"));
-		}
-
-	}
-----
-
-You can also use regular Spring MVC features like http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#mvc-exception-handlers[`@ExceptionHandler`
-methods] and http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#mvc-ann-controller-advice[`@ControllerAdvice`].
-The `ErrorController` will then pick up any unhandled exceptions.
 
 
 
@@ -1099,16 +1038,9 @@ Additional information can be found in the {spring-security-reference}#jc-method
 Security Reference].
 
 The default `AuthenticationManager` has a single user (``user'' username and random
-password, printed at INFO level when the application starts up)
-
-[indent=0]
-----
-	Using default security password: 78fa095d-3f4c-48b1-ad50-e24c31d5cf35
-----
-
-You can change the password by providing a `security.user.password`. This and other
-useful properties are externalized via
-{sc-spring-boot-autoconfigure}/security/SecurityProperties.{sc-ext}[`SecurityProperties`]
+password, printed at INFO level when the application starts up). You can change the
+password by providing a `security.user.password`. This and other useful properties are
+externalized via {sc-spring-boot-autoconfigure}/security/SecurityProperties.{sc-ext}[`SecurityProperties`]
 (properties prefix "security").
 
 The default security configuration is implemented in `SecurityAutoConfiguration` and in
@@ -1134,9 +1066,7 @@ The basic features you get out of the box in a web application are:
   on by default.
 
 All of the above can be switched on and off or modified using external properties
-(`security.*`). To override the access rules without changing any other autoconfigured
-features add a `@Bean` of type `WebConfigurerAdapter` with
-`@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)`.
+(`security.*`).
 
 If the Actuator is also in use, you will find:
 
@@ -1145,12 +1075,7 @@ If the Actuator is also in use, you will find:
 * The default user will have the "ADMIN" role as well as the "USER" role.
 
 The Actuator security features can be modified using external properties
-(`management.security.*`). To override the application access rules
-add a `@Bean` of type `WebConfigurerAdapter` and use
-`@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)` if you _don't_ want to override
-the actuator access rules, or `@Order(ManagementServerProperties.ACCESS_OVERRIDE_ORDER)`
-if you _do_ want to override the actuator access rules.
-
+(`management.security.*`).
 
 
 
@@ -1402,10 +1327,8 @@ following to your `application.properties`.
 NOTE: Hibernate's own internal property name for this (if you happen to remember it
 better) is `hibernate.hbm2ddl.auto`. You can set it, along with other Hibernate native
 properties, using `spring.jpa.properties.*` (the prefix is stripped before adding them
-to the entity manager). By default the DDL execution (or validation) is deferred until
-the `ApplicationContext` has started. There is also a `spring.jpa.generate-ddl` flag, but
-it is not used if Hibernate autoconfig is active because the `ddl-auto`
-settings are more fine grained.
+to the entity manager). Alternatively, `spring.jpa.generate-ddl=false` switches off all
+DDL generation.
 
 
 
@@ -1547,20 +1470,20 @@ documentation].
 [[boot-features-testing]]
 == Testing
 Spring Boot provides a number of useful tools for testing your application. The
-`spring-boot-starter-test` POM provides Spring Test, JUnit, Hamcrest and Mockito
+`spring-boot-starter-parent` POM provides JUnit, Hamcrest and Mockito ``test'' `scope`
 dependencies. There are also useful test utilities in the core `spring-boot` module
-under the `org.springframework.boot.test` package.
+under the `org.springframework.boot.test` package. There is also a
+`spring-boot-starter-test` ``Starter POM''.
 
 
 
 [[boot-features-test-scope-dependencies]]
 === Test scope dependencies
-If you use the
+If you extend your Maven project from the `spring-boot-starter-parent` POM, or use the
 `spring-boot-starter-test` ``Starter POM'' (in the `test` `scope`), you will find
 the following provided libraries:
 
-* Spring Test -- integration test support for Spring applications.
-* Junit -- The de-facto standard for unit testing Java applications.
+* JUnit -- The de-facto standard for unit testing Java applications.
 * Hamcrest -- A library of matcher objects (also known as constraints or predicates)
   allowing `assertThat` style JUnit assertions.
 * Mockito -- A Java mocking framework.
@@ -1649,31 +1572,8 @@ interaction. For Example:
 	}
 ----
 
-NOTE: Spring's test framework will cache application contexts between tests. Therefore,
-as long as your tests share the same configuration, the time consuming process of starting
-and stopping the server will only happen once, regardless of the number of tests that
-actually run.
-
 To change the port you can add environment properties to `@IntegrationTest` as colon- or
 equals-separated name-value pairs, e.g. `@IntegrationTest("server.port:9000")`.
-Additionally you can set the `server.port` and `management.port` properties to `0`
-in order to run your integration tests using random ports. For example:
-
-[source,java,indent=0,subs="verbatim,quotes,attributes"]
-----
-	@RunWith(SpringJUnit4ClassRunner.class)
-	@SpringApplicationConfiguration(classes = MyApplication.class)
-	@WebAppConfiguration
-	@IntegrationTest({"server.port=0", "management.port=0"})
-	public class SomeIntegrationTests {
-
-		// ...
-
-	}
-----
-
-See <<howto-discover-the-http-port-at-runtime>> for a description of how you can discover
-the actual port that was allocated for the duration of the tests.
 
 
 

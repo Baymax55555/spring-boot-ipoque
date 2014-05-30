@@ -53,7 +53,7 @@ public class ExtendedGroovyClassLoaderTests {
 	}
 
 	@Test
-	public void filtersNonGroovy() throws Exception {
+	public void filteresNonGroovy() throws Exception {
 		this.contextClassLoader.loadClass("org.springframework.util.StringUtils");
 		this.thrown.expect(ClassNotFoundException.class);
 		this.defaultScopeGroovyClassLoader

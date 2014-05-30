@@ -297,11 +297,6 @@ public final class MimeMappings implements Iterable<Mapping> {
 	}
 
 	@Override
-	public int hashCode() {
-		return this.map.hashCode();
-	}
-
-	@Override
 	public boolean equals(Object obj) {
 		if (obj == null) {
 			return false;
@@ -314,6 +309,11 @@ public final class MimeMappings implements Iterable<Mapping> {
 			return this.map.equals(other.map);
 		}
 		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return this.map.hashCode();
 	}
 
 	/**
@@ -351,11 +351,6 @@ public final class MimeMappings implements Iterable<Mapping> {
 		}
 
 		@Override
-		public int hashCode() {
-			return this.extension.hashCode();
-		}
-
-		@Override
 		public boolean equals(Object obj) {
 			if (obj == null) {
 				return false;
@@ -369,6 +364,11 @@ public final class MimeMappings implements Iterable<Mapping> {
 						&& this.mimeType.equals(other.mimeType);
 			}
 			return false;
+		}
+
+		@Override
+		public int hashCode() {
+			return this.extension.hashCode();
 		}
 
 	}

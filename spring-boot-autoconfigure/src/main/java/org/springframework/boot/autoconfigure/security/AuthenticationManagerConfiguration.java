@@ -34,10 +34,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.SecurityConfigurer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -47,7 +45,6 @@ import org.springframework.security.config.annotation.authentication.configurers
  * Configuration for a Spring Security in-memory {@link AuthenticationManager}.
  * 
  * @author Dave Syer
- * @author Rob Winch
  */
 @Configuration
 @ConditionalOnBean(ObjectPostProcessor.class)
@@ -68,9 +65,6 @@ public class AuthenticationManagerConfiguration extends
 	@Autowired
 	private SecurityProperties security;
 
-	@Autowired
-	private AuthenticationEventPublisher authenticationEventPublisher;
-
 	private BootDefaultingAuthenticationConfigurerAdapter configurer = new BootDefaultingAuthenticationConfigurerAdapter();
 
 	@Override
@@ -89,13 +83,7 @@ public class AuthenticationManagerConfiguration extends
 	@Lazy
 	@Scope(proxyMode = ScopedProxyMode.INTERFACES)
 	protected AuthenticationManager lazyAuthenticationManager() {
-		AuthenticationManager manager = this.configurer.getAuthenticationManagerBuilder()
-				.getOrBuild();
-		if (manager instanceof ProviderManager) {
-			((ProviderManager) manager)
-					.setAuthenticationEventPublisher(this.authenticationEventPublisher);
-		}
-		return manager;
+		return this.configurer.getAuthenticationManagerBuilder().getOrBuild();
 	}
 
 	/**
@@ -119,6 +107,8 @@ public class AuthenticationManagerConfiguration extends
 	 * allowed in the configure stage. It is not allowed because we guarantee all init
 	 * methods are invoked before configure, which cannot be guaranteed at this point.</li>
 	 * </ul>
+	 * 
+	 * @author Rob Winch
 	 */
 	private class BootDefaultingAuthenticationConfigurerAdapter extends
 			GlobalAuthenticationConfigurerAdapter {
@@ -138,8 +128,8 @@ public class AuthenticationManagerConfiguration extends
 
 			User user = AuthenticationManagerConfiguration.this.security.getUser();
 			if (user.isDefaultPassword()) {
-				logger.info("\n\nUsing default security password: " + user.getPassword()
-						+ "\n\n");
+				logger.info("\n\nUsing default password for application endpoints: "
+						+ user.getPassword() + "\n\n");
 			}
 
 			this.defaultAuth = new AuthenticationManagerBuilder(

@@ -21,7 +21,6 @@ package org.springframework.boot.cli.compiler.grape;
  * 
  * @author Andy Wilkinson
  */
-@SuppressWarnings("serial")
 public class DependencyResolutionFailedException extends RuntimeException {
 
 	/**

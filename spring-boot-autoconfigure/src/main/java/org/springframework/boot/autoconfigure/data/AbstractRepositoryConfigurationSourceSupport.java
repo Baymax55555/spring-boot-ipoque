@@ -55,9 +55,8 @@ public abstract class AbstractRepositoryConfigurationSourceSupport implements
 	@Override
 	public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata,
 			BeanDefinitionRegistry registry) {
-		new RepositoryConfigurationDelegate(getConfigurationSource(),
-				this.resourceLoader, this.environment).registerRepositoriesIn(registry,
-				getRepositoryConfigurationExtension());
+		new RepositoryConfigurationDelegate(getConfigurationSource(), this.resourceLoader)
+				.registerRepositoriesIn(registry, getRepositoryConfigurationExtension());
 	}
 
 	private AnnotationRepositoryConfigurationSource getConfigurationSource() {
