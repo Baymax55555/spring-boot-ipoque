@@ -30,7 +30,7 @@ import org.springframework.core.type.ClassMetadata;
  * @author Dave Syer
  * @see ConditionalOnExpression
  */
-class OnExpressionCondition extends SpringBootCondition {
+public class OnExpressionCondition extends SpringBootCondition {
 
 	@Override
 	public ConditionOutcome getMatchOutcome(ConditionContext context,

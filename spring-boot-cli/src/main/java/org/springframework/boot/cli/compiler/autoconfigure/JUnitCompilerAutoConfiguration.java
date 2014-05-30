@@ -38,14 +38,12 @@ public class JUnitCompilerAutoConfiguration extends CompilerAutoConfiguration {
 	@Override
 	public void applyDependencies(DependencyCustomizer dependencies)
 			throws CompilationFailedException {
-		dependencies.add("spring-boot-starter-test");
+		dependencies.add("junit").add("spring-test", "hamcrest-library");
 	}
 
 	@Override
-	public void applyImports(ImportCustomizer imports)
-			throws CompilationFailedException {
-		imports.addStarImports("org.junit")
-				.addStaticStars("org.junit.Assert")
+	public void applyImports(ImportCustomizer imports) throws CompilationFailedException {
+		imports.addStarImports("org.junit").addStaticStars("org.junit.Assert")
 				.addStaticStars("org.hamcrest.MatcherAssert")
 				.addStaticStars("org.hamcrest.Matchers");
 	}

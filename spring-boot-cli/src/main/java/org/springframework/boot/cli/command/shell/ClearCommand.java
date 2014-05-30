@@ -36,10 +36,9 @@ class ClearCommand extends AbstractCommand {
 	}
 
 	@Override
-	public ExitStatus run(String... args) throws Exception {
+	public void run(String... args) throws Exception {
 		this.consoleReader.setPrompt("");
 		this.consoleReader.clearScreen();
-		return ExitStatus.OK;
 	}
 
 }

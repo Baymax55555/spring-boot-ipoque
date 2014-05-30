@@ -46,14 +46,13 @@ public class TestCommand extends OptionParsingCommand {
 		private TestRunner runner;
 
 		@Override
-		protected ExitStatus run(OptionSet options) throws Exception {
+		protected void run(OptionSet options) throws Exception {
 			SourceOptions sourceOptions = new SourceOptions(options);
 			TestRunnerConfiguration configuration = new TestRunnerConfigurationAdapter(
 					options, this);
 			this.runner = new TestRunner(configuration, sourceOptions.getSourcesArray(),
 					sourceOptions.getArgsArray());
 			this.runner.compileAndRunTests();
-			return ExitStatus.OK.hangup();
 		}
 
 		/**
@@ -68,7 +67,5 @@ public class TestCommand extends OptionParsingCommand {
 				super(options, optionHandler);
 			}
 		}
-
 	}
-
 }

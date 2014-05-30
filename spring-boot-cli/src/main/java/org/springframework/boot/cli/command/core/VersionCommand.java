@@ -32,9 +32,8 @@ public class VersionCommand extends AbstractCommand {
 	}
 
 	@Override
-	public ExitStatus run(String... args) {
+	public void run(String... args) {
 		Log.info("Spring CLI v" + getClass().getPackage().getImplementationVersion());
-		return ExitStatus.OK;
 	}
 
 }
