@@ -23,7 +23,7 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 
 import static org.junit.Assert.fail;
 
@@ -36,7 +36,7 @@ public class RedisServer implements TestRule {
 
 	private static final String EXTERNAL_SERVERS_REQUIRED = "EXTERNAL_SERVERS_REQUIRED";
 
-	protected LettuceConnectionFactory resource;
+	protected JedisConnectionFactory resource;
 
 	private final String resourceDescription = "Redis ConnectionFactory";
 
@@ -134,8 +134,8 @@ public class RedisServer implements TestRule {
 	 * {@link #resource} field with a valid resource and return normally, or throw an
 	 * exception.
 	 */
-	protected LettuceConnectionFactory obtainResource() throws Exception {
-		LettuceConnectionFactory resource = new LettuceConnectionFactory();
+	protected JedisConnectionFactory obtainResource() throws Exception {
+		JedisConnectionFactory resource = new JedisConnectionFactory();
 		resource.afterPropertiesSet();
 		resource.getConnection().close();
 		return resource;

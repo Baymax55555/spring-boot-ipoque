@@ -42,7 +42,8 @@ public class SpringMvcCompilerAutoConfiguration extends CompilerAutoConfiguratio
 		dependencies
 				.ifAnyMissingClasses("org.springframework.web.servlet.mvc.Controller")
 				.add("spring-boot-starter-web");
-		dependencies.add("groovy-templates");
+		dependencies.ifAnyMissingClasses("groovy.text.TemplateEngine").add(
+				"groovy-templates");
 	}
 
 	@Override
@@ -50,8 +51,9 @@ public class SpringMvcCompilerAutoConfiguration extends CompilerAutoConfiguratio
 		imports.addStarImports("org.springframework.web.bind.annotation",
 				"org.springframework.web.servlet.config.annotation",
 				"org.springframework.web.servlet",
+				"org.springframework.http",
 				"org.springframework.web.servlet.handler", "org.springframework.http",
-				"org.springframework.ui");
+				"org.springframework.ui", "groovy.text");
 		imports.addStaticImport(GroovyTemplate.class.getName(), "template");
 	}
 

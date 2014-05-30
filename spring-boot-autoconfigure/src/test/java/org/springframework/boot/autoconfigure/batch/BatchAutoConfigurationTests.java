@@ -231,7 +231,7 @@ public class BatchAutoConfigurationTests {
 		public JobRepository getJobRepository() throws Exception {
 			if (this.jobRepository == null) {
 				this.factory.afterPropertiesSet();
-				this.jobRepository = (JobRepository) this.factory.getObject();
+				this.jobRepository = this.factory.getObject();
 			}
 			return this.jobRepository;
 		}
@@ -253,7 +253,7 @@ public class BatchAutoConfigurationTests {
 			MapJobExplorerFactoryBean explorer = new MapJobExplorerFactoryBean(
 					this.factory);
 			explorer.afterPropertiesSet();
-			return (JobExplorer) explorer.getObject();
+			return explorer.getObject();
 		}
 	}
 

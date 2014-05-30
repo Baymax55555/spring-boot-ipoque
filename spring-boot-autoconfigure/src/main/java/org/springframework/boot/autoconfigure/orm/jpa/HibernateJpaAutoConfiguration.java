@@ -21,20 +21,22 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.sql.DataSource;
 
+import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.autoconfigure.orm.jpa.EntityManagerFactoryBuilder.EntityManagerFactoryBeanCallback;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration.HibernateEntityManagerCondition;
-import org.springframework.boot.bind.RelaxedPropertyResolver;
-import org.springframework.boot.orm.jpa.SpringNamingStrategy;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.AbstractJpaVendorAdapter;
@@ -54,18 +56,14 @@ import org.springframework.util.ClassUtils;
 @AutoConfigureAfter(DataSourceAutoConfiguration.class)
 public class HibernateJpaAutoConfiguration extends JpaBaseConfiguration {
 
-	private RelaxedPropertyResolver environment;
+	@Autowired
+	private JpaProperties properties;
 
-	public HibernateJpaAutoConfiguration() {
-		this.environment = null;
-	}
+	@Autowired
+	private DataSource dataSource;
 
-	@Override
-	public void setEnvironment(Environment environment) {
-		super.setEnvironment(environment);
-		this.environment = new RelaxedPropertyResolver(environment,
-				"spring.jpa.hibernate.");
-	}
+	@Autowired
+	private ConfigurableApplicationContext applicationContext;
 
 	@Override
 	protected AbstractJpaVendorAdapter createJpaVendorAdapter() {
@@ -73,23 +71,46 @@ public class HibernateJpaAutoConfiguration extends JpaBaseConfiguration {
 	}
 
 	@Override
-	protected void configure(
-			LocalContainerEntityManagerFactoryBean entityManagerFactoryBean) {
-		Map<String, Object> properties = entityManagerFactoryBean.getJpaPropertyMap();
-		properties.put("hibernate.ejb.naming_strategy", this.environment.getProperty(
-				"naming-strategy", SpringNamingStrategy.class.getName()));
-		String ddlAuto = this.environment.getProperty("ddl-auto",
-				getDefaultDdlAuto(entityManagerFactoryBean.getDataSource()));
-		if (!"none".equals(ddlAuto)) {
-			properties.put("hibernate.hbm2ddl.auto", ddlAuto);
-		}
+	protected Map<String, String> getVendorProperties() {
+		return this.properties.getInitialHibernateProperties(this.dataSource);
 	}
 
-	private String getDefaultDdlAuto(DataSource dataSource) {
-		if (EmbeddedDatabaseConnection.isEmbedded(dataSource)) {
-			return "create-drop";
+	@Override
+	protected EntityManagerFactoryBeanCallback getVendorCallback() {
+		final Map<String, String> map = this.properties
+				.getHibernateProperties(this.dataSource);
+		return new EntityManagerFactoryBeanCallback() {
+			@Override
+			public void execute(
+					LocalContainerEntityManagerFactoryBean entityManagerFactoryBean) {
+				HibernateJpaAutoConfiguration.this.applicationContext
+						.addApplicationListener(new DeferredSchemaAction(
+								entityManagerFactoryBean, map));
+			}
+		};
+	}
+
+	private static class DeferredSchemaAction implements
+			ApplicationListener<ContextRefreshedEvent> {
+
+		private Map<String, String> map;
+		private LocalContainerEntityManagerFactoryBean factory;
+
+		public DeferredSchemaAction(LocalContainerEntityManagerFactoryBean factory,
+				Map<String, String> map) {
+			this.factory = factory;
+			this.map = map;
 		}
-		return "none";
+
+		@Override
+		public void onApplicationEvent(ContextRefreshedEvent event) {
+			String ddlAuto = this.map.get("hibernate.hbm2ddl.auto");
+			if (ddlAuto == null || "none".equals(ddlAuto)) {
+				return;
+			}
+			Bootstrap.getEntityManagerFactoryBuilder(
+					this.factory.getPersistenceUnitInfo(), this.map).generateSchema();
+		}
 	}
 
 	static class HibernateEntityManagerCondition extends SpringBootCondition {

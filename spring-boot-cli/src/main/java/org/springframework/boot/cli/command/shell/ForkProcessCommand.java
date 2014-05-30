@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.springframework.boot.cli.command.Command;
 import org.springframework.boot.cli.command.options.OptionHelp;
-import org.springframework.boot.cli.util.JavaExecutable;
+import org.springframework.boot.loader.tools.JavaExecutable;
 
 /**
  * Decorate an existing command to run it by forking the current java process.
@@ -67,7 +67,7 @@ class ForkProcessCommand extends RunProcessCommand {
 	}
 
 	@Override
-	public void run(String... args) throws Exception {
+	public ExitStatus run(String... args) throws Exception {
 		List<String> fullArgs = new ArrayList<String>();
 		fullArgs.add("-cp");
 		fullArgs.add(System.getProperty("java.class.path"));
@@ -75,6 +75,7 @@ class ForkProcessCommand extends RunProcessCommand {
 		fullArgs.add(this.command.getName());
 		fullArgs.addAll(Arrays.asList(args));
 		run(fullArgs);
+		return ExitStatus.OK;
 	}
 
 }
