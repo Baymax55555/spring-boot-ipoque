@@ -89,8 +89,8 @@ public class SecurityAutoConfigurationTests {
 				PropertyPlaceholderAutoConfiguration.class);
 		EnvironmentTestUtils.addEnvironment(this.context, "security.basic.enabled:false");
 		this.context.refresh();
-		// No security at all not even ignores
-		assertEquals(0, this.context.getBeanNamesForType(FilterChainProxy.class).length);
+		// Ignores and permitAll() security on application endpoints
+		assertEquals(1, this.context.getBeanNamesForType(FilterChainProxy.class).length);
 	}
 
 	@Test
@@ -120,6 +120,8 @@ public class SecurityAutoConfigurationTests {
 	public void testJpaCoexistsHappily() throws Exception {
 		this.context = new AnnotationConfigWebApplicationContext();
 		this.context.setServletContext(new MockServletContext());
+		EnvironmentTestUtils.addEnvironment(this.context,
+				"spring.datasource.url:jdbc:hsqldb:mem:testsecdb");
 		this.context.register(EntityConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class,
 				DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class,

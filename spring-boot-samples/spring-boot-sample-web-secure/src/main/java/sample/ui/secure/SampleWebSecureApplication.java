@@ -19,11 +19,12 @@ package sample.ui.secure;
 import java.util.Date;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -36,7 +37,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 @ComponentScan
 @Controller
 public class SampleWebSecureApplication extends WebMvcConfigurerAdapter {
-
+	
 	@RequestMapping("/")
 	public String home(Map<String, Object> model) {
 		model.put("message", "Hello World");
@@ -51,9 +52,7 @@ public class SampleWebSecureApplication extends WebMvcConfigurerAdapter {
 	}
 
 	public static void main(String[] args) throws Exception {
-		// Set user password to "password" for demo purposes only
-		new SpringApplicationBuilder(SampleWebSecureApplication.class).properties(
-				"security.user.password=password").run(args);
+		new SpringApplicationBuilder(SampleWebSecureApplication.class).run(args);
 	}
 
 	@Override
@@ -66,8 +65,12 @@ public class SampleWebSecureApplication extends WebMvcConfigurerAdapter {
 		return new ApplicationSecurity();
 	}
 
-	@Order(Ordered.LOWEST_PRECEDENCE - 8)
+	@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
 	protected static class ApplicationSecurity extends WebSecurityConfigurerAdapter {
+
+		@Autowired
+		private SecurityProperties security;
+
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			http.authorizeRequests().anyRequest().fullyAuthenticated().and().formLogin()
