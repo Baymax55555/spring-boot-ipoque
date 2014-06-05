@@ -17,7 +17,6 @@
 package cli.command;
 
 import org.springframework.boot.cli.command.AbstractCommand;
-import org.springframework.boot.cli.command.status.ExitStatus;
 
 /**
  * @author Dave Syer
@@ -29,9 +28,8 @@ public class CustomCommand extends AbstractCommand {
 	}
 
 	@Override
-	public ExitStatus run(String... args) throws Exception {
+	public void run(String... args) throws Exception {
 		System.err.println("Custom Command Hello");
-		return ExitStatus.OK;
 	}
 
 }

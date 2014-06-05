@@ -16,16 +16,12 @@
 
 package org.springframework.boot.autoconfigure.reactor;
 
-import static org.junit.Assert.assertNotNull;
-
 import org.junit.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
-import reactor.core.Environment;
 import reactor.core.Reactor;
-import reactor.core.spec.Reactors;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Dave Syer
@@ -40,23 +36,6 @@ public class ReactorAutoConfigurationTests {
 		this.context.refresh();
 		assertNotNull(this.context.getBean(Reactor.class));
 		this.context.close();
-	}
-
-	@Test
-	public void customReactor() {
-		this.context.register(TestConfiguration.class, ReactorAutoConfiguration.class);
-		this.context.refresh();
-		assertNotNull(this.context.getBean(Reactor.class));
-		this.context.close();
-	}
-
-	@Configuration
-	protected static class TestConfiguration {
-
-		@Bean
-		public Reactor reactor(Environment env) {
-			return Reactors.reactor().env(env).dispatcher(Environment.RING_BUFFER).get();
-		}
 	}
 
 }

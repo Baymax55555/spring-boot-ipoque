@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starters</artifactId>
-		<version>1.1.0.BUILD-SNAPSHOT</version>
+		<version>1.0.3.BUILD-SNAPSHOT</version>
 	</parent>
 	<artifactId>spring-boot-starter-remote-shell</artifactId>
 	<name>Spring Boot Remote Shell Starter</name>
@@ -19,8 +19,13 @@
 	</properties>
 	<dependencies>
 		<dependency>
-			<groupId>org.codehaus.groovy</groupId>
-			<artifactId>groovy</artifactId>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.crashub</groupId>
@@ -29,21 +34,11 @@
 		<dependency>
 			<groupId>org.crashub</groupId>
 			<artifactId>crash.connectors.ssh</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.crashub</groupId>
 			<artifactId>crash.connectors.telnet</artifactId>
 			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
 				<exclusion>
 					<groupId>javax.servlet</groupId>
 					<artifactId>servlet-api</artifactId>
@@ -52,6 +47,10 @@
 					<groupId>log4j</groupId>
 					<artifactId>log4j</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
 			</exclusions>
 			<optional>true</optional>
 		</dependency>
@@ -59,10 +58,6 @@
 			<groupId>org.crashub</groupId>
 			<artifactId>crash.embed.spring</artifactId>
 			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
 				<exclusion>
 					<artifactId>spring-web</artifactId>
 					<groupId>org.springframework</groupId>
@@ -88,24 +83,8 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>org.codehaus.groovy</groupId>
+			<artifactId>groovy</artifactId>
 		</dependency>
 	</dependencies>
 </project>

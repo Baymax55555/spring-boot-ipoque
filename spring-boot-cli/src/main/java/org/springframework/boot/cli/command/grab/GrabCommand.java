@@ -25,7 +25,6 @@ import org.springframework.boot.cli.command.OptionParsingCommand;
 import org.springframework.boot.cli.command.options.CompilerOptionHandler;
 import org.springframework.boot.cli.command.options.OptionSetGroovyCompilerConfiguration;
 import org.springframework.boot.cli.command.options.SourceOptions;
-import org.springframework.boot.cli.command.status.ExitStatus;
 import org.springframework.boot.cli.compiler.GroovyCompiler;
 import org.springframework.boot.cli.compiler.GroovyCompilerConfiguration;
 import org.springframework.boot.cli.compiler.RepositoryConfigurationFactory;
@@ -46,7 +45,7 @@ public class GrabCommand extends OptionParsingCommand {
 	private static final class GrabOptionHandler extends CompilerOptionHandler {
 
 		@Override
-		protected ExitStatus run(OptionSet options) throws Exception {
+		protected void run(OptionSet options) throws Exception {
 			SourceOptions sourceOptions = new SourceOptions(options);
 
 			List<RepositoryConfiguration> repositoryConfiguration = RepositoryConfigurationFactory
@@ -61,7 +60,6 @@ public class GrabCommand extends OptionParsingCommand {
 
 			GroovyCompiler groovyCompiler = new GroovyCompiler(configuration);
 			groovyCompiler.compile(sourceOptions.getSourcesArray());
-			return ExitStatus.OK;
 		}
 
 	}

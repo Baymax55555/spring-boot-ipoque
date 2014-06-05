@@ -38,7 +38,7 @@ Having trouble with Spring Boot, We'd like to help!
 * Report bugs with Spring Boot at https://github.com/spring-projects/spring-boot/issues.
 
 NOTE: All of Spring Boot is open source, including the documentation! If you find problems
-with the docs; or if you just want to improve them, please <<github-code, get involved>>.
+with the docs; or if you just want to improve them, please {github-code}[get involved].
 
 [[boot-documentation-first-steps]]
 == First steps
@@ -96,9 +96,6 @@ Need more details about Spring Boot's core features?
 * *Working with data:*
   <<spring-boot-features.adoc#boot-features-sql, SQL>> |
   <<spring-boot-features.adoc#boot-features-nosql, NO-SQL>>
-* *Messaging:*
-  <<spring-boot-features.adoc#boot-features-messaging, Overview>> |
-  <<spring-boot-features.adoc#boot-features-jms, JMS>>
 * *Testing:*
   <<spring-boot-features.adoc#boot-features-testing, Overview>> |
   <<spring-boot-features.adoc#boot-features-testing-spring-boot-applications, Boot Applications>> |

@@ -13,7 +13,6 @@ build
 lib/
 target
 .springBeans
-interpolated*.xml
 dependency-reduced-pom.xml
 build.log
 _site/
@@ -25,4 +24,3 @@ activemq-data
 overridedb.*
 *.iml
 .idea
-*.jar

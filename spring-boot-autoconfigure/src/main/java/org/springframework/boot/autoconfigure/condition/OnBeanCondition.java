@@ -1,5 +1,5 @@
 /*
-On * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,12 +55,6 @@ import org.springframework.util.StringUtils;
  * @author Jakub Kubrynski
  */
 class OnBeanCondition extends SpringBootCondition implements ConfigurationCondition {
-
-	/**
-	 * Bean definition attribute name for factory beans to signal their product type (if
-	 * known and it can't be deduced from the factory bean class).
-	 */
-	public static final String FACTORY_BEAN_OBJECT_TYPE = "factoryBeanObjectType";
 
 	private static final String[] NO_BEANS = {};
 
@@ -185,7 +179,7 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
 		for (String name : names) {
 			name = BeanFactoryUtils.transformedBeanName(name);
 			BeanDefinition beanDefinition = beanFactory.getBeanDefinition(name);
-			Class<?> generic = getFactoryBeanGeneric(beanFactory, beanDefinition, name);
+			Class<?> generic = getFactoryBeanGeneric(beanFactory, beanDefinition);
 			if (generic != null && ClassUtils.isAssignable(type, generic)) {
 				result.add(name);
 			}
@@ -193,15 +187,14 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
 	}
 
 	private Class<?> getFactoryBeanGeneric(ConfigurableListableBeanFactory beanFactory,
-			BeanDefinition definition, String name) {
+			BeanDefinition definition) {
 		try {
 			if (StringUtils.hasLength(definition.getFactoryBeanName())
 					&& StringUtils.hasLength(definition.getFactoryMethodName())) {
-				return getConfigurationClassFactoryBeanGeneric(beanFactory, definition,
-						name);
+				return getConfigurationClassFactoryBeanGeneric(beanFactory, definition);
 			}
 			if (StringUtils.hasLength(definition.getBeanClassName())) {
-				return getDirectFactoryBeanGeneric(beanFactory, definition, name);
+				return getDirectFactoryBeanGeneric(beanFactory, definition);
 			}
 		}
 		catch (Exception ex) {
@@ -210,35 +203,25 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
 	}
 
 	private Class<?> getConfigurationClassFactoryBeanGeneric(
-			ConfigurableListableBeanFactory beanFactory, BeanDefinition definition,
-			String name) throws Exception {
+			ConfigurableListableBeanFactory beanFactory, BeanDefinition definition)
+			throws Exception {
 		BeanDefinition factoryDefinition = beanFactory.getBeanDefinition(definition
 				.getFactoryBeanName());
 		Class<?> factoryClass = ClassUtils.forName(factoryDefinition.getBeanClassName(),
 				beanFactory.getBeanClassLoader());
 		Method method = ReflectionUtils.findMethod(factoryClass,
 				definition.getFactoryMethodName());
-		Class<?> generic = ResolvableType.forMethodReturnType(method)
-				.as(FactoryBean.class).resolveGeneric();
-		if ((generic == null || generic.equals(Object.class))
-				&& definition.hasAttribute(FACTORY_BEAN_OBJECT_TYPE)) {
-			generic = (Class<?>) definition.getAttribute(FACTORY_BEAN_OBJECT_TYPE);
-		}
-		return generic;
+		return ResolvableType.forMethodReturnType(method).as(FactoryBean.class)
+				.resolveGeneric();
 	}
 
 	private Class<?> getDirectFactoryBeanGeneric(
-			ConfigurableListableBeanFactory beanFactory, BeanDefinition definition,
-			String name) throws ClassNotFoundException, LinkageError {
+			ConfigurableListableBeanFactory beanFactory, BeanDefinition definition)
+			throws ClassNotFoundException, LinkageError {
 		Class<?> factoryBeanClass = ClassUtils.forName(definition.getBeanClassName(),
 				beanFactory.getBeanClassLoader());
-		Class<?> generic = ResolvableType.forClass(factoryBeanClass)
-				.as(FactoryBean.class).resolveGeneric();
-		if ((generic == null || generic.equals(Object.class))
-				&& definition.hasAttribute(FACTORY_BEAN_OBJECT_TYPE)) {
-			generic = (Class<?>) definition.getAttribute(FACTORY_BEAN_OBJECT_TYPE);
-		}
-		return generic;
+		return ResolvableType.forClass(factoryBeanClass).as(FactoryBean.class)
+				.resolveGeneric();
 	}
 
 	private String[] getBeanNamesForAnnotation(
@@ -346,7 +329,7 @@ class OnBeanCondition extends SpringBootCondition implements ConfigurationCondit
 						}
 					});
 				}
-				catch (Throwable ex) {
+				catch (Exception ex) {
 					// swallow exception and continue
 				}
 			}

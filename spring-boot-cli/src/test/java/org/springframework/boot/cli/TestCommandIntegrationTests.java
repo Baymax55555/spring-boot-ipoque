@@ -83,24 +83,6 @@ public class TestCommandIntegrationTests {
 	}
 
 	@Test
-	public void integrationTest() throws Exception {
-		String output = this.cli.test("integration.groovy");
-		assertThat(output, containsString("OK (1 test)"));
-	}
-
-	@Test
-	public void integrationAutoConfigEmbeddedTest() throws Exception {
-		String output = this.cli.test("integration_auto.groovy");
-		assertThat(output, containsString("OK (1 test)"));
-	}
-
-	@Test
-	public void integrationAutoConfigTest() throws Exception {
-		String output = this.cli.test("integration_auto_test.groovy", "reactor.groovy");
-		assertThat(output, containsString("OK (1 test)"));
-	}
-
-	@Test
 	public void spockTester() throws Exception {
 		String output = this.cli.test("spock.groovy");
 		assertThat(output, containsString("OK (1 test)"));

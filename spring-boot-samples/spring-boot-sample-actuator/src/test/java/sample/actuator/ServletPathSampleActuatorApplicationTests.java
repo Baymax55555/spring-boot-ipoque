@@ -42,7 +42,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = SampleActuatorApplication.class)
 @WebAppConfiguration
-@IntegrationTest({"server.port=0", "server.servletPath=/spring"})
+@IntegrationTest({"server.port=0", "server.servletPath=/spring/*"})
 @DirtiesContext
 public class ServletPathSampleActuatorApplicationTests {
 
@@ -67,7 +67,7 @@ public class ServletPathSampleActuatorApplicationTests {
 				"http://localhost:" + this.port + "/spring/health", String.class);
 		assertEquals(HttpStatus.OK, entity.getStatusCode());
 		assertTrue("Wrong body: " + entity.getBody(),
-				entity.getBody().contains("\"status\":\"UP\""));
+				entity.getBody().contains("ok"));
 	}
 
 	@Test

@@ -16,25 +16,16 @@
 
 package org.springframework.boot.autoconfigure;
 
-import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-
-import org.springframework.boot.autoconfigure.MessageSourceAutoConfiguration.ResourceBundleCondition;
-import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.bind.RelaxedPropertyResolver;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ConditionContext;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.type.AnnotatedTypeMetadata;
+import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
 import static org.springframework.util.StringUtils.commaDelimitedListToStringArray;
@@ -48,77 +39,28 @@ import static org.springframework.util.StringUtils.trimAllWhitespace;
 @Configuration
 @ConditionalOnMissingBean(MessageSource.class)
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@Conditional(ResourceBundleCondition.class)
-@EnableConfigurationProperties
-@ConfigurationProperties(prefix = "spring.messages")
-public class MessageSourceAutoConfiguration {
+public class MessageSourceAutoConfiguration implements EnvironmentAware {
 
-	private String basename = "messages";
+	private RelaxedPropertyResolver environment;
 
-	private String encoding = "utf-8";
-
-	private int cacheSeconds = -1;
+	@Override
+	public void setEnvironment(Environment environment) {
+		this.environment = new RelaxedPropertyResolver(environment, "spring.messages.");
+	}
 
 	@Bean
 	public MessageSource messageSource() {
 		ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
-		if (StringUtils.hasText(this.basename)) {
+		String basename = this.environment.getProperty("basename", "messages");
+		if (StringUtils.hasText(basename)) {
 			messageSource
-					.setBasenames(commaDelimitedListToStringArray(trimAllWhitespace(this.basename)));
+					.setBasenames(commaDelimitedListToStringArray(trimAllWhitespace(basename)));
 		}
-		messageSource.setDefaultEncoding(this.encoding);
-		messageSource.setCacheSeconds(this.cacheSeconds);
+		String encoding = this.environment.getProperty("encoding", "utf-8");
+		messageSource.setDefaultEncoding(encoding);
+		messageSource.setCacheSeconds(this.environment.getProperty("cacheSeconds",
+				Integer.class, -1));
 		return messageSource;
-	}
-
-	public String getBasename() {
-		return this.basename;
-	}
-
-	public void setBasename(String basename) {
-		this.basename = basename;
-	}
-
-	public String getEncoding() {
-		return this.encoding;
-	}
-
-	public void setEncoding(String encoding) {
-		this.encoding = encoding;
-	}
-
-	public int getCacheSeconds() {
-		return this.cacheSeconds;
-	}
-
-	public void setCacheSeconds(int cacheSeconds) {
-		this.cacheSeconds = cacheSeconds;
-	}
-
-	protected static class ResourceBundleCondition extends SpringBootCondition {
-
-		@Override
-		public ConditionOutcome getMatchOutcome(ConditionContext context,
-				AnnotatedTypeMetadata metadata) {
-			String basename = context.getEnvironment().getProperty(
-					"spring.messages.basename", "messages");
-			if (!StringUtils.hasText(basename)) {
-				return ConditionOutcome.noMatch("Empty spring.messages.basename");
-			}
-			for (String name : commaDelimitedListToStringArray(trimAllWhitespace(basename))) {
-				try {
-					ResourceBundle.getBundle(name, Locale.getDefault(),
-							context.getClassLoader());
-				}
-				catch (MissingResourceException e) {
-					return ConditionOutcome
-							.noMatch("Bundle found for spring.messages.basename: " + name);
-				}
-			}
-			return ConditionOutcome.match("Bundle found for spring.messages.basename: "
-					+ basename);
-		}
-
 	}
 
 }

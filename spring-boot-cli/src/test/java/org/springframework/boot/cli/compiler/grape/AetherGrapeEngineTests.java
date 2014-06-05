@@ -25,10 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.aether.DefaultRepositorySystemSession;
-import org.eclipse.aether.util.repository.JreProxySelector;
 import org.junit.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -44,8 +41,7 @@ public class AetherGrapeEngineTests {
 
 	private final AetherGrapeEngine grapeEngine = AetherGrapeEngineFactory.create(
 			this.groovyClassLoader, Arrays.asList(new RepositoryConfiguration("central",
-					URI.create("http://repo1.maven.org/maven2"), false)),
-					new DependencyResolutionContext());
+					URI.create("http://repo1.maven.org/maven2"), false)));
 
 	@Test
 	public void dependencyResolution() {
@@ -55,14 +51,6 @@ public class AetherGrapeEngineTests {
 				createDependency("org.springframework", "spring-jdbc", "3.2.4.RELEASE"));
 
 		assertEquals(5, this.groovyClassLoader.getURLs().length);
-	}
-
-	@Test
-	public void proxySelector() {
-		DefaultRepositorySystemSession session = (DefaultRepositorySystemSession) ReflectionTestUtils
-				.getField(this.grapeEngine, "session");
-		assertTrue((session.getProxySelector() instanceof CompositeProxySelector)
-				|| (session.getProxySelector() instanceof JreProxySelector));
 	}
 
 	@SuppressWarnings("unchecked")

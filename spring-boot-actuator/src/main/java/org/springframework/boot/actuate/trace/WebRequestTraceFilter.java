@@ -25,17 +25,18 @@ import java.util.Map;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.boot.autoconfigure.web.ErrorAttributes;
+import org.springframework.boot.actuate.web.BasicErrorController;
 import org.springframework.core.Ordered;
-import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,25 +46,37 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * 
  * @author Dave Syer
  */
-public class WebRequestTraceFilter extends OncePerRequestFilter implements Ordered {
+public class WebRequestTraceFilter implements Filter, Ordered {
 
 	private final Log logger = LogFactory.getLog(WebRequestTraceFilter.class);
 
 	private boolean dumpRequests = false;
 
-	private int order = Integer.MAX_VALUE;
-
 	private final TraceRepository traceRepository;
+
+	private int order = Integer.MAX_VALUE;
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
-	private ErrorAttributes errorAttributes;
+	private BasicErrorController errorController;
 
 	/**
 	 * @param traceRepository
 	 */
 	public WebRequestTraceFilter(TraceRepository traceRepository) {
 		this.traceRepository = traceRepository;
+	}
+
+	/**
+	 * @param order the order to set
+	 */
+	public void setOrder(int order) {
+		this.order = order;
+	}
+
+	@Override
+	public int getOrder() {
+		return this.order;
 	}
 
 	/**
@@ -75,18 +88,10 @@ public class WebRequestTraceFilter extends OncePerRequestFilter implements Order
 	}
 
 	@Override
-	public int getOrder() {
-		return this.order;
-	}
-
-	public void setOrder(int order) {
-		this.order = order;
-	}
-
-	@Override
-	protected void doFilterInternal(HttpServletRequest request,
-			HttpServletResponse response, FilterChain filterChain)
-			throws ServletException, IOException {
+	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+			throws IOException, ServletException {
+		HttpServletRequest request = (HttpServletRequest) req;
+		HttpServletResponse response = (HttpServletResponse) res;
 
 		Map<String, Object> trace = getTrace(request);
 		if (this.logger.isTraceEnabled()) {
@@ -107,7 +112,7 @@ public class WebRequestTraceFilter extends OncePerRequestFilter implements Order
 		}
 
 		try {
-			filterChain.doFilter(request, response);
+			chain.doFilter(request, response);
 		}
 		finally {
 			enhanceTrace(trace, response);
@@ -151,19 +156,27 @@ public class WebRequestTraceFilter extends OncePerRequestFilter implements Order
 		trace.put("method", request.getMethod());
 		trace.put("path", request.getRequestURI());
 		trace.put("headers", allHeaders);
-		Throwable exception = (Throwable) request
+		Throwable error = (Throwable) request
 				.getAttribute("javax.servlet.error.exception");
-		if (exception != null && this.errorAttributes != null) {
-			RequestAttributes requestAttributes = new ServletRequestAttributes(request);
-			Map<String, Object> error = this.errorAttributes.getErrorAttributes(
-					requestAttributes, true);
-			trace.put("error", error);
+		if (error != null) {
+			if (this.errorController != null) {
+				trace.put("error", this.errorController.extract(
+						new ServletRequestAttributes(request), true, false));
+			}
 		}
 		return trace;
 	}
 
-	public void setErrorAttributes(ErrorAttributes errorAttributes) {
-		this.errorAttributes = errorAttributes;
+	@Override
+	public void init(FilterConfig filterConfig) throws ServletException {
+	}
+
+	@Override
+	public void destroy() {
+	}
+
+	public void setErrorController(BasicErrorController errorController) {
+		this.errorController = errorController;
 	}
 
 }

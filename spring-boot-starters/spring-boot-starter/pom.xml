@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starters</artifactId>
-		<version>1.1.0.BUILD-SNAPSHOT</version>
+		<version>1.0.3.BUILD-SNAPSHOT</version>
 	</parent>
 	<artifactId>spring-boot-starter</artifactId>
 	<name>Spring Boot Starter</name>
@@ -19,28 +19,19 @@
 	</properties>
 	<dependencies>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>spring-boot</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>spring-boot-autoconfigure</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>spring-boot-starter-logging</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.yaml</groupId>
