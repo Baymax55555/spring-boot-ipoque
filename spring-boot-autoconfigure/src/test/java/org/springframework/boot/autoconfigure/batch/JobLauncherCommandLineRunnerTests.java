@@ -16,6 +16,8 @@
 
 package org.springframework.boot.autoconfigure.batch;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.batch.core.Job;
@@ -43,8 +45,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.SyncTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * Tests for {@link JobLauncherCommandLineRunner}.
@@ -152,7 +152,7 @@ public class JobLauncherCommandLineRunnerTests {
 				this.transactionManager);
 
 		public BatchConfiguration() throws Exception {
-			this.jobRepository = this.jobRepositoryFactory.getJobRepository();
+			this.jobRepository = this.jobRepositoryFactory.getObject();
 		}
 
 		public void clear() {
@@ -179,8 +179,7 @@ public class JobLauncherCommandLineRunnerTests {
 
 		@Bean
 		public JobExplorer jobExplorer() throws Exception {
-			return (JobExplorer) new MapJobExplorerFactoryBean(this.jobRepositoryFactory)
-					.getObject();
+			return new MapJobExplorerFactoryBean(this.jobRepositoryFactory).getObject();
 		}
 	}
 

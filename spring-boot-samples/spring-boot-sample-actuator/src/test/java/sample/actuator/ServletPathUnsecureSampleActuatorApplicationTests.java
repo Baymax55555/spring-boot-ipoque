@@ -42,7 +42,7 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = SampleActuatorApplication.class)
 @WebAppConfiguration
-@IntegrationTest({ "server.port:0", "security.basic.enabled:false", "server.servletPath:/spring/*" })
+@IntegrationTest({ "server.port:0", "security.basic.enabled:false", "server.servletPath:/spring" })
 @DirtiesContext
 public class ServletPathUnsecureSampleActuatorApplicationTests {
 

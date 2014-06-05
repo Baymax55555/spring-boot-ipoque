@@ -24,6 +24,7 @@ import org.springframework.boot.cli.command.AbstractCommand;
 import org.springframework.boot.cli.command.Command;
 import org.springframework.boot.cli.command.CommandRunner;
 import org.springframework.boot.cli.command.options.OptionHelp;
+import org.springframework.boot.cli.command.status.ExitStatus;
 import org.springframework.boot.cli.util.Log;
 
 /**
@@ -42,7 +43,7 @@ public class HintCommand extends AbstractCommand {
 	}
 
 	@Override
-	public void run(String... args) throws Exception {
+	public ExitStatus run(String... args) throws Exception {
 		try {
 			int index = (args.length == 0 ? 0 : Integer.valueOf(args[0]) - 1);
 			List<String> arguments = new ArrayList<String>(args.length);
@@ -64,7 +65,9 @@ public class HintCommand extends AbstractCommand {
 		}
 		catch (Exception ex) {
 			// Swallow and provide no hints
+			return ExitStatus.ERROR;
 		}
+		return ExitStatus.OK;
 	}
 
 	private void showCommandHints(String starting) {

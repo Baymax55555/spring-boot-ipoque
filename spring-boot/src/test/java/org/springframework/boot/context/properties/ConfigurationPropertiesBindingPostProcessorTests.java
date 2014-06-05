@@ -32,15 +32,17 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 /**
- * 
  * Tests for {@link ConfigurationPropertiesBindingPostProcessor}.
  * 
  * @author Christian Dupuis
+ * @author Phillip Webb
  */
 public class ConfigurationPropertiesBindingPostProcessorTests {
 
@@ -64,7 +66,7 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 		}
 		catch (BeanCreationException ex) {
 			BindException bex = (BindException) ex.getRootCause();
-			assertTrue(1 == bex.getErrorCount());
+			assertEquals(1, bex.getErrorCount());
 		}
 	}
 
@@ -78,7 +80,7 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 		}
 		catch (BeanCreationException ex) {
 			BindException bex = (BindException) ex.getRootCause();
-			assertTrue(1 == bex.getErrorCount());
+			assertEquals(1, bex.getErrorCount());
 		}
 	}
 
@@ -92,7 +94,7 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 		}
 		catch (BeanCreationException ex) {
 			BindException bex = (BindException) ex.getRootCause();
-			assertTrue(2 == bex.getErrorCount());
+			assertEquals(2, bex.getErrorCount());
 		}
 	}
 
@@ -115,6 +117,16 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 		this.context.setEnvironment(env);
 		this.context.register(TestConfigurationWithInitializer.class);
 		this.context.refresh();
+	}
+
+	@Test
+	public void testPropertyWithEnum() throws Exception {
+		this.context = new AnnotationConfigApplicationContext();
+		EnvironmentTestUtils.addEnvironment(this.context, "test.value:foo");
+		this.context.register(PropertyWithEnum.class);
+		this.context.refresh();
+		assertThat(this.context.getBean(PropertyWithEnum.class).getValue(),
+				equalTo(FooEnum.FOO));
 	}
 
 	@Configuration
@@ -228,6 +240,27 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 		public String getBar() {
 			return this.bar;
 		}
+
 	}
 
+	@Configuration
+	@EnableConfigurationProperties
+	@ConfigurationProperties(prefix = "test")
+	public static class PropertyWithEnum {
+
+		private FooEnum value;
+
+		public void setValue(FooEnum value) {
+			this.value = value;
+		}
+
+		public FooEnum getValue() {
+			return this.value;
+		}
+
+	}
+
+	static enum FooEnum {
+		FOO, BAZ, BAR
+	}
 }

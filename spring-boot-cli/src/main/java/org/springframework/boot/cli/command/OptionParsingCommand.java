@@ -20,6 +20,7 @@ import java.util.Collection;
 
 import org.springframework.boot.cli.command.options.OptionHandler;
 import org.springframework.boot.cli.command.options.OptionHelp;
+import org.springframework.boot.cli.command.status.ExitStatus;
 
 /**
  * Base class for a {@link Command} that parse options using an {@link OptionHandler}.
@@ -48,8 +49,8 @@ public abstract class OptionParsingCommand extends AbstractCommand {
 	}
 
 	@Override
-	public final void run(String... args) throws Exception {
-		this.handler.run(args);
+	public final ExitStatus run(String... args) throws Exception {
+		return this.handler.run(args);
 	}
 
 	protected OptionHandler getHandler() {

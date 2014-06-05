@@ -16,6 +16,13 @@
 
 package org.springframework.boot.autoconfigure.orm.jpa;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertThat;
+
+import javax.sql.DataSource;
+
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
@@ -26,10 +33,6 @@ import org.springframework.boot.autoconfigure.orm.jpa.test.City;
 import org.springframework.boot.test.EnvironmentTestUtils;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-
-import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
 
 /**
  * Tests for {@link HibernateJpaAutoConfiguration}.
@@ -58,11 +61,12 @@ public class CustomHibernateJpaAutoConfigurationTests {
 				PropertyPlaceholderAutoConfiguration.class,
 				HibernateJpaAutoConfiguration.class);
 		this.context.refresh();
-		LocalContainerEntityManagerFactoryBean bean = this.context
-				.getBean(LocalContainerEntityManagerFactoryBean.class);
-		String actual = (String) bean.getJpaPropertyMap().get("hibernate.hbm2ddl.auto");
-		// No default (let Hibernate choose)
-		assertThat(actual, equalTo(null));
+		JpaProperties bean = this.context.getBean(JpaProperties.class);
+		DataSource dataSource = this.context.getBean(DataSource.class);
+		String actual = bean.getHibernateProperties(dataSource).get(
+				"hibernate.hbm2ddl.auto");
+		// Default is generic and safe
+		assertThat(actual, is(nullValue()));
 	}
 
 	@Test
@@ -74,9 +78,10 @@ public class CustomHibernateJpaAutoConfigurationTests {
 				PropertyPlaceholderAutoConfiguration.class,
 				HibernateJpaAutoConfiguration.class);
 		this.context.refresh();
-		LocalContainerEntityManagerFactoryBean bean = this.context
-				.getBean(LocalContainerEntityManagerFactoryBean.class);
-		String actual = (String) bean.getJpaPropertyMap().get("hibernate.hbm2ddl.auto");
+		JpaProperties bean = this.context.getBean(JpaProperties.class);
+		DataSource dataSource = this.context.getBean(DataSource.class);
+		String actual = bean.getHibernateProperties(dataSource).get(
+				"hibernate.hbm2ddl.auto");
 		assertThat(actual, equalTo("create-drop"));
 	}
 
