@@ -23,15 +23,17 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.bind.RelaxedPropertyResolver;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.core.env.Environment;
 import org.springframework.mobile.device.view.LiteDeviceDelegatingViewResolver;
 import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
@@ -55,18 +57,33 @@ public class DeviceDelegatingViewResolverAutoConfiguration {
 	private static Log logger = LogFactory
 			.getLog(DeviceDelegatingViewResolverAutoConfiguration.class);
 
-	private static abstract class AbstractDelegateConfiguration {
+	private static abstract class AbstractDelegateConfiguration implements
+			EnvironmentAware {
 
-		@Autowired
-		private DeviceDelegatingViewResolverProperties viewResolverProperties;
+		private RelaxedPropertyResolver environment;
+
+		@Override
+		public void setEnvironment(Environment environment) {
+			this.environment = new RelaxedPropertyResolver(environment,
+					"spring.mobile.devicedelegatingviewresolver.");
+		}
 
 		protected LiteDeviceDelegatingViewResolver getConfiguredViewResolver(
 				ViewResolver delegate, int delegateOrder) {
 			LiteDeviceDelegatingViewResolver resolver = new LiteDeviceDelegatingViewResolver(
 					delegate);
-			viewResolverProperties.apply(resolver);
+			resolver.setNormalPrefix(getProperty("normal-prefix", ""));
+			resolver.setNormalSuffix(getProperty("normal-suffix", ""));
+			resolver.setMobilePrefix(getProperty("mobile-prefix", "mobile/"));
+			resolver.setMobileSuffix(getProperty("mobile-suffix", ""));
+			resolver.setTabletPrefix(getProperty("tablet-prefix", "tablet/"));
+			resolver.setTabletSuffix(getProperty("tablet-suffix", ""));
 			resolver.setOrder(getAdjustedOrder(delegateOrder));
 			return resolver;
+		}
+
+		private String getProperty(String key, String defaultValue) {
+			return this.environment.getProperty(key, defaultValue);
 		}
 
 		private int getAdjustedOrder(int order) {
@@ -81,10 +98,8 @@ public class DeviceDelegatingViewResolverAutoConfiguration {
 	}
 
 	@Configuration
-	@EnableConfigurationProperties(DeviceDelegatingViewResolverProperties.class)
 	@ConditionalOnMissingBean(name = "deviceDelegatingViewResolver")
-	@ConditionalOnProperty(value = "spring.mobile.devicedelegatingviewresolver.enabled",
-			match = "true", defaultMatch = false)
+	@ConditionalOnExpression("${spring.mobile.devicedelegatingviewresolver.enabled:false}")
 	protected static class DeviceDelegatingViewResolverConfiguration {
 
 		@Configuration
@@ -108,7 +123,6 @@ public class DeviceDelegatingViewResolverAutoConfiguration {
 		}
 
 		@Configuration
-		@EnableConfigurationProperties(DeviceDelegatingViewResolverProperties.class)
 		@ConditionalOnMissingBean(name = "thymeleafViewResolver")
 		@ConditionalOnBean(InternalResourceViewResolver.class)
 		protected static class InternalResourceViewResolverDelegateConfiguration extends
