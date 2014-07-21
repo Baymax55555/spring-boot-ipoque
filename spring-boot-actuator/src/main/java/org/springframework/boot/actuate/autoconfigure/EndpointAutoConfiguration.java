@@ -16,7 +16,6 @@
 
 package org.springframework.boot.actuate.autoconfigure;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -36,7 +35,6 @@ import org.springframework.boot.actuate.endpoint.MetricsEndpoint;
 import org.springframework.boot.actuate.endpoint.PublicMetrics;
 import org.springframework.boot.actuate.endpoint.RequestMappingEndpoint;
 import org.springframework.boot.actuate.endpoint.ShutdownEndpoint;
-import org.springframework.boot.actuate.endpoint.SystemPublicMetrics;
 import org.springframework.boot.actuate.endpoint.TraceEndpoint;
 import org.springframework.boot.actuate.endpoint.VanillaPublicMetrics;
 import org.springframework.boot.actuate.health.HealthAggregator;
@@ -70,7 +68,6 @@ import org.springframework.web.servlet.handler.AbstractHandlerMethodMapping;
  * @author Phillip Webb
  * @author Greg Turnquist
  * @author Christian Dupuis
- * @author Stephane Nicoll
  */
 @Configuration
 public class EndpointAutoConfiguration {
@@ -88,7 +85,7 @@ public class EndpointAutoConfiguration {
 	private MetricReader metricRepository = new InMemoryMetricRepository();
 
 	@Autowired(required = false)
-	private Collection<PublicMetrics> allMetrics;
+	private PublicMetrics metrics;
 
 	@Autowired(required = false)
 	private TraceRepository traceRepository = new InMemoryTraceRepository();
@@ -129,8 +126,10 @@ public class EndpointAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public MetricsEndpoint metricsEndpoint() {
-		PublicMetrics metrics = new VanillaPublicMetrics(this.metricRepository, this.allMetrics);
-		return new MetricsEndpoint(metrics);
+		if (this.metrics == null) {
+			this.metrics = new VanillaPublicMetrics(this.metricRepository);
+		}
+		return new MetricsEndpoint(this.metrics);
 	}
 
 	@Bean
@@ -177,16 +176,6 @@ public class EndpointAutoConfiguration {
 		ConfigurationPropertiesReportEndpoint endpoint = new ConfigurationPropertiesReportEndpoint();
 		endpoint.setConfigurationBeanFactoryMetaData(this.beanFactoryMetaData);
 		return endpoint;
-	}
-
-	@Configuration
-	protected static class CorePublicMetrics {
-
-		@Bean
-		SystemPublicMetrics systemPublicMetrics() {
-			return new SystemPublicMetrics();
-		}
-
 	}
 
 	@Configuration
