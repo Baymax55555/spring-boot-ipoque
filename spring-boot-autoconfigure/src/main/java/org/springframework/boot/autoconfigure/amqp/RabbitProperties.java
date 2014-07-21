@@ -31,19 +31,35 @@ import org.springframework.util.StringUtils;
 @ConfigurationProperties(prefix = "spring.rabbitmq")
 public class RabbitProperties {
 
+	/**
+	 * RabbitMQ host.
+	 */
 	private String host = "localhost";
 
+	/**
+	 * RabbitMQ port.
+	 */
 	private int port = 5672;
 
+	/**
+	 * Login user to authenticate to the broker.
+	 */
 	private String username;
 
+	/**
+	 * Login to authenticate against the broker.
+	 */
 	private String password;
 
+	/**
+	 * Virtual host to use when connecting to the broker.
+	 */
 	private String virtualHost;
 
+	/**
+	 * Comma-separated list of addresses to which the client should connect to.
+	 */
 	private String addresses;
-
-	private boolean dynamic = true;
 
 	public String getHost() {
 		if (this.addresses == null) {
@@ -129,14 +145,6 @@ public class RabbitProperties {
 
 	public void setPassword(String password) {
 		this.password = password;
-	}
-
-	public boolean isDynamic() {
-		return this.dynamic;
-	}
-
-	public void setDynamic(boolean dynamic) {
-		this.dynamic = dynamic;
 	}
 
 	public String getVirtualHost() {

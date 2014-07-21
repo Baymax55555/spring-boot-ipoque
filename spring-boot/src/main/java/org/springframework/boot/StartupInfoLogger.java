@@ -16,15 +16,8 @@
 
 package org.springframework.boot;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
-import java.net.JarURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
-import java.security.CodeSource;
-import java.security.ProtectionDomain;
 import java.util.concurrent.Callable;
 
 import org.apache.commons.logging.Log;
@@ -145,10 +138,9 @@ class StartupInfoLogger {
 				return System.getProperty("user.dir");
 			}
 		});
-		File codeSourceLocation = getCodeSourceLocation();
-		String path = (codeSourceLocation == null ? "" : codeSourceLocation
-				.getAbsolutePath());
-		if (startedBy == null && codeSourceLocation == null) {
+		ApplicationHome home = new ApplicationHome(this.sourceClass);
+		String path = (home.getSource() == null ? "" : home.getSource().getAbsolutePath());
+		if (startedBy == null && path == null) {
 			return "";
 		}
 		if (StringUtils.hasLength(startedBy) && StringUtils.hasLength(path)) {
@@ -158,33 +150,6 @@ class StartupInfoLogger {
 			in = " " + in;
 		}
 		return " (" + path + startedBy + in + ")";
-	}
-
-	private File getCodeSourceLocation() {
-		try {
-			ProtectionDomain protectionDomain = (this.sourceClass == null ? getClass()
-					: this.sourceClass).getProtectionDomain();
-			CodeSource codeSource = protectionDomain.getCodeSource();
-			if (codeSource == null) {
-				return null;
-			}
-			URL location = protectionDomain.getCodeSource().getLocation();
-			URLConnection connection = location.openConnection();
-			File file = getFile(location, connection);
-			if (file.exists()) {
-				return file;
-			}
-		}
-		catch (Exception ex) {
-		}
-		return null;
-	}
-
-	private File getFile(URL location, URLConnection connection) throws IOException {
-		if (connection instanceof JarURLConnection) {
-			return new File(((JarURLConnection) connection).getJarFile().getName());
-		}
-		return new File(location.getPath());
 	}
 
 	private String getValue(String prefix, Callable<Object> call) {
