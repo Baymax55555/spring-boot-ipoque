@@ -59,8 +59,6 @@ public abstract class AbstractConfigurableEmbeddedServletContainer implements
 
 	private int sessionTimeout;
 
-	private Ssl ssl;
-
 	/**
 	 * Create a new {@link AbstractConfigurableEmbeddedServletContainer} instance.
 	 */
@@ -247,15 +245,6 @@ public abstract class AbstractConfigurableEmbeddedServletContainer implements
 	@Override
 	public void setJspServletClassName(String jspServletClassName) {
 		this.jspServletClassName = jspServletClassName;
-	}
-
-	@Override
-	public void setSsl(Ssl ssl) {
-		this.ssl = ssl;
-	}
-
-	public Ssl getSsl() {
-		return this.ssl;
 	}
 
 	/**
