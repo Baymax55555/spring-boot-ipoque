@@ -29,15 +29,15 @@ import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.support.SimpleJobOperator;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -60,11 +60,10 @@ import org.springframework.util.StringUtils;
 @ConditionalOnClass({ JobLauncher.class, DataSource.class, JdbcOperations.class })
 @AutoConfigureAfter(HibernateJpaAutoConfiguration.class)
 @ConditionalOnBean(JobLauncher.class)
-@EnableConfigurationProperties(BatchProperties.class)
 public class BatchAutoConfiguration {
 
-	@Autowired
-	private BatchProperties properties;
+	@Value("${spring.batch.job.names:}")
+	private String jobNames;
 
 	@Autowired(required = false)
 	private JobParametersConverter jobParametersConverter;
@@ -78,14 +77,13 @@ public class BatchAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	@ConditionalOnProperty(value = "spring.batch.job.enabled", match = "true", defaultMatch = true)
+	@ConditionalOnExpression("${spring.batch.job.enabled:true}")
 	public JobLauncherCommandLineRunner jobLauncherCommandLineRunner(
 			JobLauncher jobLauncher, JobExplorer jobExplorer) {
 		JobLauncherCommandLineRunner runner = new JobLauncherCommandLineRunner(
 				jobLauncher, jobExplorer);
-		String jobNames = this.properties.getJob().getNames();
-		if (StringUtils.hasText(jobNames)) {
-			runner.setJobNames(jobNames);
+		if (StringUtils.hasText(this.jobNames)) {
+			runner.setJobNames(this.jobNames);
 		}
 		return runner;
 	}
