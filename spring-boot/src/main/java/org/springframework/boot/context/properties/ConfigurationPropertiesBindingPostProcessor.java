@@ -262,8 +262,7 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 		PropertiesConfigurationFactory<Object> factory = new PropertiesConfigurationFactory<Object>(
 				target);
 		if (annotation != null && annotation.locations().length != 0) {
-			factory.setPropertySources(loadPropertySources(annotation.locations(),
-					annotation.merge()));
+			factory.setPropertySources(loadPropertySources(annotation.locations()));
 		}
 		else {
 			factory.setPropertySources(this.propertySources);
@@ -302,8 +301,7 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 		return this.validator;
 	}
 
-	private PropertySources loadPropertySources(String[] locations,
-			boolean mergeDefaultSources) {
+	private PropertySources loadPropertySources(String[] locations) {
 		try {
 			PropertySourcesLoader loader = new PropertySourcesLoader();
 			for (String location : locations) {
@@ -316,14 +314,7 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 				}
 				loader.load(resource);
 			}
-
-			MutablePropertySources loaded = loader.getPropertySources();
-			if (mergeDefaultSources) {
-				for (PropertySource<?> propertySource : this.propertySources) {
-					loaded.addLast(propertySource);
-				}
-			}
-			return loaded;
+			return loader.getPropertySources();
 		}
 		catch (IOException ex) {
 			throw new IllegalStateException(ex);
