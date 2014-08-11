@@ -21,8 +21,13 @@ import javax.validation.constraints.NotNull;
 
 import org.junit.After;
 import org.junit.Test;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.boot.test.EnvironmentTestUtils;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -36,8 +41,10 @@ import org.springframework.validation.Validator;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -142,23 +149,23 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 	}
 
 	@Test
-	public void placeholderResolutionWithCustomLocation() throws Exception {
-		this.context = new AnnotationConfigApplicationContext();
-		EnvironmentTestUtils.addEnvironment(this.context, "fooValue:bar");
-		this.context.register(CustomConfigurationLocation.class);
+	public void configurationPropertiesWithFactoryBean() throws Exception {
+		ConfigurationPropertiesWithFactoryBean.factoryBeanInit = false;
+		this.context = new AnnotationConfigApplicationContext() {
+			@Override
+			protected void onRefresh() throws BeansException {
+				assertFalse("Init too early",
+						ConfigurationPropertiesWithFactoryBean.factoryBeanInit);
+				super.onRefresh();
+			}
+		};
+		this.context.register(ConfigurationPropertiesWithFactoryBean.class);
+		GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
+		beanDefinition.setBeanClass(FactoryBeanTester.class);
+		beanDefinition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
+		this.context.registerBeanDefinition("test", beanDefinition);
 		this.context.refresh();
-		assertThat(this.context.getBean(CustomConfigurationLocation.class).getFoo(),
-				equalTo("bar"));
-	}
-
-	@Test
-	public void placeholderResolutionWithUnmergedCustomLocation() throws Exception {
-		this.context = new AnnotationConfigApplicationContext();
-		EnvironmentTestUtils.addEnvironment(this.context, "fooValue:bar");
-		this.context.register(UnmergedCustomConfigurationLocation.class);
-		this.context.refresh();
-		assertThat(this.context.getBean(UnmergedCustomConfigurationLocation.class)
-				.getFoo(), equalTo("${fooValue}"));
+		assertTrue("No init", ConfigurationPropertiesWithFactoryBean.factoryBeanInit);
 	}
 
 	@Configuration
@@ -319,36 +326,37 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 
 	}
 
+	@Configuration
 	@EnableConfigurationProperties
-	@ConfigurationProperties(locations = "custom-location.yml")
-	public static class CustomConfigurationLocation {
+	public static class ConfigurationPropertiesWithFactoryBean {
 
-		private String foo;
-
-		public String getFoo() {
-			return this.foo;
-		}
-
-		public void setFoo(String foo) {
-			this.foo = foo;
-		}
+		public static boolean factoryBeanInit;
 
 	}
 
-	@EnableConfigurationProperties
-	@ConfigurationProperties(locations = "custom-location.yml", merge = false)
-	public static class UnmergedCustomConfigurationLocation {
+	@SuppressWarnings("rawtypes")
+	// Must be a raw type
+	static class FactoryBeanTester implements FactoryBean, InitializingBean {
 
-		private String foo;
-
-		public String getFoo() {
-			return this.foo;
+		@Override
+		public Object getObject() throws Exception {
+			return Object.class;
 		}
 
-		public void setFoo(String foo) {
-			this.foo = foo;
+		@Override
+		public Class<?> getObjectType() {
+			return null;
+		}
+
+		@Override
+		public boolean isSingleton() {
+			return true;
+		}
+
+		@Override
+		public void afterPropertiesSet() throws Exception {
+			ConfigurationPropertiesWithFactoryBean.factoryBeanInit = true;
 		}
 
 	}
-
 }
