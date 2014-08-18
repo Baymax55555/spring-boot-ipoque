@@ -29,7 +29,6 @@ import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.transform.ASTTransformation;
-import org.springframework.core.annotation.Order;
 
 /**
  * {@link ASTTransformation} to resolve beans declarations inside application source
@@ -39,10 +38,7 @@ import org.springframework.core.annotation.Order;
  *
  * @author Dave Syer
  */
-@Order(GroovyBeansTransformation.ORDER)
 public class GroovyBeansTransformation implements ASTTransformation {
-
-	public static final int ORDER = GrabMetadataTransformation.ORDER + 200;
 
 	@Override
 	public void visit(ASTNode[] nodes, SourceUnit source) {
