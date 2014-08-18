@@ -36,18 +36,7 @@ import org.springframework.boot.loader.jar.JarFile;
  */
 public class LaunchedURLClassLoader extends URLClassLoader {
 
-	static {
-		try {
-			ClassLoader.registerAsParallelCapable();
-		}
-		catch (NoSuchMethodError ex) {
-			// Not available on earlier JDKs
-		}
-	}
-
 	private final ClassLoader rootClassLoader;
-
-	private final LockProvider lockProvider;
 
 	/**
 	 * Create a new {@link LaunchedURLClassLoader} instance.
@@ -57,17 +46,6 @@ public class LaunchedURLClassLoader extends URLClassLoader {
 	public LaunchedURLClassLoader(URL[] urls, ClassLoader parent) {
 		super(urls, parent);
 		this.rootClassLoader = findRootClassLoader(parent);
-		this.lockProvider = createLockProvider();
-	}
-
-	private LockProvider createLockProvider() {
-		try {
-			ClassLoader.class.getMethod("getClassLoadingLock", String.class);
-			return new Java7LockProvider();
-		}
-		catch (NoSuchMethodException ex) {
-			return new LockProvider();
-		}
 	}
 
 	private ClassLoader findRootClassLoader(ClassLoader classLoader) {
@@ -148,7 +126,7 @@ public class LaunchedURLClassLoader extends URLClassLoader {
 	@Override
 	protected Class<?> loadClass(String name, boolean resolve)
 			throws ClassNotFoundException {
-		synchronized (this.lockProvider.getLock(this, name)) {
+		synchronized (this) {
 			Class<?> loadedClass = findLoadedClass(name);
 			if (loadedClass == null) {
 				Handler.setUseFastConnectionExceptions(true);
@@ -242,29 +220,6 @@ public class LaunchedURLClassLoader extends URLClassLoader {
 		catch (java.security.PrivilegedActionException ex) {
 			// Ignore
 		}
-	}
-
-	/**
-	 * Strategy used to provide the synchronize lock object to use when loading classes.
-	 */
-	private static class LockProvider {
-
-		public Object getLock(LaunchedURLClassLoader classLoader, String className) {
-			return classLoader;
-		}
-
-	}
-
-	/**
-	 * Java 7 specific {@link LockProvider}.
-	 */
-	private static class Java7LockProvider extends LockProvider {
-
-		@Override
-		public Object getLock(LaunchedURLClassLoader classLoader, String className) {
-			return classLoader.getClassLoadingLock(className);
-		}
-
 	}
 
 }
