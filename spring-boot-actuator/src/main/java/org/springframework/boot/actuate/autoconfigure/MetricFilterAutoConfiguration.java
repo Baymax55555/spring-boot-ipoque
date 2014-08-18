@@ -97,7 +97,7 @@ public class MetricFilterAutoConfiguration {
 				try {
 					httpStatus = HttpStatus.valueOf(status);
 				}
-				catch (Exception ex) {
+				catch (Exception e) {
 					// not convertible
 				}
 				if (bestMatchingPattern != null) {
