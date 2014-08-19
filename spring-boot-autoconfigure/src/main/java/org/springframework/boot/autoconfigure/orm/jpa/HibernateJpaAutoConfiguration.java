@@ -16,7 +16,6 @@
 
 package org.springframework.boot.autoconfigure.orm.jpa;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
@@ -68,10 +67,8 @@ public class HibernateJpaAutoConfiguration extends JpaBaseConfiguration {
 	}
 
 	@Override
-	protected Map<String, Object> getVendorProperties() {
-		Map<String, Object> vendorProperties = new LinkedHashMap<String, Object>();
-		vendorProperties.putAll(this.properties.getHibernateProperties(this.dataSource));
-		return vendorProperties;
+	protected Map<String, String> getVendorProperties() {
+		return this.properties.getHibernateProperties(this.dataSource);
 	}
 
 	static class HibernateEntityManagerCondition extends SpringBootCondition {
