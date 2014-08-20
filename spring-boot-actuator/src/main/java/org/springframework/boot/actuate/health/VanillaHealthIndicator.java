@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.social;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
+package org.springframework.boot.actuate.health;
 
 /**
- * Properties for Spring Social Facebook.
+ * Default implementation of {@link HealthIndicator} that returns {@link Status#UP}.
  *
- * @author Stephane Nicoll
- * @since 1.2.0
+ * @author Dave Syer
+ * @author Christian Dupuis
+ * @see Status#UP
  */
-@ConfigurationProperties("spring.social.facebook")
-public class FacebookProperties extends SocialProperties {
+public class VanillaHealthIndicator extends AbstractHealthIndicator {
+
+	@Override
+	protected void doHealthCheck(Health.Builder builder) throws Exception {
+		builder.up();
+	}
 
 }

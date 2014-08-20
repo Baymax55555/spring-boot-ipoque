@@ -16,7 +16,6 @@
 
 package org.springframework.boot.autoconfigure.social;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -25,7 +24,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.bind.RelaxedPropertyResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -49,20 +48,29 @@ import org.springframework.web.servlet.View;
  */
 @Configuration
 @ConditionalOnClass({ SocialConfigurerAdapter.class, LinkedInConnectionFactory.class })
-@ConditionalOnProperty(prefix = "spring.social.linkedin", name = "app-id")
+@ConditionalOnProperty(prefix = "spring.social.linkedin.", value = "app-id")
 @AutoConfigureBefore(SocialWebAutoConfiguration.class)
 @AutoConfigureAfter(WebMvcAutoConfiguration.class)
 public class LinkedInAutoConfiguration {
 
 	@Configuration
 	@EnableSocial
-	@EnableConfigurationProperties(LinkedInProperties.class)
 	@ConditionalOnWebApplication
 	protected static class LinkedInAutoConfigurationAdapter extends
 			SocialAutoConfigurerAdapter {
 
-		@Autowired
-		private LinkedInProperties properties;
+		@Override
+		protected String getPropertyPrefix() {
+			return "spring.social.linkedin.";
+		}
+
+		@Override
+		protected ConnectionFactory<?> createConnectionFactory(
+				RelaxedPropertyResolver properties) {
+			return new LinkedInConnectionFactory(
+					properties.getRequiredProperty("app-id"),
+					properties.getRequiredProperty("app-secret"));
+		}
 
 		@Bean
 		@ConditionalOnMissingBean(LinkedIn.class)
@@ -74,16 +82,11 @@ public class LinkedInAutoConfiguration {
 		}
 
 		@Bean(name = { "connect/linkedinConnect", "connect/linkedinConnected" })
-		@ConditionalOnProperty(prefix = "spring.social", name = "auto-connection-views")
+		@ConditionalOnProperty(prefix = "spring.social.", value = "auto-connection-views")
 		public View linkedInConnectView() {
 			return new GenericConnectionStatusView("linkedin", "LinkedIn");
 		}
 
-		@Override
-		protected ConnectionFactory<?> createConnectionFactory() {
-			return new LinkedInConnectionFactory(this.properties.getAppId(),
-					this.properties.getAppSecret());
-		}
 	}
 
 }
