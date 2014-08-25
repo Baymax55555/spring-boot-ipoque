@@ -5,26 +5,13 @@ package org.test
 import java.util.concurrent.CountDownLatch
 
 @Log
-@Configuration
-@EnableJmsMessaging
+@EnableJms
 class JmsExample implements CommandLineRunner {
 
 	private CountDownLatch latch = new CountDownLatch(1)
 
 	@Autowired
 	JmsTemplate jmsTemplate
-
-	@Bean
-	DefaultMessageListenerContainer jmsListener(ConnectionFactory connectionFactory) {
-		new DefaultMessageListenerContainer([
-			connectionFactory: connectionFactory,
-			destinationName: "spring-boot",
-			pubSubDomain: true,
-			messageListener: new MessageListenerAdapter(new Receiver(latch:latch)) {{
-				defaultListenerMethod = "receive"
-			}}
-		])
-	}
 
 	void run(String... args) {
 		def messageCreator = { session ->
@@ -35,13 +22,11 @@ class JmsExample implements CommandLineRunner {
 		log.info "Send JMS message, waiting..."
 		latch.await()
 	}
-}
 
-@Log
-class Receiver {
-	CountDownLatch latch
+	@JmsListener(destination = 'spring-boot')
 	def receive(String message) {
 		log.info "Received ${message}"
 		latch.countDown()
 	}
+
 }
