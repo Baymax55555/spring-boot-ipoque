@@ -28,8 +28,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -102,14 +102,14 @@ public abstract class JpaBaseConfiguration implements BeanFactoryAware {
 	@Primary
 	@ConditionalOnMissingBean
 	public LocalContainerEntityManagerFactoryBean entityManagerFactory(
-			EntityManagerFactoryBuilder factoryBuilder) {
-		return factoryBuilder.dataSource(this.dataSource).packages(getPackagesToScan())
+			EntityManagerFactoryBuilder factory) {
+		return factory.dataSource(this.dataSource).packages(getPackagesToScan())
 				.properties(getVendorProperties()).build();
 	}
 
 	protected abstract AbstractJpaVendorAdapter createJpaVendorAdapter();
 
-	protected abstract Map<String, Object> getVendorProperties();
+	protected abstract Map<String, String> getVendorProperties();
 
 	protected EntityManagerFactoryBuilder.EntityManagerFactoryBeanCallback getVendorCallback() {
 		return null;
@@ -136,7 +136,7 @@ public abstract class JpaBaseConfiguration implements BeanFactoryAware {
 	@ConditionalOnWebApplication
 	@ConditionalOnMissingBean({ OpenEntityManagerInViewInterceptor.class,
 			OpenEntityManagerInViewFilter.class })
-	@ConditionalOnProperty(prefix = "spring.jpa", name = "open-in-view", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnExpression("${spring.jpa.openInView:${spring.jpa.open_in_view:true}}")
 	protected static class JpaWebConfiguration extends WebMvcConfigurerAdapter {
 
 		@Override

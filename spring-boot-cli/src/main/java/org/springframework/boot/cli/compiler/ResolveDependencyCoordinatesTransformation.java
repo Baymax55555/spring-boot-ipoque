@@ -29,7 +29,6 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.springframework.boot.cli.compiler.grape.DependencyResolutionContext;
-import org.springframework.core.annotation.Order;
 
 /**
  * {@link ASTTransformation} to resolve {@link Grab} artifact coordinates.
@@ -37,11 +36,8 @@ import org.springframework.core.annotation.Order;
  * @author Andy Wilkinson
  * @author Phillip Webb
  */
-@Order(ResolveDependencyCoordinatesTransformation.ORDER)
 public class ResolveDependencyCoordinatesTransformation extends
 		AnnotatedNodeASTTransformation {
-
-	public static final int ORDER = GrabMetadataTransformation.ORDER + 300;
 
 	private static final Set<String> GRAB_ANNOTATION_NAMES = Collections
 			.unmodifiableSet(new HashSet<String>(Arrays.asList(Grab.class.getName(),
