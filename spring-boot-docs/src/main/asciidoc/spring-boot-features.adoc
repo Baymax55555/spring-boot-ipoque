@@ -711,10 +711,7 @@ messages to the console you can start your application with a `--debug` flag.
 	$ java -jar myapp.jar --debug
 ----
 
-If your terminal supports ANSI, color output will be used to aid readability. You can set
-`spring.output.ansi.enabled` to a
-{dc-spring-boot}/ansi/AnsiOutput.Enabled.{dc-ext}[supported value] to override the auto
-detection.
+If your terminal supports ANSI, color output will be used to aid readability.
 
 
 
@@ -723,7 +720,7 @@ detection.
 By default, log files are written to `spring.log` in your `temp` directory and rotate at
 10 Mb. You can easily customize the output folder by setting the `logging.path` property
 (for example in your `application.properties`). It is also possible to change the filename
-using a `logging.file` property.
+using a `logging.file` property. Note that if `logging.file` is used, then setting `logging.path` has no effect.
 
 As with console output, `ERROR`, `WARN` and `INFO` level messages are logged by default.
 

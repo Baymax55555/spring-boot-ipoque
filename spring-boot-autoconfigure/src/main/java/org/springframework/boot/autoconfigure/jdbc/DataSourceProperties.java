@@ -25,16 +25,14 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
- * Base class for configuration of a data source.
+ * Base class for configuration of a database pool.
  *
  * @author Dave Syer
  * @author Maciej Walkowiak
  * @since 1.1.0
  */
-@ConfigurationProperties(prefix = DataSourceProperties.PREFIX)
+@ConfigurationProperties(prefix = DataSourceAutoConfiguration.CONFIGURATION_PREFIX)
 public class DataSourceProperties implements BeanClassLoaderAware, InitializingBean {
-
-	public static final String PREFIX = "spring.datasource";
 
 	private String driverClassName;
 
@@ -201,7 +199,7 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 	}
 
 	public String getSqlScriptEncoding() {
-		return this.sqlScriptEncoding;
+		return sqlScriptEncoding;
 	}
 
 	public void setSqlScriptEncoding(String sqlScriptEncoding) {
