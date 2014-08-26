@@ -56,6 +56,8 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 @Import(Registrar.class)
 public class DataSourceAutoConfiguration {
 
+	public static final String CONFIGURATION_PREFIX = "spring.datasource";
+
 	/**
 	 * Determines if the {@code dataSource} being used by Spring was created from
 	 * {@link EmbeddedDataSourceConfiguration}.
@@ -97,8 +99,8 @@ public class DataSourceAutoConfiguration {
 		@Autowired
 		private DataSourceProperties properties;
 
+		@ConfigurationProperties(prefix = DataSourceAutoConfiguration.CONFIGURATION_PREFIX)
 		@Bean
-		@ConfigurationProperties(prefix = DataSourceProperties.PREFIX)
 		public DataSource dataSource() {
 			DataSourceBuilder factory = DataSourceBuilder
 					.create(this.properties.getClassLoader())
@@ -205,7 +207,8 @@ public class DataSourceAutoConfiguration {
 				return ConditionOutcome.match("existing auto database detected");
 			}
 
-			if (hasBean(context, DataSource.class)) {
+			if (BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
+					context.getBeanFactory(), DataSource.class, true, false).length > 0) {
 				return ConditionOutcome
 						.match("Existing bean configured database detected");
 			}
@@ -213,10 +216,6 @@ public class DataSourceAutoConfiguration {
 			return ConditionOutcome.noMatch("no existing bean configured database");
 		}
 
-		private boolean hasBean(ConditionContext context, Class<?> type) {
-			return BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
-					context.getBeanFactory(), type, true, false).length > 0;
-		}
 	}
 
 }
