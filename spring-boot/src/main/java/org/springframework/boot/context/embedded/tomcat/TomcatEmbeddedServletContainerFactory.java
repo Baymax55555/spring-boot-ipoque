@@ -17,7 +17,6 @@
 package org.springframework.boot.context.embedded.tomcat;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -26,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContainerInitializer;
 import javax.servlet.ServletContext;
@@ -42,7 +42,6 @@ import org.apache.catalina.loader.WebappLoader;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.startup.Tomcat.FixContextListener;
 import org.apache.coyote.AbstractProtocol;
-import org.apache.coyote.http11.AbstractHttp11JsseProtocol;
 import org.springframework.beans.BeanUtils;
 import org.springframework.boot.context.embedded.AbstractEmbeddedServletContainerFactory;
 import org.springframework.boot.context.embedded.EmbeddedServletContainer;
@@ -51,16 +50,12 @@ import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory
 import org.springframework.boot.context.embedded.ErrorPage;
 import org.springframework.boot.context.embedded.MimeMappings;
 import org.springframework.boot.context.embedded.ServletContextInitializer;
-import org.springframework.boot.context.embedded.Ssl;
-import org.springframework.boot.context.embedded.Ssl.ClientAuth;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.ResourceUtils;
 import org.springframework.util.StreamUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * {@link EmbeddedServletContainerFactory} that can be used to create
@@ -236,73 +231,9 @@ public class TomcatEmbeddedServletContainerFactory extends
 		// If ApplicationContext is slow to start we want Tomcat not to bind to the socket
 		// prematurely...
 		connector.setProperty("bindOnInit", "false");
-
-		if (getSsl() != null) {
-			Assert.state(
-					connector.getProtocolHandler() instanceof AbstractHttp11JsseProtocol,
-					"To use SSL, the connector's protocol handler must be an "
-							+ "AbstractHttp11JsseProtocol subclass");
-			configureSsl((AbstractHttp11JsseProtocol<?>) connector.getProtocolHandler(),
-					getSsl());
-			connector.setScheme("https");
-			connector.setSecure(true);
-		}
-
 		for (TomcatConnectorCustomizer customizer : this.tomcatConnectorCustomizers) {
 			customizer.customize(connector);
 		}
-	}
-
-	/**
-	 * Configure Tomcat's {@link AbstractHttp11JsseProtocol} for SSL.
-	 * @param protocol the protocol
-	 * @param ssl the ssl details
-	 */
-	protected void configureSsl(AbstractHttp11JsseProtocol<?> protocol, Ssl ssl) {
-		protocol.setSSLEnabled(true);
-		protocol.setSslProtocol(ssl.getProtocol());
-		configureSslClientAuth(protocol, ssl);
-		protocol.setKeystorePass(ssl.getKeyStorePassword());
-		protocol.setKeyPass(ssl.getKeyPassword());
-		protocol.setKeyAlias(ssl.getKeyAlias());
-		configureSslKeyStore(protocol, ssl);
-		String ciphers = StringUtils.arrayToCommaDelimitedString(ssl.getCiphers());
-		protocol.setCiphers(ciphers);
-		configureSslTrustStore(protocol, ssl);
-	}
-
-	private void configureSslClientAuth(AbstractHttp11JsseProtocol<?> protocol, Ssl ssl) {
-		if (ssl.getClientAuth() == ClientAuth.NEED) {
-			protocol.setClientAuth(Boolean.TRUE.toString());
-		}
-		else if (ssl.getClientAuth() == ClientAuth.WANT) {
-			protocol.setClientAuth("want");
-		}
-	}
-
-	private void configureSslKeyStore(AbstractHttp11JsseProtocol<?> protocol, Ssl ssl) {
-		try {
-			File file = ResourceUtils.getFile(ssl.getKeyStore());
-			protocol.setKeystoreFile(file.getAbsolutePath());
-		}
-		catch (FileNotFoundException ex) {
-			throw new EmbeddedServletContainerException("Could not find key store "
-					+ ssl.getKeyStore(), ex);
-		}
-	}
-
-	private void configureSslTrustStore(AbstractHttp11JsseProtocol<?> protocol, Ssl ssl) {
-		if (ssl.getTrustStore() != null) {
-			try {
-				File file = ResourceUtils.getFile(ssl.getTrustStore());
-				protocol.setTruststoreFile(file.getAbsolutePath());
-			}
-			catch (FileNotFoundException ex) {
-				throw new EmbeddedServletContainerException("Could not find trust store "
-						+ ssl.getTrustStore(), ex);
-			}
-		}
-		protocol.setTruststorePass(ssl.getTrustStorePassword());
 	}
 
 	/**
@@ -331,7 +262,12 @@ public class TomcatEmbeddedServletContainerFactory extends
 		for (MimeMappings.Mapping mapping : getMimeMappings()) {
 			context.addMimeMapping(mapping.getExtension(), mapping.getMimeType());
 		}
-		context.setSessionTimeout(getSessionTimeout());
+		long timeout = getSessionTimeout();
+		if (timeout > 0) {
+			// Tomcat timeouts are in minutes
+			timeout = Math.max(TimeUnit.SECONDS.toMinutes(timeout), 1L);
+		}
+		context.setSessionTimeout((int) timeout);
 		for (TomcatContextCustomizer customizer : this.tomcatContextCustomizers) {
 			customizer.customize(context);
 		}

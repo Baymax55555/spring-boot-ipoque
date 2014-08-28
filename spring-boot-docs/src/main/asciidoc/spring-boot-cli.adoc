@@ -113,11 +113,8 @@ The following items are used as ``grab hints'':
 |`JdbcTemplate`, `NamedParameterJdbcTemplate`, `DataSource`
 |JDBC Application.
 
-|`@EnableJms`
+|`@EnableJmsMessaging`
 |JMS Application.
-
-|`@EnableCaching`
-|Caching abstraction.
 
 |`@Test`
 |JUnit.
