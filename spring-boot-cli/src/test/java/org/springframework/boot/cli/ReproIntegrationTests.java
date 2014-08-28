@@ -28,7 +28,6 @@ import static org.junit.Assert.assertThat;
  *
  * @author Phillip Webb
  * @author Andy Wilkinson
- * @author Stephane Nicoll
  */
 public class ReproIntegrationTests {
 
@@ -71,17 +70,5 @@ public class ReproIntegrationTests {
 		this.thrown.expect(IllegalStateException.class);
 		this.thrown.expectMessage("is not a JAR file");
 		this.cli.jar("secure.groovy", "crsh.groovy");
-	}
-
-	@Test
-	public void jmsListener() throws Exception {
-		this.cli.run("jms.groovy");
-		assertThat(this.cli.getOutput(), containsString("Hello World"));
-	}
-
-	@Test
-	public void caching() throws Exception {
-		this.cli.run("caching.groovy");
-		assertThat(this.cli.getOutput(), containsString("Hello World"));
 	}
 }
