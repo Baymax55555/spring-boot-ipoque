@@ -24,9 +24,7 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -136,10 +134,12 @@ public class SampleIntegrationTests {
 	}
 
 	@Test
+	@Ignore("Intermittent failure on CI. See #323")
 	public void jmsSample() throws Exception {
 		String output = this.cli.run("jms.groovy");
 		assertTrue("Wrong output: " + output,
-				output.contains("Received Greetings from Spring Boot via HornetQ"));
+				output.contains("Received Greetings from Spring Boot via ActiveMQ"));
+		FileUtils.deleteDirectory(new File("activemq-data"));// cleanup ActiveMQ cruft
 	}
 
 	@Test
@@ -154,12 +154,6 @@ public class SampleIntegrationTests {
 	public void deviceSample() throws Exception {
 		this.cli.run("device.groovy");
 		assertEquals("Hello Normal Device!", this.cli.getHttpOutput());
-	}
-
-	@Test
-	public void caching() throws Exception {
-		this.cli.run("caching.groovy");
-		assertThat(this.cli.getOutput(), containsString("Hello World"));
 	}
 
 }
