@@ -26,8 +26,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "spring.redis")
 public class RedisProperties {
 
-	private int database = 0;
-
 	private String host = "localhost";
 
 	private String password;
@@ -66,14 +64,6 @@ public class RedisProperties {
 
 	public void setPool(RedisProperties.Pool pool) {
 		this.pool = pool;
-	}
-
-	public int getDatabase() {
-		return this.database;
-	}
-
-	public void setDatabase(int database) {
-		this.database = database;
 	}
 
 	/**
