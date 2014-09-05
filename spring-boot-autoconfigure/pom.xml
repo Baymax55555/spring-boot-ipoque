@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-parent</artifactId>
-		<version>1.2.0.BUILD-SNAPSHOT</version>
+		<version>1.1.7.BUILD-SNAPSHOT</version>
 		<relativePath>../spring-boot-parent</relativePath>
 	</parent>
 	<artifactId>spring-boot-autoconfigure</artifactId>
@@ -26,16 +26,6 @@
 		</dependency>
 		<!-- Optional -->
 		<dependency>
-			<groupId>com.atomikos</groupId>
-			<artifactId>transactions-jdbc</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.atomikos</groupId>
-			<artifactId>transactions-jta</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<optional>true</optional>
@@ -48,11 +38,6 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -76,11 +61,6 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-dbcp2</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.solr</groupId>
 			<artifactId>solr-solrj</artifactId>
 			<optional>true</optional>
@@ -98,11 +78,6 @@
 		<dependency>
 			<groupId>org.apache.velocity</groupId>
 			<artifactId>velocity</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.codehaus.btm</groupId>
-			<artifactId>btm</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -224,7 +199,7 @@
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-elasticsearch</artifactId>
 			<optional>true</optional>
-		</dependency>
+        </dependency>
 		<dependency>
 			<groupId>org.springframework.data</groupId>
 			<artifactId>spring-data-solr</artifactId>
@@ -263,11 +238,6 @@
 		<dependency>
 			<groupId>org.springframework.amqp</groupId>
 			<artifactId>spring-rabbit</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-spring-service-connector</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -318,11 +288,6 @@
 		<dependency>
 			<groupId>nz.net.ultraq.thymeleaf</groupId>
 			<artifactId>thymeleaf-layout-dialect</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.github.mxab.thymeleaf.extras</groupId>
-			<artifactId>thymeleaf-extras-data-attribute</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
