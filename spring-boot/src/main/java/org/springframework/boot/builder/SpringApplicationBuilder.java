@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.beans.factory.support.BeanNameGenerator;
-import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextInitializer;
@@ -291,16 +290,6 @@ public class SpringApplicationBuilder {
 	 */
 	public SpringApplicationBuilder logStartupInfo(boolean logStartupInfo) {
 		this.application.setLogStartupInfo(logStartupInfo);
-		return this;
-	}
-
-	/**
-	 * Sets the {@link Banner} instance which will be used to print the banner when no
-	 * static banner file is provided.
-	 * @param banner The banner to use
-	 */
-	public SpringApplicationBuilder banner(Banner banner) {
-		this.application.setBanner(banner);
 		return this;
 	}
 
