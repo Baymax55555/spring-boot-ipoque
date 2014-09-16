@@ -17,7 +17,6 @@
 package org.springframework.boot.autoconfigure.jackson;
 
 import java.util.Collection;
-import java.util.Map.Entry;
 
 import javax.annotation.PostConstruct;
 
@@ -34,10 +33,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -56,7 +51,6 @@ import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
  * </ul>
  *
  * @author Oliver Gierke
- * @author Andy Wilkinson
  * @since 1.1.0
  */
 @Configuration
@@ -81,73 +75,24 @@ public class JacksonAutoConfiguration {
 
 	@Configuration
 	@ConditionalOnClass(ObjectMapper.class)
-	@EnableConfigurationProperties({ HttpMapperProperties.class, JacksonProperties.class })
+	@EnableConfigurationProperties(HttpMapperProperties.class)
 	static class JacksonObjectMapperAutoConfiguration {
 
 		@Autowired
-		private HttpMapperProperties httpMapperProperties = new HttpMapperProperties();
-
-		@Autowired
-		private JacksonProperties jacksonProperties = new JacksonProperties();
+		private HttpMapperProperties properties = new HttpMapperProperties();
 
 		@Bean
 		@Primary
 		@ConditionalOnMissingBean
 		public ObjectMapper jacksonObjectMapper() {
 			ObjectMapper objectMapper = new ObjectMapper();
-
-			if (this.httpMapperProperties.isJsonSortKeys()) {
+			if (this.properties.isJsonSortKeys()) {
 				objectMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS,
 						true);
 			}
-
-			configureDeserializationFeatures(objectMapper);
-			configureSerializationFeatures(objectMapper);
-			configureMapperFeatures(objectMapper);
-			configureParserFeatures(objectMapper);
-			configureGeneratorFeatures(objectMapper);
-
 			return objectMapper;
 		}
 
-		private void configureDeserializationFeatures(ObjectMapper objectMapper) {
-			for (Entry<DeserializationFeature, Boolean> entry : this.jacksonProperties
-					.getDeserialization().entrySet()) {
-				objectMapper.configure(entry.getKey(), isFeatureEnabled(entry));
-			}
-		}
-
-		private void configureSerializationFeatures(ObjectMapper objectMapper) {
-			for (Entry<SerializationFeature, Boolean> entry : this.jacksonProperties
-					.getSerialization().entrySet()) {
-				objectMapper.configure(entry.getKey(), isFeatureEnabled(entry));
-			}
-		}
-
-		private void configureMapperFeatures(ObjectMapper objectMapper) {
-			for (Entry<MapperFeature, Boolean> entry : this.jacksonProperties.getMapper()
-					.entrySet()) {
-				objectMapper.configure(entry.getKey(), isFeatureEnabled(entry));
-			}
-		}
-
-		private void configureParserFeatures(ObjectMapper objectMapper) {
-			for (Entry<JsonParser.Feature, Boolean> entry : this.jacksonProperties
-					.getParser().entrySet()) {
-				objectMapper.configure(entry.getKey(), isFeatureEnabled(entry));
-			}
-		}
-
-		private void configureGeneratorFeatures(ObjectMapper objectMapper) {
-			for (Entry<JsonGenerator.Feature, Boolean> entry : this.jacksonProperties
-					.getGenerator().entrySet()) {
-				objectMapper.configure(entry.getKey(), isFeatureEnabled(entry));
-			}
-		}
-
-		private boolean isFeatureEnabled(Entry<?, Boolean> entry) {
-			return entry.getValue() != null && entry.getValue();
-		}
 	}
 
 	@Configuration
