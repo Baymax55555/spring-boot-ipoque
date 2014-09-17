@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.1.7.BUILD-SNAPSHOT</version>
+		<version>1.2.0.BUILD-SNAPSHOT</version>
 		<relativePath>../spring-boot-starters/spring-boot-starter-parent</relativePath>
 	</parent>
 	<artifactId>spring-boot-samples</artifactId>
@@ -38,6 +38,9 @@
 		<module>spring-boot-sample-hornetq</module>
 		<module>spring-boot-sample-integration</module>
 		<module>spring-boot-sample-jetty</module>
+		<module>spring-boot-sample-jta-atomikos</module>
+		<module>spring-boot-sample-jta-bitronix</module>
+		<module>spring-boot-sample-jta-jndi</module>
 		<module>spring-boot-sample-liquibase</module>
 		<module>spring-boot-sample-parent-context</module>
 		<module>spring-boot-sample-profile</module>
