@@ -197,14 +197,14 @@ public class WebMvcAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean(LocaleResolver.class)
-		@ConditionalOnProperty(prefix = "spring.mvc", name = "locale")
+		@ConditionalOnProperty(prefix = "spring.mvc.", value = "locale")
 		public LocaleResolver localeResolver() {
 			return new FixedLocaleResolver(
 					StringUtils.parseLocaleString(this.mvcProperties.getLocale()));
 		}
 
 		@Bean
-		@ConditionalOnProperty(prefix = "spring.mvc", name = "date-format")
+		@ConditionalOnProperty(prefix = "spring.mvc.", value = "date-format")
 		public Formatter<Date> dateFormatter() {
 			return new DateFormatter(this.mvcProperties.getDateFormat());
 		}
@@ -294,7 +294,7 @@ public class WebMvcAutoConfiguration {
 			}
 
 			@Bean
-			protected ResourceHttpRequestHandler faviconRequestHandler() {
+			public ResourceHttpRequestHandler faviconRequestHandler() {
 				ResourceHttpRequestHandler requestHandler = new ResourceHttpRequestHandler();
 				requestHandler.setLocations(Arrays
 						.<Resource> asList(new ClassPathResource("/")));
