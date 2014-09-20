@@ -28,14 +28,14 @@ import org.springframework.boot.groovy.EnableRabbitMessaging;
  * {@link CompilerAutoConfiguration} for Spring Rabbit.
  *
  * @author Greg Turnquist
- * @author Stephane Nicoll
  */
 public class RabbitCompilerAutoConfiguration extends CompilerAutoConfiguration {
 
 	@Override
 	public boolean matches(ClassNode classNode) {
-		return AstUtils.hasAtLeastOneAnnotation(classNode, "EnableRabbit")
-				|| AstUtils.hasAtLeastOneAnnotation(classNode, "EnableRabbitMessaging");
+		// Slightly weird detection algorithm because there is no @Enable annotation for
+		// Integration
+		return AstUtils.hasAtLeastOneAnnotation(classNode, "EnableRabbitMessaging");
 	}
 
 	@Override
@@ -47,9 +47,7 @@ public class RabbitCompilerAutoConfiguration extends CompilerAutoConfiguration {
 
 	@Override
 	public void applyImports(ImportCustomizer imports) throws CompilationFailedException {
-		imports.addStarImports("org.springframework.amqp.rabbit.annotation",
-				"org.springframework.amqp.rabbit.core",
-				"org.springframework.amqp.rabbit.config",
+		imports.addStarImports("org.springframework.amqp.rabbit.core",
 				"org.springframework.amqp.rabbit.connection",
 				"org.springframework.amqp.rabbit.listener",
 				"org.springframework.amqp.rabbit.listener.adapter",
