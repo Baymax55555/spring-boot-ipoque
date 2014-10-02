@@ -242,8 +242,8 @@ public class JettyEmbeddedServletContainerFactory extends
 		if (root != null) {
 			try {
 				if (!root.isDirectory()) {
-					handler.setBaseResource(Resource.newResource("jar:" + root.toURI()
-							+ "!"));
+					Resource resource = Resource.newResource("jar:" + root.toURI() + "!");
+					handler.setBaseResource(resource);
 				}
 				else {
 					handler.setBaseResource(Resource.newResource(root));

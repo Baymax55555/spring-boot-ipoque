@@ -43,7 +43,7 @@ import org.springframework.util.Assert;
  */
 public class RedisMetricRepository implements MetricRepository, InitializingBean {
 
-	private static final String DEFAULT_METRICS_PREFIX = "spring.metrics.";
+	private static final String DEFAULT_METRICS_PREFIX = "spring.metrics";
 
 	private static final String DEFAULT_KEY = "keys." + DEFAULT_METRICS_PREFIX;
 
