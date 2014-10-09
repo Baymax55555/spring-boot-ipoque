@@ -103,7 +103,6 @@ public class JpaProperties {
 	/**
 	 * Get configuration properties for the initialization of the main Hibernate
 	 * EntityManagerFactory.
-	 *
 	 * @param dataSource the DataSource in case it is needed to determine the properties
 	 * @return some Hibernate properties for configuration
 	 */
@@ -113,9 +112,9 @@ public class JpaProperties {
 
 	public static class Hibernate {
 
-		private Class<?> namingStrategy;
+		private static final String DEFAULT_NAMING_STRATEGY = "org.springframework.boot.orm.jpa.hibernate.SpringNamingStrategy";
 
-		private static String DEFAULT_NAMING_STRATEGY = "org.springframework.boot.orm.jpa.SpringNamingStrategy";
+		private Class<?> namingStrategy;
 
 		private String ddlAuto;
 
