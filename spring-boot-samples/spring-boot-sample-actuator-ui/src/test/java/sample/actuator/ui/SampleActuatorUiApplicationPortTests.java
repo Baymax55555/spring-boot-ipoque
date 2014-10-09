@@ -75,8 +75,7 @@ public class SampleActuatorUiApplicationPortTests {
 		ResponseEntity<String> entity = new TestRestTemplate().getForEntity(
 				"http://localhost:" + this.managementPort + "/health", String.class);
 		assertEquals(HttpStatus.OK, entity.getStatusCode());
-		assertEquals("{\"status\":\"UP\",\"application\":{\"status\":\"UP\"}}",
-				entity.getBody());
+		assertEquals("{\"status\":\"UP\"}", entity.getBody());
 	}
 
 }
