@@ -580,7 +580,7 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 
 	protected abstract AbstractEmbeddedServletContainerFactory getFactory();
 
-	protected ServletContextInitializer exampleServletRegistration() {
+	private ServletContextInitializer exampleServletRegistration() {
 		return new ServletRegistrationBean(new ExampleServlet(), "/hello");
 	}
 

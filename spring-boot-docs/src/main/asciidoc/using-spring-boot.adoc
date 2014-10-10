@@ -141,7 +141,7 @@ Maven, there is no ``super parent'' to import to share some configuration.
 ----
 	apply plugin: 'java'
 
-	repositories { jcenter() }
+	repositories { mavenCentral() }
 	dependencies {
 		compile("org.springframework.boot:spring-boot-starter-web:{spring-boot-version}")
 	}
@@ -156,7 +156,7 @@ for ``blessed'' dependencies>>:
 [source,groovy,indent=0,subs="attributes"]
 ----
 	buildscript {
-		repositories { jcenter() }
+		repositories { mavenCentral() }
 		dependencies {
 			classpath("org.springframework.boot:spring-boot-gradle-plugin:{spring-boot-version}")
 		}
@@ -165,7 +165,7 @@ for ``blessed'' dependencies>>:
 	apply plugin: 'java'
 	apply plugin: 'spring-boot'
 
-	repositories { jcenter() }
+	repositories { mavenCentral() }
 	dependencies {
 		compile("org.springframework.boot:spring-boot-starter-web")
 		testCompile("org.springframework.boot:spring-boot-starter-test")
@@ -259,12 +259,6 @@ and Hibernate.
 
 |`spring-boot-starter-jdbc`
 |JDBC Database support.
-
-|`spring-boot-starter-jta-atomikos`
-|Support for JTA distributed transactions via Atomikos.
-
-|`spring-boot-starter-jta-bitronix`
-|Support for JTA distributed transactions via Bitronix.
 
 |`spring-boot-starter-mobile`
 |Support for `spring-mobile`
