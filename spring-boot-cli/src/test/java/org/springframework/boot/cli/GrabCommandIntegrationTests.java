@@ -27,8 +27,6 @@ import org.junit.Test;
 import org.springframework.boot.cli.command.grab.GrabCommand;
 import org.springframework.util.FileSystemUtils;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -70,9 +68,8 @@ public class GrabCommandIntegrationTests {
 			this.cli.grab("duplicateGrabMetadata.groovy");
 			fail();
 		}
-		catch (Exception ex) {
-			assertThat(ex.getMessage(),
-					containsString("Duplicate @GrabMetadata annotation"));
+		catch (Exception e) {
+			assertTrue(e.getMessage().contains("Duplicate @GrabMetadata annotation"));
 		}
 	}
 

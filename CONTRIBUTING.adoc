@@ -33,9 +33,6 @@ added after the original pull request but before a merge.
 * A few unit tests would help a lot as well -- someone has to do it.
 * If no-one else is using your branch, please rebase it against the current master (or
   other target branch in the main project).
-* When writing a commit message please follow http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html[these conventions],
-  if you are fixing an existing issue please add `Fixes gh-XXXX` at the end of the commit
-  message (where XXXX is the issue number).
 
 == Working with the code
 If you don't have an IDE preference we would recommend that you use
@@ -133,7 +130,7 @@ With the requisite eclipse plugins installed you can select
 need to import the root `spring-boot` pom and the `spring-boot-samples` pom separately.
 
 === Importing into eclipse without m2eclipse
-If you prefer not to use m2eclipse you can generate eclipse project meta-data using the
+If you prefer not to use m2eclipse you can generate eclipse project metadata using the
 following command:
 
 [indent=0]
@@ -145,7 +142,7 @@ The generated eclipse projects can be imported by selecting `import existing pro
 from the `file` menu.
 
 === Importing into other IDEs
-Maven is well supported by most Java IDEs. Refer to your vendor documentation.
+Maven is well supported by most Java IDEs. Refer to you vendor documentation.
 
 == Integration tests
 The sample application are used as integration tests during the build (when you
