@@ -20,15 +20,17 @@ import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.amqp.rabbit.core.RabbitMessagingTemplate;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 import com.rabbitmq.client.Channel;
 
@@ -74,10 +76,11 @@ import com.rabbitmq.client.Channel;
 @Configuration
 @ConditionalOnClass({ RabbitTemplate.class, Channel.class })
 @EnableConfigurationProperties(RabbitProperties.class)
+@Import(RabbitAnnotationDrivenConfiguration.class)
 public class RabbitAutoConfiguration {
 
 	@Bean
-	@ConditionalOnExpression("${spring.rabbitmq.dynamic:true}")
+	@ConditionalOnProperty(prefix = "spring.rabbitmq", name = "dynamic", matchIfMissing = true)
 	@ConditionalOnMissingBean(AmqpAdmin.class)
 	public AmqpAdmin amqpAdmin(CachingConnectionFactory connectionFactory) {
 		return new RabbitAdmin(connectionFactory);
@@ -115,6 +118,17 @@ public class RabbitAutoConfiguration {
 				factory.setVirtualHost(config.getVirtualHost());
 			}
 			return factory;
+		}
+
+	}
+
+	@ConditionalOnClass(RabbitMessagingTemplate.class)
+	@ConditionalOnMissingBean(RabbitMessagingTemplate.class)
+	protected static class MessagingTemplateConfiguration {
+
+		@Bean
+		public RabbitMessagingTemplate jmsMessagingTemplate(RabbitTemplate rabbitTemplate) {
+			return new RabbitMessagingTemplate(rabbitTemplate);
 		}
 
 	}
