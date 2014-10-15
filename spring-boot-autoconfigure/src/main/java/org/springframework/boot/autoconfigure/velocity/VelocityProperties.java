@@ -48,8 +48,6 @@ public class VelocityProperties extends AbstractTemplateViewResolverProperties {
 
 	private String toolboxConfigLocation;
 
-	private boolean preferFileSystemAccess = true;
-
 	public VelocityProperties() {
 		super(DEFAULT_PREFIX, DEFAULT_SUFFIX);
 	}
@@ -92,14 +90,6 @@ public class VelocityProperties extends AbstractTemplateViewResolverProperties {
 
 	public void setToolboxConfigLocation(String toolboxConfigLocation) {
 		this.toolboxConfigLocation = toolboxConfigLocation;
-	}
-
-	public boolean isPreferFileSystemAccess() {
-		return this.preferFileSystemAccess;
-	}
-
-	public void setPreferFileSystemAccess(boolean preferFileSystemAccess) {
-		this.preferFileSystemAccess = preferFileSystemAccess;
 	}
 
 	@Override
