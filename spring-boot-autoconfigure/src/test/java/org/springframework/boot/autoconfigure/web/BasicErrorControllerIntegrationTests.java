@@ -16,7 +16,6 @@
 
 package org.springframework.boot.autoconfigure.web;
 
-import java.net.URI;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -26,15 +25,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.web.BasicErrorControllerIntegrationTests.TestConfiguration;
 import org.springframework.boot.autoconfigure.web.BasicErrorControllerMockMvcTests.MinimalWebConfiguration;
+import org.springframework.boot.autoconfigure.web.BasicErrorControllerMockMvcTests.TestConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.MediaType;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -80,10 +77,8 @@ public class BasicErrorControllerIntegrationTests {
 	@Test
 	@SuppressWarnings("rawtypes")
 	public void testBindingExceptionForMachineClient() throws Exception {
-		RequestEntity request = RequestEntity
-				.get(URI.create("http://localhost:" + this.port + "/bind"))
-				.accept(MediaType.APPLICATION_JSON).build();
-		ResponseEntity<Map> entity = new TestRestTemplate().exchange(request, Map.class);
+		ResponseEntity<Map> entity = new TestRestTemplate().getForEntity(
+				"http://localhost:" + this.port + "/bind", Map.class);
 		String resp = entity.getBody().toString();
 		assertThat(resp, containsString("Error count: 1"));
 		assertThat(resp, containsString("errors=[{"));
@@ -125,7 +120,7 @@ public class BasicErrorControllerIntegrationTests {
 			}
 
 			@RequestMapping("/bind")
-			public String bind(HttpServletRequest request) throws Exception {
+			public String bind() throws Exception {
 				BindException error = new BindException(this, "test");
 				error.rejectValue("foo", "bar.error");
 				throw error;
