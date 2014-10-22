@@ -16,13 +16,19 @@
 
 package org.springframework.boot.autoconfigure.data.rest;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguration;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for Spring Data Rest's MVC
@@ -30,20 +36,40 @@ import org.springframework.data.rest.webmvc.config.RepositoryRestMvcConfiguratio
  * <p>
  * Activates when the application is a web application and no
  * {@link RepositoryRestMvcConfiguration} is found.
- * </p>
  * <p>
- * Once in effect, the auto-configuration is the equivalent of importing the
- * {@link RepositoryRestMvcConfiguration}.
- * </p>
+ * Once in effect, the auto-configuration allows to configure any property of
+ * {@link RepositoryRestConfiguration} using the {@code spring.data.rest} prefix.
  *
  * @author Rob Winch
+ * @author Stephane Nicoll
  * @since 1.1.0
  */
 @Configuration
 @ConditionalOnWebApplication
 @ConditionalOnMissingBean(RepositoryRestMvcConfiguration.class)
 @ConditionalOnClass(RepositoryRestMvcConfiguration.class)
-@Import(RepositoryRestMvcConfiguration.class)
 public class RepositoryRestMvcAutoConfiguration {
 
+	@Configuration
+	static class RepositoryRestMvcBootConfiguration extends
+			RepositoryRestMvcConfiguration {
+
+		@Autowired(required = false)
+		private Jackson2ObjectMapperBuilder objectMapperBuilder;
+
+		@Bean
+		@ConfigurationProperties(prefix = "spring.data.rest")
+		@Override
+		public RepositoryRestConfiguration config() {
+			return super.config();
+		}
+
+		@Override
+		protected void configureJacksonObjectMapper(ObjectMapper objectMapper) {
+			if (this.objectMapperBuilder != null) {
+				this.objectMapperBuilder.configure(objectMapper);
+			}
+		}
+
+	}
 }
