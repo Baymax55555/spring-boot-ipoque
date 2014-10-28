@@ -21,7 +21,6 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -103,7 +102,6 @@ public class SpringApplicationContextLoader extends AbstractContextLoader {
 			application.setWebEnvironment(false);
 		}
 		application.setInitializers(initializers);
-
 		return application.run();
 	}
 
@@ -158,9 +156,11 @@ public class SpringApplicationContextLoader extends AbstractContextLoader {
 		Map<String, Object> properties = new LinkedHashMap<String, Object>();
 		// JMX bean names will clash if the same bean is used in multiple contexts
 		disableJmx(properties);
-		IntegrationTest annotation = AnnotationUtils.findAnnotation(
-				config.getTestClass(), IntegrationTest.class);
-		properties.putAll(getEnvironmentProperties(annotation));
+		properties.putAll(extractEnvironmentProperties(config
+				.getPropertySourceProperties()));
+		if (AnnotationUtils.findAnnotation(config.getTestClass(), IntegrationTest.class) == null) {
+			properties.putAll(getDefaultEnvironmentProperties());
+		}
 		return properties;
 	}
 
@@ -168,38 +168,33 @@ public class SpringApplicationContextLoader extends AbstractContextLoader {
 		properties.put("spring.jmx.enabled", "false");
 	}
 
-	private Map<String, String> getEnvironmentProperties(IntegrationTest annotation) {
-		if (annotation == null) {
-			return getDefaultEnvironmentProperties();
-		}
-		return extractEnvironmentProperties(annotation.value());
-	}
-
 	private Map<String, String> getDefaultEnvironmentProperties() {
 		return Collections.singletonMap("server.port", "-1");
 	}
 
-	// Instead of parsing the keys ourselves, we rely on standard handling
-	private Map<String, String> extractEnvironmentProperties(String[] values) {
-		StringBuilder sb = new StringBuilder();
-		for (String value : values) {
-			sb.append(value).append(LINE_SEPARATOR);
+	Map<String, Object> extractEnvironmentProperties(String[] values) {
+		// Instead of parsing the keys ourselves, we rely on standard handling
+		if (values == null) {
+			return Collections.emptyMap();
 		}
-		String content = sb.toString();
-		Properties props = new Properties();
+		String content = StringUtils.arrayToDelimitedString(values, LINE_SEPARATOR);
+		Properties properties = new Properties();
 		try {
-			props.load(new StringReader(content));
+			properties.load(new StringReader(content));
+			return asMap(properties);
 		}
-		catch (IOException e) {
+		catch (IOException ex) {
 			throw new IllegalStateException("Unexpected could not load properties from '"
-					+ content + "'", e);
+					+ content + "'", ex);
 		}
+	}
 
-		Map<String, String> properties = new HashMap<String, String>();
-		for (String name : props.stringPropertyNames()) {
-			properties.put(name, props.getProperty(name));
+	private Map<String, Object> asMap(Properties properties) {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		for (String name : properties.stringPropertyNames()) {
+			map.put(name, properties.getProperty(name));
 		}
-		return properties;
+		return map;
 	}
 
 	private List<ApplicationContextInitializer<?>> getInitializers(
