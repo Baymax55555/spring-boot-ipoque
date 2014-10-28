@@ -5,8 +5,8 @@
 --
 This section dives into the details of Spring Boot. Here you can learn about the key
 features that you will want to use and customize. If you haven't already, you might want
-to read the '<<getting-started.adoc#getting-started>>' and
-'<<using-spring-boot.adoc#using-boot>>' sections so that you have a good grounding
+to read the _<<getting-started.adoc#getting-started>>_ and
+_<<using-spring-boot.adoc#using-boot>>_ sections so that you have a good grounding
 of the basics.
 --
 
@@ -73,7 +73,7 @@ for spring beans. In most cases these will be references to `@Configuration` cla
 they could also be references to XML configuration or to packages that should be scanned.
 
 It is also possible to configure the `SpringApplication` using an `application.properties`
-file. See '<<boot-features-external-config>>' for details.
+file. See _<<boot-features-external-config>>_ for details.
 
 For a complete list of the configuration options, see the
 {dc-spring-boot}/SpringApplication.{dc-ext}[`SpringApplication` Javadoc].
@@ -308,8 +308,8 @@ can set up default values for your application in `application.properties` (or w
 other basename you choose with `spring.config.name`) and override it at runtime with a
 different file, keeping the defaults.
 
-NOTE: If you use environment variables rather than system properties, most operating
-systems disallow period-separated key names, but you can use underscores instead (e.g.
+NOTE: if you use environment variables not system properties, most operating systems
+disallow period-separated key names, but you can use underscores instead (e.g.
 `SPRING_CONFIG_NAME` instead of `spring.config.name`).
 
 NOTE: If you are running in a container then JNDI properties (in `java:comp/env`) or
@@ -324,7 +324,7 @@ In addition to `application.properties` files, profile specific properties can a
 defined using the naming convention `application-{profile}.properties`.
 
 Profile specific properties are loaded from the same locations as standard
-`application.properties`, with profile specific files overriding the default ones.
+`application.properties`, with profiles specific files overriding the default ones.
 
 
 
@@ -341,7 +341,7 @@ properties).
 ----
 
 TIP: You can also use this technique to create '`short`' variants of existing Spring Boot
-properties. See the '<<howto.adoc#howto-use-short-command-line-arguments>>' how-to
+properties. See the _<<howto.adoc#howto-use-short-command-line-arguments>>_ how-to
 for details.
 
 
@@ -436,7 +436,7 @@ placeholders syntax to access YAML properties.
 [[boot-features-external-config-multi-profile-yaml]]
 ==== Multi-profile YAML documents
 You can specify multiple profile-specific YAML documents in a single file by
-using a `spring.profiles` key to indicate when the document applies. For example:
+by using a `spring.profiles` key to indicate when the document applies. For example:
 
 [source,yaml,indent=0]
 ----
@@ -583,7 +583,7 @@ You can also add a custom Spring `Validator` by creating a bean definition calle
 TIP: The `spring-boot-actuator` module includes an endpoint that exposes all
 `@ConfigurationProperties` beans. Simply point your web browser to `/configprops`
 or use the equivalent JMX endpoint. See the
-'<<production-ready-features.adoc#production-ready-endpoints, Production ready features>>'.
+_<<production-ready-features.adoc#production-ready-endpoints, Production ready features>>_.
 section for details.
 
 
@@ -661,7 +661,7 @@ possible to activate profiles using Spring's `ConfigurableEnvironment` interface
 === Profile specific configuration files
 Profile specific variants of both `application.properties` (or `application.yml`) and
 files referenced via `@ConfigurationProperties` are considered as files are loaded.
-See '<<boot-features-external-config-profile-specific-properties>>' for details.
+See _<<boot-features-external-config-profile-specific-properties>>_ for details.
 
 
 
@@ -680,7 +680,7 @@ Logback routing is also included to ensure that dependent libraries that use
 Java Util Logging, Commons Logging, Log4J or SLF4J will all work correctly.
 
 TIP: There are a lot of logging frameworks available for Java. Don't worry if the above
-list seems confusing. Generally you won't need to change your logging dependencies and
+list seems confusing, generally you won't need to change your logging dependencies and
 the Spring Boot defaults will work just fine.
 
 
@@ -700,7 +700,7 @@ The default log output from Spring Boot looks like this:
 
 The following items are output:
 
-* Date and Time -- Millisecond precision and easily sortable.
+* Date and Time -- Millesecond precision and easily sortable.
 * Log Level -- `ERROR`, `WARN`, `INFO`, `DEBUG` or `TRACE`.
 * Process ID.
 * A `---` separator to distinguish the start of actual log messages.
@@ -720,10 +720,7 @@ messages to the console you can start your application with a `--debug` flag.
 	$ java -jar myapp.jar --debug
 ----
 
-If your terminal supports ANSI, color output will be used to aid readability. You can set
-`spring.output.ansi.enabled` to a
-{dc-spring-boot}/ansi/AnsiOutput.Enabled.{dc-ext}[supported value] to override the auto
-detection.
+If your terminal supports ANSI, color output will be used to aid readability.
 
 
 
@@ -815,7 +812,7 @@ use the `spring-boot-starter-web` module to get up and running quickly.
 
 If you haven't yet developed a Spring Boot web application you can follow the
 "Hello World!" example in the
-'<<getting-started.adoc#getting-started-first-application, Getting started>>' section.
+_<<getting-started.adoc#getting-started-first-application, Getting started>>_ section.
 
 
 
@@ -885,8 +882,7 @@ formatters, view controllers etc.) you can add your own `@Bean` of type
 ==== HttpMessageConverters
 Spring MVC uses the `HttpMessageConverter` interface to convert HTTP requests and
 responses. Sensible defaults are included out of the box, for example Objects can be
-automatically converted to JSON (using the Jackson library) or XML (using the Jackson
-XML extension if available, else using JAXB).
+automatically converted to JSON (using the Jackson library) or XML (using JAXB).
 
 If you need to add or customize converters you can use Spring Boot's
 `HttpMessageConverters` class:
@@ -1029,59 +1025,6 @@ only be forwarded to the correct error page if the response has not already been
 committed. By default, WebSphere Application Server 8.0 and later commits the response
 upon  successful completion of a servlet's service method. You should disable this
 behaviour by setting `com.ibm.ws.webcontainer.invokeFlushAfterService` to `false`
-
-
-
-[[boot-features-jersey]]
-=== JAX-RS and Jersey
-If you prefer the JAX-RS programming model for REST endpoints you can use one of the
-available implementations instead of Spring MVC. Jersey 1.x and Apache Celtix work
-quite well out of the box if you just register their `Servlet` or `Filter` as a
-`@Bean` in your application context. Jersey 2.x has some native Spring support so
-we also provide autoconfiguration support for it in Spring Boot together with a
-starter.
-
-To get started with Jersey 2.x just include the `spring-boot-starter-jersey` as a
-dependency and then you need one `@Bean` of type `ResourceConfig` in which you register
-all the endpoints:
-
-[source,java,indent=0,subs="verbatim,quotes,attributes"]
-----
-	@Component
-	public class JerseyConfig extends ResourceConfig {
-		public JerseyConfig() {
-			register(Endpoint.class);
-		}
-	}
-----
-
-All the registered endpoints should be `@Components` with HTTP resource annotations
-(`@GET` etc.), e.g.
-
-[source,java,indent=0,subs="verbatim,quotes,attributes"]
-----
-	@Component
-	@Path("/hello")
-	public class Endpoint {
-
-		@GET
-		public String message() {
-			return "Hello";
-		}
-
-	}
-----
-
-Since the `Endpoint` is a Spring `@Component` its lifecycle is managed by Spring and you
-can `@Autowired` dependencies and inject external configuration with `@Value`. The Jersey
-servlet will be registered and mapped to '`+/*+`' by default. You can change the mapping
-by adding `@ApplicationPath` to your `ResourceConfig`.
-
-There is a {github-code}/spring-boot-samples/spring-boot-sample-jersey[Jersey sample] so
-you can see how to set things up. There is also a {github-code}/spring-boot-samples/spring-boot-sample-jersey1[Jersey 1.x sample].
-Note that in the Jersey 1.x sample that the spring-boot maven plugin has been configured to
-unpack some Jersey jars so they can be scanned by the JAX-RS implementation (the sample
-asks for them to be scanned in its `Filter` registration).
 
 
 
@@ -1332,9 +1275,7 @@ Production database connections can also be auto-configured using a pooling
 
 * We prefer the Tomcat pooling `DataSource` for its performance and concurrency, so if
   that is available we always choose it.
-* If HikariCP is available we will use it
-* If Commons DBCP is available we will use it, but we don't recommend it in production.
-* Lastly, if Commons DBCP2 is available we will use it
+* If commons-dbcp is available we will use that, but we don't recommend it in production.
 
 If you use the `spring-boot-starter-jdbc` or `spring-boot-starter-data-jpa`
 '`starter POMs`' you will automcatically get a dependency to `tomcat-jdbc`.
@@ -1351,38 +1292,16 @@ in `application.properties`:
 	spring.datasource.url=jdbc:mysql://localhost/test
 	spring.datasource.username=dbuser
 	spring.datasource.password=dbpass
-	spring.datasource.driver-class-name=com.mysql.jdbc.Driver
+	spring.datasource.driverClassName=com.mysql.jdbc.Driver
 ----
 
 See {sc-spring-boot-autoconfigure}/jdbc/DataSourceProperties.{sc-ext}[`DataSourceProperties`]
 for more of the supported options.
 
-TIP: You often won't need to specify the `driver-class-name` since Spring boot can deduce
-it for most databases from the `url`.
-
 NOTE: For a pooling `DataSource` to be created we need to be able to verify that a valid
 `Driver` class is available, so we check for that before doing anything. I.e. if you set
 `spring.datasource.driverClassName=com.mysql.jdbc.Driver` then that class has to be
 loadable.
-
-
-
-[[boot-features-connecting-to-a-jndi-datasource]]
-==== Connection to a JNDI DataSource
-If you are deploying your Spring Boot application to an Application Server you might want
-to configure and manage your DataSource using your Application Servers built-in features
-and access it using JNDI.
-
-The `spring.datasource.jndi-name` property can be used as an alternative to the
-`spring.datasource.url`, `spring.datasource.username` and `spring.datasource.password`
-properties to access the `DataSource` from a specific JNDI location. For example, the
-following section in `application.properties` shows how you can access a JBoss AS defined
-`DataSource`:
-
-[source,properties,indent=0]
-----
-	spring.datasource.jndi-name=java:jboss/datasources/customers
-----
 
 
 
@@ -1487,7 +1406,7 @@ considered. A typical entity class would look something like this:
 ----
 
 TIP: You can customize entity scanning locations using the `@EntityScan` annotation.
-See the '<<howto.adoc#howto-separate-entity-definitions-from-spring-configuration>>'
+See the _<<howto.adoc#howto-separate-entity-definitions-from-spring-configuration>>_
 how-to.
 
 
@@ -1876,8 +1795,7 @@ The `javax.jms.ConnectionFactory` interface provides a standard method of creati
 `ConnectionFactory` to work with JMS, you generally won't need to use it directly yourself
 and you can instead rely on higher level messaging abstractions (see the
 {spring-reference}/#jms[relevant section] of the Spring Framework reference
-documentation for details). Spring Boot also auto configures the necessary infrastructure
-to send and receive messages.
+documentation for details).
 
 
 
@@ -1949,24 +1867,9 @@ resolved against their provided names.
 
 
 
-[[boot-features-jms-jndi]]
-==== Using a JNDI ConnectionFactory
-If you are running your application in an Application Server Spring Boot will attempt to
-locate a JMS `ConnectionFactory` using JNDI. By default the locations `java:/JmsXA` and
-`java:/XAConnectionFactory` will be checked. You can use the
-`spring.jms.jndi-name` property if you need to specify an alternative location:
-
-[source,properties,indent=0]
-----
-	spring.jms.jndi-name=java:/MyConnectionFactory
-----
-
-
-
 [[boot-features-using-jms-template]]
-[[boot-features-using-jms-sending]]
-==== Sending a message
-Spring's `JmsTemplate` is auto-configured and you can autowire it directly into your
+==== Using JmsTemplate
+Spring's `JmsTemplate` is auto-configured and you can `@Autowire` it directly into your
 own beans:
 
 [source,java,indent=0]
@@ -1989,154 +1892,6 @@ own beans:
 
 	}
 ----
-
-NOTE: {spring-javadoc}/jms/core/JmsMessagingTemplate.{dc-ext}[`JmsMessagingTemplate`]
-(new in Spring 4.1) can be injected in a similar manner.
-
-
-
-[[boot-features-using-jms-receiving]]
-==== Receiving a message
-
-When the JMS infrastructure is present, any bean can be annotated with `@JmsListener` to
-create a listener endpoint. If no `JmsListenerContainerFactory` has been defined, a default
-one is configured automatically.
-
-The following component creates a listener endpoint on the `someQueue` destination:
-
-[source,java,indent=0]
-----
-	@Component
-	public class MyBean {
-
-		@JmsListener(destination = "someQueue")
-		public void processMessage(String content) { ... }
-
-	}
-----
-
-Check {spring-javadoc}/jms/annotation/EnableJms.{dc-ext}[the javadoc of `@EnableJms`]
-for more details.
-
-[[boot-features-jta]]
-== Distributed Transactions with JTA
-Spring Boot supports distributed JTA transactions across multiple XA resources using
-either an http://www.atomikos.com/[Atomkos] or
-http://docs.codehaus.org/display/BTM/Home[Bitronix] embedded transaction manager. JTA
-transactions are also supported when deploying to a suitable Java EE Application Server.
-
-When a JTA environment is detected, Spring's `JtaTransactionManager` will be used to manage
-transactions. Auto-configured JMS, DataSource and JPA beans will be upgraded to support
-XA transactions. You can use standard Spring idioms such as `@Transactional` to
-participate in a distributed transaction.
-
-
-
-=== Using an Atomikos transaction manager
-Atomikos is a popular open source transaction manager which can be embedded into your
-Spring Boot application. You can use the `spring-boot-starter-jta-atomikos` Starter POM to
-pull in the appropriate Atomikos libraries. Spring Boot will auto-configure Atomikos and
-ensure that appropriate `depends-on` settings are applied to your Spring Beans for correct
-startup and shutdown ordering.
-
-By default Atomikos transaction logs will be written to a `transaction-logs` folder in
-your application home directory (the directory in which your application jar file
-resides). You can customize this directory by setting a `spring.jta.log-dir` property in
-your `application.properties` file. Properties starting `spring.jta.` can also be used to
-customize the Atomikos `UserTransactionServiceIml`. See the
-{dc-spring-boot}/jta/atomikos/AtomikosProperties.{dc-ext}[`AtomikosProperties` javadoc]
-for complete details.
-
-NOTE: To ensure that multiple transaction managers can safely coordinate the same
-resource managers, each Atomikos instance must be configured with a unique ID. By default
-this ID is the IP address of the machine on which Atomikos is running. To ensure
-uniqueness in production, you should configure the `spring.jta.transaction-manager-id`
-property with a different value for each instance of your application.
-
-
-
-=== Using a Bitronix transaction manager
-Bitronix is another popular open source JTA transaction manager implementation. You can
-use the `spring-boot-starter-jta-bitronix` starter POM to add the appropriate Birtronix
-dependencies to your project. As with Atomikos, Spring Boot will automatically configure
-Bitronix and post-process your beans to ensure that startup and shutdown ordering is
-correct.
-
-By default Bitronix transaction log files (`part1.btm` and `part2.btm`) will be written to
-a `transaction-logs` folder in your application home directory. You can customize this
-directory by using the `spring.jta.log-dir` property. Properties starting `spring.jta.`
-are also bound to the `bitronix.tm.Configuration` bean, allowing for complete
-customization. See the http://btm.codehaus.org/api/2.0.1/bitronix/tm/Configuration.html[Bitronix
-documentation] for details.
-
-NOTE: To ensure that multiple transaction managers can safely coordinate the same
-resource managers, each Bitronix instance must be configured with a unique ID. By default
-this ID is the IP address of the machine on which Bitronix is running. To ensure
-uniqueness in production, you should configure the `spring.jta.transaction-manager-id`
-property with a different value for each instance of your application.
-
-
-
-=== Using a Java EE managed transaction manager
-If you are packaging your Spring Boot application as a `war` or `ear` file and deploying
-it to a Java EE application server, you can use your application servers built-in
-transaction manager. Spring Boot will attempt to auto-configure a transaction manager by
-looking at common JNDI locations (`java:comp/UserTransaction`,
-`java:comp/TransactionManager` etc). If you are using a transaction service provided by
-your application server, you will generally also want to ensure that all resources are
-managed by the server and exposed over JNDI.  Spring Boot will attempt to auto-configure
-JMS by looking for a `ConnectionFactory` at the JNDI path `java:/JmsXA` or
-`java:/XAConnectionFactory` and you can use the
-<<boot-features-connecting-to-a-jndi-datasource, `spring.datasource.jndi-name` property>>
-to configure your `DataSource`.
-
-
-
-=== Mixing XA and non-XA JMS connections
-When using JTA, the primary JMS `ConnectionFactory` bean will be XA aware and participate
-in distributed transactions. In some situations you might want to process certain JMS
-messages using a non-XA `ConnectionFactory`. For example, your JMS processing logic might
-take longer than the XA timeout.
-
-If you want to use a non-XA `ConnectionFactory` you can inject the
-`nonXaJmsConnectionFactory` bean rather than the `@Primary` `jmsConnectionFactory` bean.
-For consistency the `jmsConnectionFactory` bean is also provided using the bean alias
-`xaJmsConnectionFactory`.
-
-For example:
-
-[source,java,indent=0,subs="verbatim,quotes,attributes"]
-----
-	// Inject the primary (XA aware) ConnectionFactory
-	@Autowired
-	private ConnectionFactory defaultConnectionFactory;
-
-	// Inject the XA aware ConnectionFactory (uses the alias and injects the same as above)
-	@Autowired
-	@Qualifier("xaJmsConnectionFactory")
-	private ConnectionFactory xaConnectionFactory;
-
-	// Inject the non-XA aware ConnectionFactory
-	@Autowired
-	@Qualifier("nonXaJmsConnectionFactory")
-	private ConnectionFactory nonXaConnectionFactory;
-----
-
-
-
-=== Supporting an alternative embedded transaction manager
-The {sc-spring-boot}/jta/XAConnectionFactoryWrapper.{sc-ext}[`XAConnectionFactoryWrapper`]
-and {sc-spring-boot}/jta/XADataSourceWrapper.{sc-ext}[`XADataSourceWrapper`] interfaces
-can be used to support alternative embedded transaction managers. The interfaces are
-responsible for wrapping `XAConnectionFactory` and `XADataSource` beans and exposing them
-as regular `ConnectionFactory` and `DataSource` beans which will transparently enroll in
-the distributed transaction. DataSource and JMS auto-configuration will use JTA variants
-as long as you have a `JtaTransactionManager` bean and appropriate XA wrapper beans
-registered within your `ApplicationContext`
-
-The {sc-spring-boot}/jta/BitronixXAConnectionFactoryWrapper.{sc-ext}[BitronixXAConnectionFactoryWrapper]
-and {sc-spring-boot}/jta/BitronixXADataSourceWrapper.{sc-ext}[BitronixXADataSourceWrapper]
-provide good examples of how to write XA wrappers.
 
 
 
