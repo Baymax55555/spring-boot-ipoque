@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 the original author or authors.
+ * Copyright 2012-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,17 @@ public class JavaLoggingSystem extends AbstractLoggingSystem {
 	}
 
 	public JavaLoggingSystem(ClassLoader classLoader) {
-		super(classLoader, "logging.properties");
+		this(classLoader, false, true);
+	}
+	
+	public JavaLoggingSystem(ClassLoader classLoader, boolean fileOutput,
+			boolean consoleOutput) {
+		super(classLoader, fileOutput, consoleOutput);
+	}
+
+	@Override
+	protected String[] getLogFileNames() {
+		return new String[] { "logging.properties" };
 	}
 
 	@Override

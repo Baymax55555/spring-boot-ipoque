@@ -30,10 +30,12 @@ import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.autoconfigure.security.AuthenticationManagerConfiguration;
 import org.springframework.boot.autoconfigure.security.FallbackWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration;
@@ -44,8 +46,11 @@ import org.springframework.boot.autoconfigure.web.ErrorController;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -136,11 +141,9 @@ public class ManagementSecurityAutoConfiguration {
 			// add them back.
 			List<String> ignored = SpringBootWebSecurityConfiguration
 					.getIgnored(this.security);
-			ignored.addAll(Arrays.asList(getEndpointPaths(this.endpointHandlerMapping,
-					false)));
 			if (!this.management.getSecurity().isEnabled()) {
 				ignored.addAll(Arrays.asList(getEndpointPaths(
-						this.endpointHandlerMapping, true)));
+						this.endpointHandlerMapping)));
 			}
 			if (ignored.contains("none")) {
 				ignored.remove("none");
@@ -165,16 +168,35 @@ public class ManagementSecurityAutoConfiguration {
 	}
 
 	@Configuration
-	@ConditionalOnExpression("${management.security.enabled:true} && !${security.basic.enabled:true}")
 	@ConditionalOnMissingBean(WebSecurityConfiguration.class)
 	@ConditionalOnWebApplication
+	@Conditional(WebSecurityEnablerCondition.class)
 	@EnableWebSecurity
 	protected static class WebSecurityEnabler extends AuthenticationManagerConfiguration {
 	}
 
+	/**
+	 * WebSecurityEnabler condition
+	 */
+	static class WebSecurityEnablerCondition extends SpringBootCondition {
+
+		@Override
+		public ConditionOutcome getMatchOutcome(ConditionContext context,
+				AnnotatedTypeMetadata metadata) {
+			String managementEnabled = context.getEnvironment().getProperty(
+					"management.security.enabled", "true");
+			String basicEnabled = context.getEnvironment().getProperty(
+					"security.basic.enabled", "true");
+			return new ConditionOutcome("true".equalsIgnoreCase(managementEnabled)
+					&& !"true".equalsIgnoreCase(basicEnabled),
+					"Management security enabled and basic disabled");
+		}
+
+	}
+
 	@Configuration
 	@ConditionalOnMissingBean({ ManagementWebSecurityConfigurerAdapter.class })
-	@ConditionalOnExpression("${management.security.enabled:true}")
+	@ConditionalOnProperty(prefix = "management.security", name = "enabled", matchIfMissing = true)
 	@ConditionalOnWebApplication
 	@Order(ManagementServerProperties.BASIC_AUTH_ORDER)
 	protected static class ManagementWebSecurityConfigurerAdapter extends
@@ -196,7 +218,7 @@ public class ManagementSecurityAutoConfiguration {
 		protected void configure(HttpSecurity http) throws Exception {
 
 			// secure endpoints
-			String[] paths = getEndpointPaths(this.endpointHandlerMapping, true);
+			String[] paths = getEndpointPaths(this.endpointHandlerMapping);
 			if (paths.length > 0 && this.management.getSecurity().isEnabled()) {
 				// Always protect them if present
 				if (this.security.isRequireSsl()) {
@@ -205,10 +227,12 @@ public class ManagementSecurityAutoConfiguration {
 				http.exceptionHandling().authenticationEntryPoint(entryPoint());
 				paths = this.server.getPathsArray(paths);
 				http.requestMatchers().antMatchers(paths);
-				http.authorizeRequests().anyRequest()
-						.hasRole(this.management.getSecurity().getRole()) //
-						.and().httpBasic() //
-						.and().anonymous().disable();
+				// @formatter:off
+				http.authorizeRequests()
+						.antMatchers(this.server.getPathsArray(getEndpointPaths(this.endpointHandlerMapping, false))).access("permitAll()")
+						.anyRequest().hasRole(this.management.getSecurity().getRole());
+				// @formatter:on
+				http.httpBasic();
 
 				// No cookies for management endpoints by default
 				http.csrf().disable();
@@ -230,6 +254,12 @@ public class ManagementSecurityAutoConfiguration {
 
 	}
 
+	private static String[] getEndpointPaths(EndpointHandlerMapping endpointHandlerMapping) {
+		return StringUtils.mergeStringArrays(
+				getEndpointPaths(endpointHandlerMapping, false),
+				getEndpointPaths(endpointHandlerMapping, true));
+	}
+
 	private static String[] getEndpointPaths(
 			EndpointHandlerMapping endpointHandlerMapping, boolean secure) {
 		if (endpointHandlerMapping == null) {
@@ -240,13 +270,11 @@ public class ManagementSecurityAutoConfiguration {
 		List<String> paths = new ArrayList<String>(endpoints.size());
 		for (MvcEndpoint endpoint : endpoints) {
 			if (endpoint.isSensitive() == secure) {
-				String path = endpointHandlerMapping.getPrefix() + endpoint.getPath();
+				String path = endpointHandlerMapping.getPath(endpoint.getPath());
 				paths.add(path);
-				if (secure) {
-					// Add Spring MVC-generated additional paths
-					paths.add(path + "/");
-					paths.add(path + ".*");
-				}
+				// Add Spring MVC-generated additional paths
+				paths.add(path + "/");
+				paths.add(path + ".*");
 			}
 		}
 		return paths.toArray(new String[paths.size()]);
