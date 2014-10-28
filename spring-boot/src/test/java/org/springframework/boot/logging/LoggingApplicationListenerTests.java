@@ -103,18 +103,7 @@ public class LoggingApplicationListenerTests {
 		String output = this.outputCapture.toString().trim();
 		assertTrue("Wrong output:\n" + output, output.contains("Hello world"));
 		assertFalse("Wrong output:\n" + output, output.contains("???"));
-		assertFalse(new File(tmpDir() + "/spring.log").exists());
-	}
-
-	@Test
-	public void noConsole() {
-		EnvironmentTestUtils.addEnvironment(this.context, "logging.console: false");
-		this.initializer.initialize(this.context.getEnvironment(),
-				this.context.getClassLoader());
-		this.logger.info("Hello world");
-		String output = this.outputCapture.toString().trim();
-		assertFalse("Wrong output:\n" + output, output.contains("Hello world"));
-		assertFalse(new File(tmpDir() + "/spring.log").exists());
+		assertTrue(new File(tmpDir() + "/spring.log").exists());
 	}
 
 	@Test
@@ -141,7 +130,7 @@ public class LoggingApplicationListenerTests {
 		String output = this.outputCapture.toString().trim();
 		assertTrue("Wrong output:\n" + output, output.contains("Hello world"));
 		assertFalse("Wrong output:\n" + output, output.contains("???"));
-		assertFalse(new File(tmpDir() + "/spring.log").exists());
+		assertTrue(new File(tmpDir() + "/spring.log").exists());
 	}
 
 	@Test

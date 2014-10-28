@@ -74,8 +74,6 @@ public class LoggingApplicationListener implements SmartApplicationListener {
 	private static final Map<String, String> ENVIRONMENT_SYSTEM_PROPERTY_MAPPING;
 
 	public static final String PID_KEY = "PID";
-	
-	public static final String LOG_FILE = "LOG_FILE";
 
 	static {
 		ENVIRONMENT_SYSTEM_PROPERTY_MAPPING = new HashMap<String, String>();
@@ -93,7 +91,6 @@ public class LoggingApplicationListener implements SmartApplicationListener {
 		LOG_LEVEL_LOGGERS.add(LogLevel.TRACE, "org.apache.catalina");
 		LOG_LEVEL_LOGGERS.add(LogLevel.TRACE, "org.eclipse.jetty");
 		LOG_LEVEL_LOGGERS.add(LogLevel.TRACE, "org.hibernate.tool.hbm2ddl");
-		LOG_LEVEL_LOGGERS.add(LogLevel.DEBUG, "org.hibernate.SQL");
 	}
 
 	private static Class<?>[] EVENT_TYPES = { ApplicationStartedEvent.class,
@@ -133,7 +130,8 @@ public class LoggingApplicationListener implements SmartApplicationListener {
 			if (System.getProperty(PID_KEY) == null) {
 				System.setProperty(PID_KEY, new ApplicationPid().toString());
 			}
-			LoggingSystem loggingSystem = LoggingSystem.get(ClassUtils.getDefaultClassLoader(), false, false);
+			LoggingSystem loggingSystem = LoggingSystem.get(ClassUtils
+					.getDefaultClassLoader());
 			loggingSystem.beforeInitialize();
 		}
 	}
@@ -145,13 +143,7 @@ public class LoggingApplicationListener implements SmartApplicationListener {
 	protected void initialize(ConfigurableEnvironment environment, ClassLoader classLoader) {
 		initializeEarlyLoggingLevel(environment);
 		cleanLogTempProperty();
-		boolean fileOutput = !StringUtils.isEmpty(environment.getProperty("logging.file"));
-		boolean consoleOutput = true;
-		if (!StringUtils.isEmpty(environment.getProperty("logging.console"))
-				&& environment.getProperty("logging.console").equalsIgnoreCase("false")) {
-			consoleOutput = false;
-		}
-		LoggingSystem system = LoggingSystem.get(classLoader, fileOutput, consoleOutput);
+		LoggingSystem system = LoggingSystem.get(classLoader);
 		boolean systemEnvironmentChanged = mapSystemPropertiesFromSpring(environment);
 		if (systemEnvironmentChanged) {
 			// Re-initialize the defaults in case the system Environment changed
