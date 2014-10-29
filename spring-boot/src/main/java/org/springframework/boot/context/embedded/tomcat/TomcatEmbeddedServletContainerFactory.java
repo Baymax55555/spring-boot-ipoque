@@ -149,6 +149,7 @@ public class TomcatEmbeddedServletContainerFactory extends
 		}
 
 		prepareContext(tomcat.getHost(), initializers);
+		this.logger.info("Server initialized with port: " + getPort());
 		return getTomcatEmbeddedServletContainer(tomcat);
 	}
 

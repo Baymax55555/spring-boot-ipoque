@@ -23,20 +23,22 @@ import java.util.Map;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.slf4j.bridge.SLF4JBridgeHandler;
+import org.springframework.boot.logging.AbstractLoggingSystem;
 import org.springframework.boot.logging.LogLevel;
 import org.springframework.boot.logging.LoggingSystem;
-import org.springframework.boot.logging.Slf4JLoggingSystem;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.Log4jConfigurer;
 import org.springframework.util.StringUtils;
 
 /**
- * {@link LoggingSystem} for <a href="http://logging.apache.org/log4j/1.2">Log4j</a>.
+ * {@link LoggingSystem} for for <a href="http://logging.apache.org/log4j">log4j</a>.
  *
  * @author Phillip Webb
  * @author Dave Syer
  */
-public class Log4JLoggingSystem extends Slf4JLoggingSystem {
+public class Log4JLoggingSystem extends AbstractLoggingSystem {
 
 	private static final Map<LogLevel, Level> LEVELS;
 	static {
@@ -52,17 +54,16 @@ public class Log4JLoggingSystem extends Slf4JLoggingSystem {
 	}
 
 	public Log4JLoggingSystem(ClassLoader classLoader) {
-		this(classLoader, false, true);
-	}
-	
-	public Log4JLoggingSystem(ClassLoader classLoader, boolean fileOutput,
-			boolean consoleOutput) {
-		super(classLoader, fileOutput, consoleOutput);
+		super(classLoader, "log4j.xml", "log4j.properties");
 	}
 
 	@Override
-	protected String[] getLogFileNames() {
-		return new String[] { "log4j.xml", "log4j.properties" };
+	public void beforeInitialize() {
+		super.beforeInitialize();
+		if (ClassUtils.isPresent("org.slf4j.bridge.SLF4JBridgeHandler", getClassLoader())) {
+			SLF4JBridgeHandler.removeHandlersForRootLogger();
+			SLF4JBridgeHandler.install();
+		}
 	}
 
 	@Override

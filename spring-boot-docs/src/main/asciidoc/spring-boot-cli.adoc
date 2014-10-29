@@ -80,7 +80,6 @@ is completely self-contained so you don't need any external Groovy installation.
 
 Here is an example "`hello world`" web application written in Groovy:
 
-.hello.groovy
 [source,groovy,indent=0,subs="verbatim,quotes,attributes"]
 ----
 	@RestController
@@ -92,58 +91,6 @@ Here is an example "`hello world`" web application written in Groovy:
 		}
 
 	}
-----
-
-Then
-
-----
-$ spring run hello.groovy
-----
-
-To pass command line arguments to the application, you need to use a
-"--" to separate them from the "spring" command arguments, e.g.
-
-----
-$ spring run hello.groovy -- --server.port=9000
-----
-
-and to set JVM command line arguments you can use the `JAVA_OPTS`
-environment variable, e.g.
-
-----
-$ JAVA_OPTS=-Xmx1024m spring run hello.groovy
-----
-
-[[cli-install-uninstall]]
-=== Adding dependencies to the CLI
-You can add dependencies to the CLI using the `install` command. The command takes one
-or more sets of artifact coordinates in the format `group:artifact:version`. For example:
-
-[indent=0,subs="verbatim,quotes,attributes"]
-----
-	$ spring install com.example:spring-boot-cli-extension:1.0.0.RELEASE
-----
-
-In addition to installing the artifacts identified by the coordinates you supply, all of
-the artifacts' dependencies will also be installed.
-
-To uninstall a dependency use the `uninstall` command. As with the `install` command, it
-takes one or more sets of artifact coordinates in the format `group:artifact:version`.
-For example:
-
-[indent=0,subs="verbatim,quotes,attributes"]
-----
-	$ spring uninstall com.example:spring-boot-cli-extension:1.0.0.RELEASE
-----
-
-It will uninstall the artifacts identified by the coordinates you supply and their
-dependencies.
-
-To uninstall all additional dependencies you can use the `--all` option. For example:
-
-[indent=0,subs="verbatim,quotes,attributes"]
-----
-	$ spring uninstall --all
 ----
 
 
@@ -166,16 +113,13 @@ The following items are used as "`grab hints`":
 |`JdbcTemplate`, `NamedParameterJdbcTemplate`, `DataSource`
 |JDBC Application.
 
-|`@EnableJms`
+|`@EnableJmsMessaging`
 |JMS Application.
-
-|`@EnableCaching`
-|Caching abstraction.
 
 |`@Test`
 |JUnit.
 
-|`@EnableRabbit`
+|`@EnableRabbitMessaging`
 |RabbitMQ.
 
 |`@EnableReactor`

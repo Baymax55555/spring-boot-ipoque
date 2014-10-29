@@ -17,9 +17,15 @@
 package org.springframework.boot.autoconfigure;
 
 import java.io.IOException;
-import java.util.Iterator;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.autoconfigure.MessageSourceAutoConfiguration.ResourceBundleCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -35,9 +41,10 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.type.AnnotatedTypeMetadata;
-import org.springframework.util.ConcurrentReferenceHashMap;
+import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
 import static org.springframework.util.StringUtils.commaDelimitedListToStringArray;
@@ -47,7 +54,6 @@ import static org.springframework.util.StringUtils.trimAllWhitespace;
  * {@link EnableAutoConfiguration Auto-configuration} for {@link MessageSource}.
  *
  * @author Dave Syer
- * @author Phillip Webb
  */
 @Configuration
 @ConditionalOnMissingBean(MessageSource.class)
@@ -103,23 +109,11 @@ public class MessageSourceAutoConfiguration {
 
 	protected static class ResourceBundleCondition extends SpringBootCondition {
 
-		private static ConcurrentReferenceHashMap<String, ConditionOutcome> cache = new ConcurrentReferenceHashMap<String, ConditionOutcome>();
-
 		@Override
 		public ConditionOutcome getMatchOutcome(ConditionContext context,
 				AnnotatedTypeMetadata metadata) {
 			String basename = context.getEnvironment().getProperty(
 					"spring.messages.basename", "messages");
-			ConditionOutcome outcome = cache.get(basename);
-			if (outcome == null) {
-				outcome = getMatchOutcomeForBasename(context, basename);
-				cache.put(basename, outcome);
-			}
-			return outcome;
-		}
-
-		private ConditionOutcome getMatchOutcomeForBasename(ConditionContext context,
-				String basename) {
 			for (String name : commaDelimitedListToStringArray(trimAllWhitespace(basename))) {
 				for (Resource resource : getResources(context.getClassLoader(), name)) {
 					if (resource.exists()) {
@@ -134,7 +128,7 @@ public class MessageSourceAutoConfiguration {
 
 		private Resource[] getResources(ClassLoader classLoader, String name) {
 			try {
-				return new SkipPatternPathMatchingResourcePatternResolver(classLoader)
+				return new ExtendedPathMatchingResourcePatternResolver(classLoader)
 						.getResources("classpath*:" + name + "*.properties");
 			}
 			catch (IOException ex) {
@@ -145,57 +139,92 @@ public class MessageSourceAutoConfiguration {
 	}
 
 	/**
-	 * {@link PathMatchingResourcePatternResolver} that skips well known JARs that don't
-	 * contain messages.properties.
+	 * Extended version of {@link PathMatchingResourcePatternResolver} to deal with the
+	 * fact that "{@code classpath*:...*.properties}" patterns don't work with
+	 * {@link URLClassLoader}s.
 	 */
-	private static class SkipPatternPathMatchingResourcePatternResolver extends
+	private static class ExtendedPathMatchingResourcePatternResolver extends
 			PathMatchingResourcePatternResolver {
 
-		private static final ClassLoader ROOT_CLASSLOADER;
-		static {
-			ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-			while (classLoader.getParent() != null) {
-				classLoader = classLoader.getParent();
-			}
-			ROOT_CLASSLOADER = classLoader;
-		}
+		private static final Log logger = LogFactory
+				.getLog(PathMatchingResourcePatternResolver.class);
 
-		private static final String[] SKIPPED = { "aspectjweaver-", "hibernate-core-",
-				"hsqldb-", "jackson-annotations-", "jackson-core-", "jackson-databind-",
-				"javassist-", "snakeyaml-", "spring-aop-", "spring-beans-",
-				"spring-boot-", "spring-boot-actuator-", "spring-boot-autoconfigure-",
-				"spring-core-", "spring-context-", "spring-data-commons-",
-				"spring-expression-", "spring-jdbc-", "spring-orm-", "spring-tx-",
-				"spring-web-", "spring-webmvc-", "tomcat-embed-", "joda-time-",
-				"hibernate-entitymanager-", "hibernate-validator-", "logback-classic-",
-				"logback-core-", "thymeleaf-" };
+		private static final String JAR_FILE_EXTENSION = ".jar";
 
-		public SkipPatternPathMatchingResourcePatternResolver(ClassLoader classLoader) {
+		private static final String JAR_URL_PREFIX = "jar:";
+
+		public ExtendedPathMatchingResourcePatternResolver(ClassLoader classLoader) {
 			super(classLoader);
 		}
 
 		@Override
-		protected void addAllClassLoaderJarRoots(ClassLoader classLoader,
-				Set<Resource> result) {
-			if (classLoader != ROOT_CLASSLOADER) {
-				super.addAllClassLoaderJarRoots(classLoader, result);
-			}
-		};
-
-		@Override
-		protected Set<Resource> doFindAllClassPathResources(String path)
+		protected Resource[] findAllClassPathResources(String location)
 				throws IOException {
-			Set<Resource> resources = super.doFindAllClassPathResources(path);
-			for (Iterator<Resource> iterator = resources.iterator(); iterator.hasNext();) {
-				Resource resource = iterator.next();
-				for (String skipped : SKIPPED) {
-					if (resource.getFilename().startsWith(skipped)) {
-						iterator.remove();
-						break;
+			String path = location;
+			if (path.startsWith("/")) {
+				path = path.substring(1);
+			}
+			if ("".equals(path)) {
+				Set<Resource> result = new LinkedHashSet<Resource>(16);
+				result.addAll(Arrays.asList(super.findAllClassPathResources(location)));
+				addAllClassLoaderJarRoots(getClassLoader(), result);
+				return result.toArray(new Resource[result.size()]);
+			}
+			return super.findAllClassPathResources(location);
+		}
+
+		private void addAllClassLoaderJarRoots(ClassLoader classLoader,
+				Set<Resource> result) {
+			if (classLoader != null) {
+				if (classLoader instanceof URLClassLoader) {
+					try {
+						addAllClassLoaderJarUrls(
+								((URLClassLoader) classLoader).getURLs(), result);
+					}
+					catch (Exception ex) {
+						if (logger.isDebugEnabled()) {
+							logger.debug("Cannot introspect jar files since "
+									+ "ClassLoader [" + classLoader
+									+ "] does not support 'getURLs()': " + ex);
+						}
+					}
+				}
+				try {
+					addAllClassLoaderJarRoots(classLoader.getParent(), result);
+				}
+				catch (Exception ex) {
+					if (logger.isDebugEnabled()) {
+						logger.debug("Cannot introspect jar files in parent "
+								+ "ClassLoader since [" + classLoader
+								+ "] does not support 'getParent()': " + ex);
 					}
 				}
 			}
-			return resources;
+		}
+
+		private void addAllClassLoaderJarUrls(URL[] urls, Set<Resource> result) {
+			for (URL url : urls) {
+				if (isJarFileUrl(url)) {
+					try {
+						UrlResource jarResource = new UrlResource(JAR_URL_PREFIX
+								+ url.toString() + ResourceUtils.JAR_URL_SEPARATOR);
+						if (jarResource.exists()) {
+							result.add(jarResource);
+						}
+					}
+					catch (MalformedURLException ex) {
+						if (logger.isDebugEnabled()) {
+							logger.debug("Cannot search for matching files underneath "
+									+ url + " because it cannot be accessed as a JAR", ex);
+						}
+					}
+				}
+			}
+		}
+
+		private boolean isJarFileUrl(URL url) {
+			return ResourceUtils.URL_PROTOCOL_FILE.equals(url.getProtocol())
+					&& url.getPath().toLowerCase().endsWith(JAR_FILE_EXTENSION);
 		}
 
 	}

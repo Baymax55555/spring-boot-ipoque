@@ -19,7 +19,6 @@ package org.springframework.boot.logging.log4j;
 import org.apache.commons.logging.impl.Log4JLogger;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.springframework.boot.logging.LogLevel;
@@ -88,18 +87,6 @@ public class Log4JLoggingSystemTests {
 		this.logger.debug("Hello");
 		assertThat(StringUtils.countOccurrencesOf(this.output.toString(), "Hello"),
 				equalTo(1));
-	}
-
-	@Test
-	@Ignore("Fails on Bamboo")
-	public void loggingThatUsesJulIsCaptured() {
-		this.loggingSystem.beforeInitialize();
-		this.loggingSystem.initialize();
-		java.util.logging.Logger julLogger = java.util.logging.Logger
-				.getLogger(getClass().getName());
-		julLogger.severe("Hello world");
-		String output = this.output.toString().trim();
-		assertTrue("Wrong output:\n" + output, output.contains("Hello world"));
 	}
 
 }

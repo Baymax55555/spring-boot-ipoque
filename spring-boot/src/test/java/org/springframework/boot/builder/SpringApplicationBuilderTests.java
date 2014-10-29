@@ -16,15 +16,6 @@
 
 package org.springframework.boot.builder;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collections;
@@ -38,10 +29,18 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.StaticApplicationContext;
-import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.StringUtils;
+
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests for {@link SpringApplicationBuilder}.
@@ -177,50 +176,6 @@ public class SpringApplicationBuilderTests {
 				is(equalTo("redis")));
 		// only defined in node profile
 		assertThat(this.context.getEnvironment().getProperty("bar"), is(equalTo("spam")));
-	}
-
-	@Test
-	public void parentFirstWithDifferentProfile() throws Exception {
-		SpringApplicationBuilder application = new SpringApplicationBuilder(
-				ExampleConfig.class).profiles("node").properties("transport=redis")
-				.child(ChildConfig.class).profiles("admin").web(false);
-		this.context = application.run();
-		assertThat(this.context.getEnvironment().acceptsProfiles("node", "admin"),
-				is(true));
-		assertThat(this.context.getParent().getEnvironment().acceptsProfiles("admin"),
-				is(false));
-	}
-
-	@Test
-	public void parentWithDifferentProfile() throws Exception {
-		SpringApplicationBuilder shared = new SpringApplicationBuilder(
-				ExampleConfig.class).profiles("node").properties("transport=redis");
-		SpringApplicationBuilder application = shared.child(ChildConfig.class)
-				.profiles("admin").web(false);
-		shared.profiles("parent");
-		this.context = application.run();
-		assertThat(this.context.getEnvironment().acceptsProfiles("node", "admin"),
-				is(true));
-		assertThat(
-				this.context.getParent().getEnvironment()
-						.acceptsProfiles("node", "parent"), is(true));
-		assertThat(this.context.getParent().getEnvironment().acceptsProfiles("admin"),
-				is(false));
-	}
-
-	@Test
-	public void parentFirstWithDifferentProfileAndExplicitEnvironment() throws Exception {
-		SpringApplicationBuilder application = new SpringApplicationBuilder(
-				ExampleConfig.class).environment(new StandardEnvironment())
-				.profiles("node").properties("transport=redis").child(ChildConfig.class)
-				.profiles("admin").web(false);
-		this.context = application.run();
-		assertThat(this.context.getEnvironment().acceptsProfiles("node", "admin"),
-				is(true));
-		// Now they share an Environment explicitly so there's no way to keep the profiles
-		// separate
-		assertThat(this.context.getParent().getEnvironment().acceptsProfiles("admin"),
-				is(true));
 	}
 
 	@Test

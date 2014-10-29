@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,8 +37,6 @@ public abstract class LoggingSystem {
 		systems.put("ch.qos.logback.core.Appender", pkg + ".logback.LogbackLoggingSystem");
 		systems.put("org.apache.log4j.PropertyConfigurator", pkg
 				+ ".log4j.Log4JLoggingSystem");
-		systems.put("org.apache.logging.log4j.LogManager", pkg
-				+ ".log4j2.Log4J2LoggingSystem");
 		systems.put("java.util.logging.LogManager", pkg + ".java.JavaLoggingSystem");
 		SYSTEMS = Collections.unmodifiableMap(systems);
 	}
@@ -74,14 +72,14 @@ public abstract class LoggingSystem {
 	 * Detect and return the logging system in use.
 	 * @return The logging system
 	 */
-	public static LoggingSystem get(ClassLoader classLoader, boolean fileOutput, boolean consoleOutput) {
+	public static LoggingSystem get(ClassLoader classLoader) {
 		for (Map.Entry<String, String> entry : SYSTEMS.entrySet()) {
 			if (ClassUtils.isPresent(entry.getKey(), classLoader)) {
 				try {
 					Class<?> systemClass = ClassUtils.forName(entry.getValue(),
 							classLoader);
-					return (LoggingSystem) systemClass.getConstructor(ClassLoader.class, boolean.class, boolean.class)
-							.newInstance(classLoader, fileOutput, consoleOutput);
+					return (LoggingSystem) systemClass.getConstructor(ClassLoader.class)
+							.newInstance(classLoader);
 				}
 				catch (Exception ex) {
 					throw new IllegalStateException(ex);

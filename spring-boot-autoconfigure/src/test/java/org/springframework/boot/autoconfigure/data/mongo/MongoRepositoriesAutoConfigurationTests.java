@@ -18,7 +18,6 @@ package org.springframework.boot.autoconfigure.data.mongo;
 
 import org.junit.After;
 import org.junit.Test;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.TestAutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.data.alt.mongo.CityMongoDbRepository;
@@ -56,16 +55,26 @@ public class MongoRepositoriesAutoConfigurationTests {
 
 	@Test
 	public void testDefaultRepositoryConfiguration() throws Exception {
-		prepareApplicationContext(TestConfiguration.class);
-
+		this.context = new AnnotationConfigApplicationContext();
+		this.context.register(TestConfiguration.class, MongoAutoConfiguration.class,
+				MongoDataAutoConfiguration.class,
+				MongoRepositoriesAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class);
+		this.context.refresh();
 		assertNotNull(this.context.getBean(CityRepository.class));
+
 		Mongo mongo = this.context.getBean(Mongo.class);
 		assertThat(mongo, is(instanceOf(MongoClient.class)));
 	}
 
 	@Test
 	public void testNoRepositoryConfiguration() throws Exception {
-		prepareApplicationContext(EmptyConfiguration.class);
+		this.context = new AnnotationConfigApplicationContext();
+		this.context.register(EmptyConfiguration.class, MongoAutoConfiguration.class,
+				MongoDataAutoConfiguration.class,
+				MongoRepositoriesAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class);
+		this.context.refresh();
 
 		Mongo mongo = this.context.getBean(Mongo.class);
 		assertThat(mongo, is(instanceOf(MongoClient.class)));
@@ -73,26 +82,13 @@ public class MongoRepositoriesAutoConfigurationTests {
 
 	@Test
 	public void doesNotTriggerDefaultRepositoryDetectionIfCustomized() {
-		prepareApplicationContext(CustomizedConfiguration.class);
-
-		assertNotNull(this.context.getBean(CityMongoDbRepository.class));
-	}
-
-	@Test(expected = NoSuchBeanDefinitionException.class)
-	public void autoConfigurationShouldNotKickInEvenIfManualConfigDidNotCreateAnyRepositories() {
-		prepareApplicationContext(SortOfInvalidCustomConfiguration.class);
-
-		this.context.getBean(CityRepository.class);
-	}
-
-	private void prepareApplicationContext(Class<?>... configurationClasses) {
 		this.context = new AnnotationConfigApplicationContext();
-		this.context.register(configurationClasses);
-		this.context.register(MongoAutoConfiguration.class,
-				MongoDataAutoConfiguration.class,
+		this.context.register(CustomizedConfiguration.class,
+				MongoAutoConfiguration.class, MongoDataAutoConfiguration.class,
 				MongoRepositoriesAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class);
 		this.context.refresh();
+		assertNotNull(this.context.getBean(CityMongoDbRepository.class));
 	}
 
 	@Configuration
@@ -111,14 +107,6 @@ public class MongoRepositoriesAutoConfigurationTests {
 	@TestAutoConfigurationPackage(MongoRepositoriesAutoConfigurationTests.class)
 	@EnableMongoRepositories(basePackageClasses = CityMongoDbRepository.class)
 	protected static class CustomizedConfiguration {
-
-	}
-
-	@Configuration
-	// To not find any repositories
-	@EnableMongoRepositories("foo.bar")
-	@TestAutoConfigurationPackage(MongoRepositoriesAutoConfigurationTests.class)
-	protected static class SortOfInvalidCustomConfiguration {
 
 	}
 }
