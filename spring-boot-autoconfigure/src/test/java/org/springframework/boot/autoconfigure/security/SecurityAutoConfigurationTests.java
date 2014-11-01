@@ -16,11 +16,15 @@
 
 package org.springframework.boot.autoconfigure.security;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
@@ -29,12 +33,12 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.test.City;
 import org.springframework.boot.autoconfigure.web.ServerPropertiesAutoConfiguration;
-import org.springframework.boot.context.embedded.FilterRegistrationBean;
 import org.springframework.boot.test.EnvironmentTestUtils;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -52,11 +56,6 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Tests for {@link SecurityAutoConfiguration}.
@@ -87,35 +86,6 @@ public class SecurityAutoConfigurationTests {
 		List<SecurityFilterChain> filterChains = this.context.getBean(
 				FilterChainProxy.class).getFilterChains();
 		assertEquals(5, filterChains.size());
-	}
-
-	@Test
-	public void testDefaultFilterOrder() throws Exception {
-		this.context = new AnnotationConfigWebApplicationContext();
-		this.context.setServletContext(new MockServletContext());
-		this.context.register(SecurityAutoConfiguration.class,
-				ServerPropertiesAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class);
-		this.context.refresh();
-		assertEquals(
-				0,
-				this.context.getBean("securityFilterChainRegistration",
-						FilterRegistrationBean.class).getOrder());
-	}
-
-	@Test
-	public void testCustomFilterOrder() throws Exception {
-		this.context = new AnnotationConfigWebApplicationContext();
-		EnvironmentTestUtils.addEnvironment(this.context, "security.filter-order:12345");
-		this.context.setServletContext(new MockServletContext());
-		this.context.register(SecurityAutoConfiguration.class,
-				ServerPropertiesAutoConfiguration.class,
-				PropertyPlaceholderAutoConfiguration.class);
-		this.context.refresh();
-		assertEquals(
-				12345,
-				this.context.getBean("securityFilterChainRegistration",
-						FilterRegistrationBean.class).getOrder());
 	}
 
 	@Test
@@ -174,7 +144,8 @@ public class SecurityAutoConfigurationTests {
 		catch (BadCredentialsException e) {
 			// expected
 		}
-		assertTrue(wrapper.get() instanceof AuthenticationFailureBadCredentialsEvent);
+		assertTrue("Wrong event type: " + wrapper.get(),
+				wrapper.get() instanceof AuthenticationFailureBadCredentialsEvent);
 	}
 
 	@Test
@@ -206,7 +177,6 @@ public class SecurityAutoConfigurationTests {
 	}
 
 	@Test
-	@Ignore("gh-1801")
 	public void testOverrideAuthenticationManagerWithBuilderAndInjectIntoSecurityFilter()
 			throws Exception {
 		this.context = new AnnotationConfigWebApplicationContext();
@@ -315,6 +285,7 @@ public class SecurityAutoConfigurationTests {
 	}
 
 	@Configuration
+	@Order(-1)
 	protected static class AuthenticationManagerCustomizer extends
 			GlobalAuthenticationConfigurerAdapter {
 
