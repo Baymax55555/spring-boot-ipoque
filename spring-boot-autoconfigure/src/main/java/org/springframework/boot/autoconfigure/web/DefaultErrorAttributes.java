@@ -120,9 +120,9 @@ public class DefaultErrorAttributes implements ErrorAttributes, HandlerException
 				addStackTrace(errorAttributes, error);
 			}
 		}
-		else {
-			Object message = getAttribute(requestAttributes,
-					"javax.servlet.error.message");
+		Object message = getAttribute(requestAttributes, "javax.servlet.error.message");
+		if ((message != null || errorAttributes.get("message") == null)
+				&& !(error instanceof BindingResult)) {
 			errorAttributes.put("message", message == null ? "No message available"
 					: message);
 		}
