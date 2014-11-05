@@ -42,12 +42,7 @@ defaults. The parent project provides the following features:
   http://maven.apache.org/surefire/maven-surefire-plugin/[surefire],
   https://github.com/ktoso/maven-git-commit-id-plugin[Git commit ID],
   http://maven.apache.org/plugins/maven-shade-plugin/[shade]).
-* Sensible resource filtering for `application.properties` and `application.yml`
 
-On the last point: since the default config files files accept
-Spring style placeholders (`${...}`) the Maven filtering is changed to
-use `@..@` placeholders (you can override that with a Maven property
-`resource.delimiter`).
 
 
 [[using-boot-maven-parent-pom]]
@@ -146,7 +141,7 @@ Maven, there is no "`super parent`" to import to share some configuration.
 ----
 	apply plugin: 'java'
 
-	repositories { jcenter() }
+	repositories { mavenCentral() }
 	dependencies {
 		compile("org.springframework.boot:spring-boot-starter-web:{spring-boot-version}")
 	}
@@ -161,7 +156,7 @@ for "`blessed`" dependencies>>:
 [source,groovy,indent=0,subs="attributes"]
 ----
 	buildscript {
-		repositories { jcenter() }
+		repositories { mavenCentral() }
 		dependencies {
 			classpath("org.springframework.boot:spring-boot-gradle-plugin:{spring-boot-version}")
 		}
@@ -170,7 +165,7 @@ for "`blessed`" dependencies>>:
 	apply plugin: 'java'
 	apply plugin: 'spring-boot'
 
-	repositories { jcenter() }
+	repositories { mavenCentral() }
 	dependencies {
 		compile("org.springframework.boot:spring-boot-starter-web")
 		testCompile("org.springframework.boot:spring-boot-starter-test")
@@ -221,9 +216,6 @@ The following application starters are provided by Spring Boot under the
 |`spring-boot-starter`
 |The core Spring Boot starter, including auto-configuration support, logging and YAML.
 
-|`spring-boot-starter-actuator`
-|Production ready features to help you monitor and manage your application.
-
 |`spring-boot-starter-amqp`
 |Support for the "`Advanced Message Queuing Protocol`" via `spring-rabbit`.
 
@@ -266,22 +258,13 @@ and Hibernate.
 |Support for common `spring-integration` modules.
 
 |`spring-boot-starter-jdbc`
-|Support for JDBC databases.
-
-|`spring-boot-starter-jta-atomikos`
-|Support for JTA distributed transactions via Atomikos.
-
-|`spring-boot-starter-jta-bitronix`
-|Support for JTA distributed transactions via Bitronix.
+|JDBC Database support.
 
 |`spring-boot-starter-mobile`
 |Support for `spring-mobile`
 
 |`spring-boot-starter-redis`
 |Support for the REDIS key-value data store, including `spring-redis`.
-
-|`spring-boot-starter-remote-shell`
-|Support for `CRaSH`.
 
 |`spring-boot-starter-security`
 |Support for `spring-security`.
