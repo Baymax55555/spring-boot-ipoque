@@ -93,6 +93,15 @@ content into your application; rather pick only the properties that you need.
 	spring.resources.cache-period= # cache timeouts in headers sent to browser
 	spring.resources.add-mappings=true # if default mappings should be added
 
+	# JACKSON ({sc-spring-boot-autoconfigure}}/jackson/JacksonProperties.{sc-ext}[JacksonProperties])
+	spring.jackson.date-format= # Date format string (e.g. yyyy-MM-dd HH:mm:ss), or a fully-qualified date format class name (e.g. com.fasterxml.jackson.databind.util.ISO8601DateFormat)
+	spring.jackson.property-naming-strategy= # One of the constants on Jackson's PropertyNamingStrategy (e.g. CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES) or the fully-qualified class name of a PropertyNamingStrategy subclass
+	spring.jackson.deserialization.*= # see Jackson's DeserializationFeature
+	spring.jackson.generator.*= # see Jackson's JsonGenerator.Feature
+	spring.jackson.mapper.*= # see Jackson's MapperFeature
+	spring.jackson.parser.*= # see Jackson's JsonParser.Feature
+	spring.jackson.serialization.*= # see Jackson's SerializationFeature
+
 	# THYMELEAF ({sc-spring-boot-autoconfigure}/thymeleaf/ThymeleafAutoConfiguration.{sc-ext}[ThymeleafAutoConfiguration])
 	spring.thymeleaf.check-template-location=true
 	spring.thymeleaf.prefix=classpath:/templates/
@@ -115,7 +124,7 @@ content into your application; rather pick only the properties that you need.
 	spring.freemarker.requestContextAttribute=
 	spring.freemarker.settings.*=
 	spring.freemarker.suffix=.ftl
-	spring.freemarker.templateLoaderPath=classpath:/templates/
+	spring.freemarker.templateLoaderPath=classpath:/templates/ # comma-separated list
 	spring.freemarker.viewNames= # whitelist of view names that can be resolved
 
 	# GROOVY TEMPLATES ({sc-spring-boot-autoconfigure}/groovy/template/GroovyTemplateAutoConfiguration.{sc-ext}[GroovyTemplateAutoConfiguration])
@@ -160,6 +169,7 @@ content into your application; rather pick only the properties that you need.
 	security.basic.enabled=true
 	security.basic.realm=Spring
 	security.basic.path= # /**
+	security.filter-order=0
 	security.headers.xss=false
 	security.headers.cache=false
 	security.headers.frame=false
@@ -177,10 +187,11 @@ content into your application; rather pick only the properties that you need.
 	spring.datasource.platform= # the platform to use in the schema resource (schema-${platform}.sql)
 	spring.datasource.continueOnError=false # continue even if can't be initialized
 	spring.datasource.separator=; # statement separator in SQL initialization scripts
-	spring.datasource.driverClassName= # JDBC Settings...
+	spring.datasource.driver-class-name= # JDBC Settings...
 	spring.datasource.url=
 	spring.datasource.username=
 	spring.datasource.password=
+	spring.datasource.jndi-name # For JNDI lookup (class, url, username & password are ignored when set)
 	spring.datasource.max-active=100 # Advanced configuration...
 	spring.datasource.max-idle=8
 	spring.datasource.min-idle=8
@@ -192,6 +203,7 @@ content into your application; rather pick only the properties that you need.
 	spring.datasource.time-between-eviction-runs-millis=
 	spring.datasource.min-evictable-idle-time-millis=
 	spring.datasource.max-wait=
+	spring.datasource.jmx-enabled=true # Export JMX MBeans (if supported)
 
 	# MONGODB ({sc-spring-boot-autoconfigure}/mongo/MongoProperties.{sc-ext}[MongoProperties])
 	spring.data.mongodb.host= # the db host
@@ -210,6 +222,10 @@ content into your application; rather pick only the properties that you need.
 	spring.jpa.hibernate.ddl-auto= # defaults to create-drop for embedded dbs
 	spring.data.jpa.repositories.enabled=true # if spring data repository support is enabled
 
+	# JTA ({sc-spring-boot-autoconfigure}/jta/JtaAutoConfiguration.{sc-ext}[JtaAutoConfiguration])
+	spring.jta.log-dir= # transaction log dir
+	spring.jta.*= # technology specific configuration
+
 	# SOLR ({sc-spring-boot-autoconfigure}/solr/SolrProperties.{sc-ext}[SolrProperties}])
 	spring.data.solr.host=http://127.0.0.1:8983/solr
 	spring.data.solr.zkHost=
@@ -220,7 +236,8 @@ content into your application; rather pick only the properties that you need.
 	spring.data.elasticsearch.cluster-nodes= # The address(es) of the server node (comma-separated; if not specified starts a client node)
 	spring.data.elasticsearch.repositories.enabled=true # if spring data repository support is enabled
 
-
+	# DATA RESET ({spring-data-rest-javadoc}/core/config/RepositoryRestConfiguration.{dc-ext}[RepositoryRestConfiguration}])
+	spring.data.rest.baseUri=foo # base URI against which the exporter should calculate its links
 
 	# FLYWAY ({sc-spring-boot-autoconfigure}/flyway/FlywayProperties.{sc-ext}[FlywayProperties])
 	flyway.locations=classpath:db/migrations # locations of migrations scripts
@@ -263,6 +280,8 @@ content into your application; rather pick only the properties that you need.
 	spring.redis.pool.min-idle=0
 	spring.redis.pool.max-active=8
 	spring.redis.pool.max-wait=-1
+	spring.redis.sentinel.master= # name of Redis server
+	spring.redis.sentinel.nodes= # comma-separated list of host:port pairs
 
 	# ACTIVEMQ ({sc-spring-boot-autoconfigure}/jms/activemq/ActiveMQProperties.{sc-ext}[ActiveMQProperties])
 	spring.activemq.broker-url=tcp://localhost:61616 # connection URL
@@ -284,6 +303,7 @@ content into your application; rather pick only the properties that you need.
 	spring.hornetq.embedded.cluster-password= # customer password (randomly generated by default)
 
 	# JMS ({sc-spring-boot-autoconfigure}/jms/JmsProperties.{sc-ext}[JmsProperties])
+	spring.jms.jndi-name= # JNDI location of a JMS ConnectionFactory
 	spring.jms.pub-sub-domain= # false for queue (default), true for topic
 
 	# SPRING BATCH ({sc-spring-boot-autoconfigure}/batch/BatchDatabaseInitializer.{sc-ext}[BatchDatabaseInitializer])
@@ -336,6 +356,9 @@ content into your application; rather pick only the properties that you need.
 	management.contextPath= # default to '/'
 	management.add-application-context-header= # default to true
 
+	# PID FILE ({sc-spring-boot-actuator}/system/ApplicationPidFileWriter.{sc-ext}[ApplicationPidFileWriter])
+	spring.pidfile= # Location of the PID file to write
+
 	# ENDPOINTS ({sc-spring-boot-actuator}/endpoint/AbstractEndpoint.{sc-ext}[AbstractEndpoint] subclasses)
 	endpoints.autoconfig.id=autoconfig
 	endpoints.autoconfig.sensitive=true
@@ -346,16 +369,18 @@ content into your application; rather pick only the properties that you need.
 	endpoints.configprops.id=configprops
 	endpoints.configprops.sensitive=true
 	endpoints.configprops.enabled=true
-	endpoints.configprops.keys-to-sanitize=password,secret
+	endpoints.configprops.keys-to-sanitize=password,secret,key # suffix or regex
 	endpoints.dump.id=dump
 	endpoints.dump.sensitive=true
 	endpoints.dump.enabled=true
 	endpoints.env.id=env
 	endpoints.env.sensitive=true
 	endpoints.env.enabled=true
+	endpoints.env.keys-to-sanitize=password,secret,key # suffix or regex
 	endpoints.health.id=health
 	endpoints.health.sensitive=false
 	endpoints.health.enabled=true
+	endpoints.health.time-to-live=1000
 	endpoints.info.id=info
 	endpoints.info.sensitive=false
 	endpoints.info.enabled=true
@@ -368,6 +393,10 @@ content into your application; rather pick only the properties that you need.
 	endpoints.trace.id=trace
 	endpoints.trace.sensitive=true
 	endpoints.trace.enabled=true
+
+	# HEALTH INDICATORS
+	health.diskspace.path=.
+	health.diskspace.threshold=10485760
 
 	# MVC ONLY ENDPOINTS
 	endpoints.jolokia.path=jolokia
