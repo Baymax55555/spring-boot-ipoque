@@ -29,6 +29,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.StaticApplicationContext;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.StringUtils;
@@ -176,6 +177,50 @@ public class SpringApplicationBuilderTests {
 				is(equalTo("redis")));
 		// only defined in node profile
 		assertThat(this.context.getEnvironment().getProperty("bar"), is(equalTo("spam")));
+	}
+
+	@Test
+	public void parentFirstWithDifferentProfile() throws Exception {
+		SpringApplicationBuilder application = new SpringApplicationBuilder(
+				ExampleConfig.class).profiles("node").properties("transport=redis")
+				.child(ChildConfig.class).profiles("admin").web(false);
+		this.context = application.run();
+		assertThat(this.context.getEnvironment().acceptsProfiles("node", "admin"),
+				is(true));
+		assertThat(this.context.getParent().getEnvironment().acceptsProfiles("admin"),
+				is(false));
+	}
+
+	@Test
+	public void parentWithDifferentProfile() throws Exception {
+		SpringApplicationBuilder shared = new SpringApplicationBuilder(
+				ExampleConfig.class).profiles("node").properties("transport=redis");
+		SpringApplicationBuilder application = shared.child(ChildConfig.class)
+				.profiles("admin").web(false);
+		shared.profiles("parent");
+		this.context = application.run();
+		assertThat(this.context.getEnvironment().acceptsProfiles("node", "admin"),
+				is(true));
+		assertThat(
+				this.context.getParent().getEnvironment()
+						.acceptsProfiles("node", "parent"), is(true));
+		assertThat(this.context.getParent().getEnvironment().acceptsProfiles("admin"),
+				is(false));
+	}
+
+	@Test
+	public void parentFirstWithDifferentProfileAndExplicitEnvironment() throws Exception {
+		SpringApplicationBuilder application = new SpringApplicationBuilder(
+				ExampleConfig.class).environment(new StandardEnvironment())
+				.profiles("node").properties("transport=redis").child(ChildConfig.class)
+				.profiles("admin").web(false);
+		this.context = application.run();
+		assertThat(this.context.getEnvironment().acceptsProfiles("node", "admin"),
+				is(true));
+		// Now they share an Environment explicitly so there's no way to keep the profiles
+		// separate
+		assertThat(this.context.getParent().getEnvironment().acceptsProfiles("admin"),
+				is(true));
 	}
 
 	@Test
