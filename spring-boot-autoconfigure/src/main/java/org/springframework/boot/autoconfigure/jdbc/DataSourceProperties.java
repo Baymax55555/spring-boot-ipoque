@@ -16,9 +16,6 @@
 
 package org.springframework.boot.autoconfigure.jdbc;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.InitializingBean;
@@ -28,16 +25,14 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
- * Base class for configuration of a data source.
+ * Base class for configuration of a database pool.
  *
  * @author Dave Syer
  * @author Maciej Walkowiak
  * @since 1.1.0
  */
-@ConfigurationProperties(prefix = DataSourceProperties.PREFIX)
+@ConfigurationProperties(prefix = DataSourceAutoConfiguration.CONFIGURATION_PREFIX)
 public class DataSourceProperties implements BeanClassLoaderAware, InitializingBean {
-
-	public static final String PREFIX = "spring.datasource";
 
 	private String driverClassName;
 
@@ -48,8 +43,6 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 	private String password;
 
 	private ClassLoader classLoader;
-
-	private String jndiName;
 
 	private boolean initialize = true;
 
@@ -67,7 +60,7 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 
 	private EmbeddedDatabaseConnection embeddedDatabaseConnection = EmbeddedDatabaseConnection.NONE;
 
-	private Xa xa = new Xa();
+	private DriverClassNameProvider driverClassNameProvider = new DriverClassNameProvider();
 
 	@Override
 	public void setBeanClassLoader(ClassLoader classLoader) {
@@ -80,7 +73,7 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 				.get(this.classLoader);
 	}
 
-	public String getDriverClassName() {
+	protected String getDriverClassName() {
 		if (StringUtils.hasText(this.driverClassName)) {
 			Assert.state(ClassUtils.isPresent(this.driverClassName, null),
 					"Cannot load driver class: " + this.driverClassName);
@@ -89,7 +82,7 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 		String driverClassName = null;
 
 		if (StringUtils.hasText(this.url)) {
-			driverClassName = DatabaseDriver.fromJdbcUrl(this.url).getDriverClassName();
+			driverClassName = this.driverClassNameProvider.getDriverClassName(this.url);
 		}
 
 		if (!StringUtils.hasText(driverClassName)) {
@@ -116,7 +109,7 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 					"Cannot determine embedded database url for database type "
 							+ this.embeddedDatabaseConnection
 							+ ". If you want an embedded "
-							+ "database please put a supported one on the classpath.");
+							+ "database please put a supported on on the classpath.");
 		}
 		return url;
 	}
@@ -155,20 +148,6 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 
 	public void setPassword(String password) {
 		this.password = password;
-	}
-
-	public String getJndiName() {
-		return this.jndiName;
-	}
-
-	/**
-	 * Allows the DataSource to be managed by the container and obtained via JNDI. The
-	 * {@code URL}, {@code driverClassName}, {@code username} and {@code password} fields
-	 * will be ignored when using JNDI lookups.
-	 * @param jndiName the JNDI name
-	 */
-	public void setJndiName(String jndiName) {
-		this.jndiName = jndiName;
 	}
 
 	public boolean isInitialize() {
@@ -220,7 +199,7 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 	}
 
 	public String getSqlScriptEncoding() {
-		return this.sqlScriptEncoding;
+		return sqlScriptEncoding;
 	}
 
 	public void setSqlScriptEncoding(String sqlScriptEncoding) {
@@ -230,40 +209,4 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 	public ClassLoader getClassLoader() {
 		return this.classLoader;
 	}
-
-	public Xa getXa() {
-		return this.xa;
-	}
-
-	public void setXa(Xa xa) {
-		this.xa = xa;
-	}
-
-	/**
-	 * XA Specific datasource settings.
-	 */
-	public static class Xa {
-
-		private String dataSourceClassName;
-
-		private Map<String, String> properties = new LinkedHashMap<String, String>();
-
-		public String getDataSourceClassName() {
-			return this.dataSourceClassName;
-		}
-
-		public void setDataSourceClassName(String dataSourceClassName) {
-			this.dataSourceClassName = dataSourceClassName;
-		}
-
-		public Map<String, String> getProperties() {
-			return this.properties;
-		}
-
-		public void setProperties(Map<String, String> properties) {
-			this.properties = properties;
-		}
-
-	}
-
 }
