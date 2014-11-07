@@ -18,7 +18,10 @@ package org.springframework.boot.actuate.endpoint.mvc;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.boot.actuate.endpoint.Endpoint;
@@ -50,7 +53,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 public class EndpointHandlerMapping extends RequestMappingHandlerMapping implements
 		ApplicationContextAware {
 
-	private final Set<? extends MvcEndpoint> endpoints;
+	private final Map<String, MvcEndpoint> endpoints;
 
 	private String prefix = "";
 
@@ -62,17 +65,26 @@ public class EndpointHandlerMapping extends RequestMappingHandlerMapping impleme
 	 * @param endpoints
 	 */
 	public EndpointHandlerMapping(Collection<? extends MvcEndpoint> endpoints) {
-		this.endpoints = new HashSet<MvcEndpoint>(endpoints);
+		this.endpoints = buildEndpointsMap(endpoints);
 		// By default the static resource handler mapping is LOWEST_PRECEDENCE - 1
 		// and the RequestMappingHandlerMapping is 0 (we ideally want to be before both)
 		setOrder(-100);
+	}
+
+	private Map<String, MvcEndpoint> buildEndpointsMap(
+			Collection<? extends MvcEndpoint> endpoints) {
+		Map<String, MvcEndpoint> map = new LinkedHashMap<String, MvcEndpoint>();
+		for (MvcEndpoint endpoint : endpoints) {
+			map.put(endpoint.getPath(), endpoint);
+		}
+		return Collections.unmodifiableMap(map);
 	}
 
 	@Override
 	public void afterPropertiesSet() {
 		super.afterPropertiesSet();
 		if (!this.disabled) {
-			for (MvcEndpoint endpoint : this.endpoints) {
+			for (MvcEndpoint endpoint : this.endpoints.values()) {
 				detectHandlerMethods(endpoint);
 			}
 		}
@@ -147,6 +159,13 @@ public class EndpointHandlerMapping extends RequestMappingHandlerMapping impleme
 	}
 
 	/**
+	 * @return the path used in mappings
+	 */
+	public String getPath(String endpoint) {
+		return this.prefix + endpoint;
+	}
+
+	/**
 	 * Sets if this mapping is disabled.
 	 */
 	public void setDisabled(boolean disabled) {
@@ -164,7 +183,7 @@ public class EndpointHandlerMapping extends RequestMappingHandlerMapping impleme
 	 * Return the endpoints
 	 */
 	public Set<? extends MvcEndpoint> getEndpoints() {
-		return this.endpoints;
+		return new HashSet<MvcEndpoint>(this.endpoints.values());
 	}
 
 }
