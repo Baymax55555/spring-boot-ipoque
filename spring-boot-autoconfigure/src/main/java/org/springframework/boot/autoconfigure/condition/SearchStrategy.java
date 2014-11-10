@@ -35,6 +35,7 @@ public enum SearchStrategy {
 
 	/**
 	 * Search the entire hierarchy
+	 *
 	 */
 	ALL;
 
