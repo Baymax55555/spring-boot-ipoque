@@ -30,7 +30,6 @@ public class StartUpLoggerTests {
 
 	private final StringBuffer output = new StringBuffer();
 
-	@SuppressWarnings("serial")
 	private final SimpleLog log = new SimpleLog("test") {
 		@Override
 		protected void write(StringBuffer buffer) {
