@@ -76,7 +76,7 @@ public class AutoConfigurationReportEndpoint extends AbstractEndpoint<Report> {
 			this.negativeMatches = new LinkedMultiValueMap<String, MessageAndCondition>();
 			for (Map.Entry<String, ConditionAndOutcomes> entry : report
 					.getConditionAndOutcomesBySource().entrySet()) {
-				add(entry.getValue().isFullMatch() ? this.positiveMatches
+				dunno(entry.getValue().isFullMatch() ? this.positiveMatches
 						: this.negativeMatches, entry.getKey(), entry.getValue());
 
 			}
@@ -85,7 +85,7 @@ public class AutoConfigurationReportEndpoint extends AbstractEndpoint<Report> {
 			}
 		}
 
-		private void add(MultiValueMap<String, MessageAndCondition> map, String source,
+		private void dunno(MultiValueMap<String, MessageAndCondition> map, String source,
 				ConditionAndOutcomes conditionAndOutcomes) {
 			String name = ClassUtils.getShortName(source);
 			for (ConditionAndOutcome conditionAndOutcome : conditionAndOutcomes) {
