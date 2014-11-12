@@ -50,7 +50,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 public class EndpointHandlerMapping extends RequestMappingHandlerMapping implements
 		ApplicationContextAware {
 
-	private final Set<? extends MvcEndpoint> endpoints;
+	private final Set<MvcEndpoint> endpoints;
 
 	private String prefix = "";
 
@@ -147,6 +147,13 @@ public class EndpointHandlerMapping extends RequestMappingHandlerMapping impleme
 	}
 
 	/**
+	 * @return the path used in mappings
+	 */
+	public String getPath(String endpoint) {
+		return this.prefix + endpoint;
+	}
+
+	/**
 	 * Sets if this mapping is disabled.
 	 */
 	public void setDisabled(boolean disabled) {
@@ -164,7 +171,7 @@ public class EndpointHandlerMapping extends RequestMappingHandlerMapping impleme
 	 * Return the endpoints
 	 */
 	public Set<? extends MvcEndpoint> getEndpoints() {
-		return this.endpoints;
+		return new HashSet<MvcEndpoint>(this.endpoints);
 	}
 
 }
