@@ -21,10 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.SslConnectionFactory;
-import org.eclipse.jetty.server.handler.HandlerCollection;
-import org.eclipse.jetty.server.handler.HandlerWrapper;
+import org.eclipse.jetty.server.ssl.SslConnector;
 import org.eclipse.jetty.webapp.Configuration;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.Test;
@@ -115,11 +112,9 @@ public class JettyEmbeddedServletContainerFactoryTests extends
 		this.container.start();
 
 		JettyEmbeddedServletContainer jettyContainer = (JettyEmbeddedServletContainer) this.container;
-		ServerConnector connector = (ServerConnector) jettyContainer.getServer()
+		SslConnector sslConnector = (SslConnector) jettyContainer.getServer()
 				.getConnectors()[0];
-		SslConnectionFactory connectionFactory = connector
-				.getConnectionFactory(SslConnectionFactory.class);
-		assertThat(connectionFactory.getSslContextFactory().getIncludeCipherSuites(),
+		assertThat(sslConnector.getSslContextFactory().getIncludeCipherSuites(),
 				equalTo(new String[] { "ALPHA", "BRAVO", "CHARLIE" }));
 	}
 
@@ -132,26 +127,6 @@ public class JettyEmbeddedServletContainerFactoryTests extends
 		int actual = webAppContext.getSessionHandler().getSessionManager()
 				.getMaxInactiveInterval();
 		assertThat(actual, equalTo(expected));
-	}
-
-	@Test
-	public void wrappedHandlers() throws Exception {
-		JettyEmbeddedServletContainerFactory factory = getFactory();
-		factory.setServerCustomizers(Arrays.asList(new JettyServerCustomizer() {
-			@Override
-			public void customize(Server server) {
-				Handler handler = server.getHandler();
-				HandlerWrapper wrapper = new HandlerWrapper();
-				wrapper.setHandler(handler);
-				HandlerCollection collection = new HandlerCollection();
-				collection.addHandler(wrapper);
-				server.setHandler(collection);
-			}
-		}));
-		this.container = factory
-				.getEmbeddedServletContainer(exampleServletRegistration());
-		this.container.start();
-		assertThat(getResponse(getLocalUrl("/hello")), equalTo("Hello World"));
 	}
 
 }

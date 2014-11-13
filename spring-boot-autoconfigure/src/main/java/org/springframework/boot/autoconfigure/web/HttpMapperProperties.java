@@ -24,28 +24,27 @@ import org.springframework.http.converter.HttpMessageConverter;
  *
  * @author Dave Syer
  * @author Piotr Maj
- * @author Sebastien Deleuze
  */
 @ConfigurationProperties(prefix = "http.mappers", ignoreUnknownFields = false)
 public class HttpMapperProperties {
 
-	private Boolean jsonPrettyPrint;
+	private boolean jsonPrettyPrint;
 
-	private Boolean jsonSortKeys;
+	private boolean jsonSortKeys;
 
-	public void setJsonPrettyPrint(Boolean jsonPrettyPrint) {
+	public void setJsonPrettyPrint(boolean jsonPrettyPrint) {
 		this.jsonPrettyPrint = jsonPrettyPrint;
 	}
 
-	public Boolean isJsonPrettyPrint() {
+	public boolean isJsonPrettyPrint() {
 		return this.jsonPrettyPrint;
 	}
 
-	public void setJsonSortKeys(Boolean jsonSortKeys) {
+	public void setJsonSortKeys(boolean jsonSortKeys) {
 		this.jsonSortKeys = jsonSortKeys;
 	}
 
-	public Boolean isJsonSortKeys() {
+	public boolean isJsonSortKeys() {
 		return this.jsonSortKeys;
 	}
 
