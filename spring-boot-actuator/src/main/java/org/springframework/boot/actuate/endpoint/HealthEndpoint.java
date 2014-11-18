@@ -36,21 +36,6 @@ public class HealthEndpoint extends AbstractEndpoint<Health> {
 
 	private final HealthIndicator healthIndicator;
 
-	private long timeToLive = 1000;
-
-	/**
-	 * Time to live for cached result. If accessed anonymously, we might need to cache the
-	 * result of this endpoint to prevent a DOS attack.
-	 * @return time to live in milliseconds (default 1000)
-	 */
-	public long getTimeToLive() {
-		return this.timeToLive;
-	}
-
-	public void setTimeToLive(long ttl) {
-		this.timeToLive = ttl;
-	}
-
 	/**
 	 * Create a new {@link HealthIndicator} instance.
 	 */
@@ -61,12 +46,17 @@ public class HealthEndpoint extends AbstractEndpoint<Health> {
 		Assert.notNull(healthAggregator, "HealthAggregator must not be null");
 		Assert.notNull(healthIndicators, "HealthIndicators must not be null");
 
-		CompositeHealthIndicator healthIndicator = new CompositeHealthIndicator(
-				healthAggregator);
-		for (Map.Entry<String, HealthIndicator> h : healthIndicators.entrySet()) {
-			healthIndicator.addHealthIndicator(getKey(h.getKey()), h.getValue());
+		if (healthIndicators.size() == 1) {
+			this.healthIndicator = healthIndicators.values().iterator().next();
 		}
-		this.healthIndicator = healthIndicator;
+		else {
+			CompositeHealthIndicator healthIndicator = new CompositeHealthIndicator(
+					healthAggregator);
+			for (Map.Entry<String, HealthIndicator> h : healthIndicators.entrySet()) {
+				healthIndicator.addHealthIndicator(getKey(h.getKey()), h.getValue());
+			}
+			this.healthIndicator = healthIndicator;
+		}
 	}
 
 	/**
