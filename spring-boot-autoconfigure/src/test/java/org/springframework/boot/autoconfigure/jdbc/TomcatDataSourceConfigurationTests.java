@@ -26,11 +26,13 @@ import org.apache.tomcat.jdbc.pool.interceptor.SlowQueryReport;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.test.EnvironmentTestUtils;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.ReflectionUtils;
 
@@ -132,13 +134,23 @@ public class TomcatDataSourceConfigurationTests {
 
 	@Configuration
 	@Import(DataSourceAutoConfiguration.class)
+	@EnableMBeanExport
 	protected static class TomcatDataSourceConfiguration {
 
+		@Autowired
+		private DataSourceProperties properties;
+
 		@Bean
-		@ConfigurationProperties(prefix = DataSourceAutoConfiguration.CONFIGURATION_PREFIX)
+		@ConfigurationProperties(prefix = DataSourceProperties.PREFIX)
 		public DataSource dataSource() {
-			return DataSourceBuilder.create()
-					.type(org.apache.tomcat.jdbc.pool.DataSource.class).build();
+			DataSourceBuilder factory = DataSourceBuilder
+					.create(this.properties.getClassLoader())
+					.driverClassName(this.properties.getDriverClassName())
+					.url(this.properties.getUrl())
+					.username(this.properties.getUsername())
+					.password(this.properties.getPassword())
+					.type(org.apache.tomcat.jdbc.pool.DataSource.class);
+			return factory.build();
 		}
 
 	}

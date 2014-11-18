@@ -312,6 +312,10 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 
 	@Test
 	public void basicSsl() throws Exception {
+		testBasicSllWithKeystore("src/test/resources/test.jks");
+	}
+
+	protected final void testBasicSllWithKeystore(String keyStore) throws Exception {
 		FileCopyUtils.copy("test",
 				new FileWriter(this.temporaryFolder.newFile("test.txt")));
 
@@ -319,7 +323,7 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 		factory.setDocumentRoot(this.temporaryFolder.getRoot());
 
 		Ssl ssl = new Ssl();
-		ssl.setKeyStore("src/test/resources/test.jks");
+		ssl.setKeyStore(keyStore);
 		ssl.setKeyStorePassword("secret");
 		ssl.setKeyPassword("password");
 		factory.setSsl(ssl);
@@ -580,10 +584,11 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 
 	protected abstract AbstractEmbeddedServletContainerFactory getFactory();
 
-	private ServletContextInitializer exampleServletRegistration() {
+	protected ServletContextInitializer exampleServletRegistration() {
 		return new ServletRegistrationBean(new ExampleServlet(), "/hello");
 	}
 
+	@SuppressWarnings("serial")
 	private ServletContextInitializer errorServletRegistration() {
 		ServletRegistrationBean bean = new ServletRegistrationBean(new ExampleServlet() {
 			@Override
@@ -596,6 +601,7 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 		return bean;
 	}
 
+	@SuppressWarnings("serial")
 	private static class InitCountingServlet extends GenericServlet {
 
 		private int initCount;
