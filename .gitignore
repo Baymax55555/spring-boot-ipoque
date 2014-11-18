@@ -8,7 +8,6 @@
 .classpath
 .project
 .settings
-.metadata
 bin
 build
 lib/
@@ -25,7 +24,5 @@ settings.xml
 activemq-data
 overridedb.*
 *.iml
-*.ipr
-*.iws
 .idea
 *.jar
