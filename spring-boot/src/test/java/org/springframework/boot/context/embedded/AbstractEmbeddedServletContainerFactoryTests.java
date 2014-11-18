@@ -580,11 +580,10 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 
 	protected abstract AbstractEmbeddedServletContainerFactory getFactory();
 
-	protected ServletContextInitializer exampleServletRegistration() {
+	private ServletContextInitializer exampleServletRegistration() {
 		return new ServletRegistrationBean(new ExampleServlet(), "/hello");
 	}
 
-	@SuppressWarnings("serial")
 	private ServletContextInitializer errorServletRegistration() {
 		ServletRegistrationBean bean = new ServletRegistrationBean(new ExampleServlet() {
 			@Override
@@ -597,7 +596,6 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 		return bean;
 	}
 
-	@SuppressWarnings("serial")
 	private static class InitCountingServlet extends GenericServlet {
 
 		private int initCount;

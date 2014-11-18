@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.xml.AbstractXmlHttpMessageConverter;
-import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
 import org.springframework.util.ClassUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
@@ -142,8 +141,7 @@ public class HttpMessageConverters implements Iterable<HttpMessageConverter<?>> 
 		for (Iterator<HttpMessageConverter<?>> iterator = converters.iterator(); iterator
 				.hasNext();) {
 			HttpMessageConverter<?> converter = iterator.next();
-			if ((converter instanceof AbstractXmlHttpMessageConverter)
-					|| (converter instanceof MappingJackson2XmlHttpMessageConverter)) {
+			if (converter instanceof AbstractXmlHttpMessageConverter) {
 				xml.add(converter);
 				iterator.remove();
 			}
