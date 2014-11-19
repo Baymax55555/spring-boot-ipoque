@@ -19,6 +19,8 @@ package org.springframework.boot.autoconfigure.web;
 import java.io.File;
 import java.net.InetAddress;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.validation.constraints.NotNull;
 
@@ -33,11 +35,14 @@ import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletCont
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizerBeanPostProcessor;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
+import org.springframework.boot.context.embedded.InitParameterConfiguringServletContextInitializer;
 import org.springframework.boot.context.embedded.Ssl;
 import org.springframework.boot.context.embedded.tomcat.TomcatConnectorCustomizer;
 import org.springframework.boot.context.embedded.tomcat.TomcatContextCustomizer;
 import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
+import org.springframework.boot.context.embedded.undertow.UndertowEmbeddedServletContainerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.util.StringUtils;
 
 /**
@@ -48,6 +53,7 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  * @author Stephane Nicoll
  * @author Andy Wilkinson
+ * @author Ivan Sopov
  */
 @ConfigurationProperties(prefix = "server", ignoreUnknownFields = false)
 public class ServerProperties implements EmbeddedServletContainerCustomizer {
@@ -60,6 +66,7 @@ public class ServerProperties implements EmbeddedServletContainerCustomizer {
 
 	private String contextPath;
 
+	@NestedConfigurationProperty
 	private Ssl ssl;
 
 	@NotNull
@@ -67,8 +74,16 @@ public class ServerProperties implements EmbeddedServletContainerCustomizer {
 
 	private final Tomcat tomcat = new Tomcat();
 
+	private final Undertow undertow = new Undertow();
+
+	private final Map<String, String> contextParameters = new HashMap<String, String>();
+
 	public Tomcat getTomcat() {
 		return this.tomcat;
+	}
+
+	public Undertow getUndertow() {
+		return this.undertow;
 	}
 
 	public String getContextPath() {
@@ -143,6 +158,10 @@ public class ServerProperties implements EmbeddedServletContainerCustomizer {
 		this.ssl = ssl;
 	}
 
+	public Map<String, String> getContextParameters() {
+		return this.contextParameters;
+	}
+
 	public void setLoader(String value) {
 		// no op to support Tomcat running as a traditional container (not embedded)
 	}
@@ -168,6 +187,12 @@ public class ServerProperties implements EmbeddedServletContainerCustomizer {
 			getTomcat()
 					.customizeTomcat((TomcatEmbeddedServletContainerFactory) container);
 		}
+		if (container instanceof UndertowEmbeddedServletContainerFactory) {
+			getUndertow().customizeUndertow(
+					(UndertowEmbeddedServletContainerFactory) container);
+		}
+		container.addInitializers(new InitParameterConfiguringServletContextInitializer(
+				getContextParameters()));
 	}
 
 	public String[] getPathsArray(Collection<String> paths) {
@@ -381,4 +406,67 @@ public class ServerProperties implements EmbeddedServletContainerCustomizer {
 		}
 
 	}
+
+	public static class Undertow {
+
+		private Integer bufferSize;
+
+		private Integer buffersPerRegion;
+
+		private Integer ioThreads;
+
+		private Integer workerThreads;
+
+		private Boolean directBuffers;
+
+		public Integer getBufferSize() {
+			return this.bufferSize;
+		}
+
+		public void setBufferSize(Integer bufferSize) {
+			this.bufferSize = bufferSize;
+		}
+
+		public Integer getBuffersPerRegion() {
+			return this.buffersPerRegion;
+		}
+
+		public void setBuffersPerRegion(Integer buffersPerRegion) {
+			this.buffersPerRegion = buffersPerRegion;
+		}
+
+		public Integer getIoThreads() {
+			return this.ioThreads;
+		}
+
+		public void setIoThreads(Integer ioThreads) {
+			this.ioThreads = ioThreads;
+		}
+
+		public Integer getWorkerThreads() {
+			return this.workerThreads;
+		}
+
+		public void setWorkerThreads(Integer workerThreads) {
+			this.workerThreads = workerThreads;
+		}
+
+		public Boolean getDirectBuffers() {
+			return this.directBuffers;
+		}
+
+		public void setDirectBuffers(Boolean directBuffers) {
+			this.directBuffers = directBuffers;
+		}
+
+		void customizeUndertow(UndertowEmbeddedServletContainerFactory factory) {
+			factory.setBufferSize(this.bufferSize);
+			factory.setBuffersPerRegion(this.buffersPerRegion);
+			factory.setIoThreads(this.ioThreads);
+			factory.setWorkerThreads(this.workerThreads);
+			factory.setDirectBuffers(this.directBuffers);
+		}
+
+	}
+
 }
