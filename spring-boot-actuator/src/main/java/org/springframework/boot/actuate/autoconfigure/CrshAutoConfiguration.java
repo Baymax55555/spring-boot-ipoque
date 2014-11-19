@@ -54,8 +54,8 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -124,21 +124,21 @@ public class CrshAutoConfiguration {
 	private ShellProperties properties;
 
 	@Bean
-	@ConditionalOnProperty(prefix = "shell", name = "auth", havingValue = "jaas")
+	@ConditionalOnExpression("'${shell.auth:simple}' == 'jaas'")
 	@ConditionalOnMissingBean({ CrshShellAuthenticationProperties.class })
 	public CrshShellAuthenticationProperties jaasAuthenticationProperties() {
 		return new JaasAuthenticationProperties();
 	}
 
 	@Bean
-	@ConditionalOnProperty(prefix = "shell", name = "auth", havingValue = "key")
+	@ConditionalOnExpression("'${shell.auth:simple}' == 'key'")
 	@ConditionalOnMissingBean({ CrshShellAuthenticationProperties.class })
 	public CrshShellAuthenticationProperties keyAuthenticationProperties() {
 		return new KeyAuthenticationProperties();
 	}
 
 	@Bean
-	@ConditionalOnProperty(prefix = "shell", name = "auth", havingValue = "simple", matchIfMissing = true)
+	@ConditionalOnExpression("'${shell.auth:simple}' == 'simple'")
 	@ConditionalOnMissingBean({ CrshShellAuthenticationProperties.class })
 	public CrshShellAuthenticationProperties simpleAuthenticationProperties() {
 		return new SimpleAuthenticationProperties();
@@ -156,7 +156,7 @@ public class CrshAutoConfiguration {
 	 * Class to configure CRaSH to authenticate against Spring Security.
 	 */
 	@Configuration
-	@ConditionalOnProperty(prefix = "shell", name = "auth", havingValue = "spring", matchIfMissing = true)
+	@ConditionalOnExpression("'${shell.auth:spring}' == 'spring'")
 	@ConditionalOnBean({ AuthenticationManager.class })
 	@AutoConfigureAfter(CrshAutoConfiguration.class)
 	public static class AuthenticationManagerAdapterAutoConfiguration {
