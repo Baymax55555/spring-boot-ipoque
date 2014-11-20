@@ -23,20 +23,22 @@ import java.util.Map;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.slf4j.bridge.SLF4JBridgeHandler;
+import org.springframework.boot.logging.AbstractLoggingSystem;
 import org.springframework.boot.logging.LogLevel;
 import org.springframework.boot.logging.LoggingSystem;
-import org.springframework.boot.logging.Slf4JLoggingSystem;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.Log4jConfigurer;
 import org.springframework.util.StringUtils;
 
 /**
- * {@link LoggingSystem} for <a href="http://logging.apache.org/log4j/1.2">Log4j</a>.
+ * {@link LoggingSystem} for for <a href="http://logging.apache.org/log4j">log4j</a>.
  *
  * @author Phillip Webb
  * @author Dave Syer
  */
-public class Log4JLoggingSystem extends Slf4JLoggingSystem {
+public class Log4JLoggingSystem extends AbstractLoggingSystem {
 
 	private static final Map<LogLevel, Level> LEVELS;
 	static {
@@ -52,42 +54,27 @@ public class Log4JLoggingSystem extends Slf4JLoggingSystem {
 	}
 
 	public Log4JLoggingSystem(ClassLoader classLoader) {
-		super(classLoader);
-	}
-
-	@Override
-	protected String[] getStandardConfigLocations() {
-		return new String[] { "log4j.xml", "log4j.properties" };
+		super(classLoader, "log4j.xml", "log4j.properties");
 	}
 
 	@Override
 	public void beforeInitialize() {
 		super.beforeInitialize();
-		LogManager.getRootLogger().setLevel(Level.FATAL);
-	}
-
-	@Override
-	protected void loadDefaults(String logFile) {
-		if (StringUtils.hasLength(logFile)) {
-			loadConfiguration(getPackagedConfigFile("log4j-file.properties"), logFile);
-		}
-		else {
-			loadConfiguration(getPackagedConfigFile("log4j.properties"), logFile);
+		if (ClassUtils.isPresent("org.slf4j.bridge.SLF4JBridgeHandler", getClassLoader())) {
+			SLF4JBridgeHandler.removeHandlersForRootLogger();
+			SLF4JBridgeHandler.install();
 		}
 	}
 
 	@Override
-	protected void loadConfiguration(String location, String logFile) {
-		Assert.notNull(location, "Location must not be null");
-		if (StringUtils.hasLength(logFile)) {
-			System.setProperty("LOG_FILE", logFile);
-		}
+	public void initialize(String configLocation) {
+		Assert.notNull(configLocation, "ConfigLocation must not be null");
 		try {
-			Log4jConfigurer.initLogging(location);
+			Log4jConfigurer.initLogging(configLocation);
 		}
 		catch (Exception ex) {
-			throw new IllegalStateException("Could not initialize Log4J logging from "
-					+ location, ex);
+			throw new IllegalStateException("Could not initialize logging from "
+					+ configLocation, ex);
 		}
 	}
 

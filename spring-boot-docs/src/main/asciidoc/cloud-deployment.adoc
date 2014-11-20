@@ -153,13 +153,13 @@ for our starter REST application:
 
 [indent=0]
 ----
-	web: java -Dserver.port=$PORT -jar target/demo-0.0.1-SNAPSHOT.jar
+	web: java -Dserver.port=$PORT $JAVA_OPTS -jar target/demo-0.0.1-SNAPSHOT.jar
 ----
 
 Spring Boot makes `-D` arguments available as properties accessible from a Spring
 `Environment` instance. The `server.port` configuration property is fed to the embedded
-Tomcat, Jetty or Undertow instance which then uses it when it starts up. The `$PORT`
-environment variable is assigned to us by the Heroku PaaS.
+Tomcat or Jetty instance which then uses it when it starts up. The `$PORT` environment
+variable is assigned to us by the Heroku PaaS.
 
 Heroku by default will use Java 1.6. This is fine as long as your Maven or Gradle build
 is set to use the same version (Maven users can use the `java.version` property). If you
@@ -297,14 +297,6 @@ There's a blog on https://www.openshift.com/blogs/run-gradle-builds-on-openshift
 Gradle in Openshift] on their website that will get you started with a gradle build to
 run the app. A http://issues.gradle.org/browse/GRADLE-2871[bug in Gradle] currently
 prevents you from using Gradle newer than 1.6.
-
-
-
-[[cloud-deployment-gae]]
-== Google App Engine
-Google App Engine is tied to the Servlet 2.5 API, so you can't deploy a Spring Application
-there without some modifications. See the <<howto.adoc#howto-servlet-2-5, Servlet 2.5 section>>
-of this guide.
 
 
 
