@@ -26,6 +26,7 @@ import org.springframework.boot.cli.command.status.ExitStatus;
  *
  * @author Phillip Webb
  * @author Dave Syer
+ * @author Stephane Nicoll
  * @see #run(String...)
  */
 public interface Command {
@@ -57,6 +58,11 @@ public interface Command {
 	 * Returns help for each supported option.
 	 */
 	Collection<OptionHelp> getOptionsHelp();
+
+	/**
+	 * Return some examples for the command.
+	 */
+	Collection<HelpExample> getExamples();
 
 	/**
 	 * Run the command.

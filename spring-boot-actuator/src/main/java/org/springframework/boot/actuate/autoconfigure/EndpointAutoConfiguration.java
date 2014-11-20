@@ -16,8 +16,12 @@
 
 package org.springframework.boot.actuate.autoconfigure;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -36,12 +40,9 @@ import org.springframework.boot.actuate.endpoint.PublicMetrics;
 import org.springframework.boot.actuate.endpoint.RequestMappingEndpoint;
 import org.springframework.boot.actuate.endpoint.ShutdownEndpoint;
 import org.springframework.boot.actuate.endpoint.TraceEndpoint;
-import org.springframework.boot.actuate.endpoint.VanillaPublicMetrics;
 import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.OrderedHealthAggregator;
-import org.springframework.boot.actuate.metrics.reader.MetricReader;
-import org.springframework.boot.actuate.metrics.repository.InMemoryMetricRepository;
 import org.springframework.boot.actuate.trace.InMemoryTraceRepository;
 import org.springframework.boot.actuate.trace.TraceRepository;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -54,6 +55,7 @@ import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.boot.context.properties.ConfigurationBeanFactoryMetaData;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.Resource;
@@ -68,6 +70,7 @@ import org.springframework.web.servlet.handler.AbstractHandlerMethodMapping;
  * @author Phillip Webb
  * @author Greg Turnquist
  * @author Christian Dupuis
+ * @author Stephane Nicoll
  */
 @Configuration
 public class EndpointAutoConfiguration {
@@ -82,10 +85,7 @@ public class EndpointAutoConfiguration {
 	Map<String, HealthIndicator> healthIndicators = new HashMap<String, HealthIndicator>();
 
 	@Autowired(required = false)
-	private MetricReader metricRepository = new InMemoryMetricRepository();
-
-	@Autowired(required = false)
-	private PublicMetrics metrics;
+	private Collection<PublicMetrics> publicMetrics;
 
 	@Autowired(required = false)
 	private TraceRepository traceRepository = new InMemoryTraceRepository();
@@ -126,10 +126,12 @@ public class EndpointAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public MetricsEndpoint metricsEndpoint() {
-		if (this.metrics == null) {
-			this.metrics = new VanillaPublicMetrics(this.metricRepository);
+		List<PublicMetrics> publicMetrics = new ArrayList<PublicMetrics>();
+		if (this.publicMetrics != null) {
+			publicMetrics.addAll(this.publicMetrics);
 		}
-		return new MetricsEndpoint(this.metrics);
+		Collections.sort(publicMetrics, AnnotationAwareOrderComparator.INSTANCE);
+		return new MetricsEndpoint(publicMetrics);
 	}
 
 	@Bean
@@ -157,6 +159,14 @@ public class EndpointAutoConfiguration {
 		return new ShutdownEndpoint();
 	}
 
+	@Bean
+	@ConditionalOnMissingBean
+	public ConfigurationPropertiesReportEndpoint configurationPropertiesReportEndpoint() {
+		ConfigurationPropertiesReportEndpoint endpoint = new ConfigurationPropertiesReportEndpoint();
+		endpoint.setConfigurationBeanFactoryMetaData(this.beanFactoryMetaData);
+		return endpoint;
+	}
+
 	@Configuration
 	@ConditionalOnClass(AbstractHandlerMethodMapping.class)
 	protected static class RequestMappingEndpointConfiguration {
@@ -168,14 +178,6 @@ public class EndpointAutoConfiguration {
 			return endpoint;
 		}
 
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public ConfigurationPropertiesReportEndpoint configurationPropertiesReportEndpoint() {
-		ConfigurationPropertiesReportEndpoint endpoint = new ConfigurationPropertiesReportEndpoint();
-		endpoint.setConfigurationBeanFactoryMetaData(this.beanFactoryMetaData);
-		return endpoint;
 	}
 
 	@Configuration
