@@ -18,7 +18,6 @@ package org.springframework.boot.actuate.autoconfigure;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.servlet.Filter;
@@ -30,7 +29,6 @@ import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.endpoint.mvc.EndpointHandlerMapping;
-import org.springframework.boot.actuate.endpoint.mvc.EndpointHandlerMappingCustomizer;
 import org.springframework.boot.actuate.endpoint.mvc.ManagementErrorEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoints;
@@ -65,9 +63,6 @@ public class EndpointWebMvcChildContextConfiguration {
 	@Value("${error.path:/error}")
 	private String errorPath = "/error";
 
-	@Autowired(required = false)
-	private List<EndpointHandlerMappingCustomizer> mappingCustomizers;
-
 	@Configuration
 	protected static class ServerCustomization implements
 			EmbeddedServletContainerCustomizer {
@@ -95,7 +90,7 @@ public class EndpointWebMvcChildContextConfiguration {
 			}
 			// Customize as per the parent context first (so e.g. the access logs go to
 			// the same place)
-			this.server.customize(container);
+			server.customize(container);
 			// Then reset the error pages
 			container.setErrorPages(Collections.<ErrorPage> emptySet());
 			// and add the management-specific bits
@@ -135,11 +130,6 @@ public class EndpointWebMvcChildContextConfiguration {
 		EndpointHandlerMapping mapping = new EndpointHandlerMapping(set);
 		// In a child context we definitely want to see the parent endpoints
 		mapping.setDetectHandlerMethodsInAncestorContexts(true);
-		if (this.mappingCustomizers != null) {
-			for (EndpointHandlerMappingCustomizer customizer : this.mappingCustomizers) {
-				customizer.customize(mapping);
-			}
-		}
 		return mapping;
 	}
 

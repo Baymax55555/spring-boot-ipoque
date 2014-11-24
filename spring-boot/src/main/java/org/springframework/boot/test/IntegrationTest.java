@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.jdbc.SqlScriptsTestExecutionListener;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
@@ -42,10 +41,9 @@ import org.springframework.test.context.transaction.TransactionalTestExecutionLi
 @Target(ElementType.TYPE)
 // Leave out the ServletTestExecutionListener because it only deals with Mock* servlet
 // stuff. A real embedded application will not need the mocks.
-@TestExecutionListeners(listeners = { IntegrationTestPropertiesListener.class,
-		DependencyInjectionTestExecutionListener.class,
+@TestExecutionListeners(listeners = { DependencyInjectionTestExecutionListener.class,
 		DirtiesContextTestExecutionListener.class,
-		TransactionalTestExecutionListener.class, SqlScriptsTestExecutionListener.class })
+		TransactionalTestExecutionListener.class })
 public @interface IntegrationTest {
 
 	/**
