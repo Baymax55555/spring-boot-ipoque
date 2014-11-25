@@ -28,7 +28,6 @@ import javax.servlet.ServletResponse;
  *
  * @author Phillip Webb
  */
-@SuppressWarnings("serial")
 public class ExampleServlet extends GenericServlet {
 
 	@Override

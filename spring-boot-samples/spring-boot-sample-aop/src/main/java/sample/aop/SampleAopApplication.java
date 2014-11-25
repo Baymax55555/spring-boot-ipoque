@@ -19,11 +19,15 @@ package sample.aop;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 
 import sample.aop.service.HelloWorldService;
 
-@SpringBootApplication
+@Configuration
+@EnableAutoConfiguration
+@ComponentScan
 public class SampleAopApplication implements CommandLineRunner {
 
 	// Simple example shows how an application can spy on itself with AOP
