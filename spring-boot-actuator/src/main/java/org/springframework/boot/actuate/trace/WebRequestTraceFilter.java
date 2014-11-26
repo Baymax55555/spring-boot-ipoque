@@ -37,6 +37,9 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * Servlet {@link Filter} that logs all requests to a {@link TraceRepository}.
  *
@@ -51,6 +54,8 @@ public class WebRequestTraceFilter extends OncePerRequestFilter implements Order
 	private int order = Integer.MAX_VALUE;
 
 	private final TraceRepository traceRepository;
+
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	private ErrorAttributes errorAttributes;
 
@@ -88,9 +93,16 @@ public class WebRequestTraceFilter extends OncePerRequestFilter implements Order
 			this.logger.trace("Processing request " + request.getMethod() + " "
 					+ request.getRequestURI());
 			if (this.dumpRequests) {
-				@SuppressWarnings("unchecked")
-				Map<String, Object> headers = (Map<String, Object>) trace.get("headers");
-				this.logger.trace("Headers: " + headers);
+				try {
+					@SuppressWarnings("unchecked")
+					Map<String, Object> headers = (Map<String, Object>) trace
+							.get("headers");
+					this.logger.trace("Headers: "
+							+ this.objectMapper.writeValueAsString(headers));
+				}
+				catch (JsonProcessingException ex) {
+					throw new IllegalStateException("Cannot create JSON", ex);
+				}
 			}
 		}
 

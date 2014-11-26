@@ -16,57 +16,36 @@
 
 package org.springframework.boot.autoconfigure.web;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.boot.autoconfigure.jackson.JacksonProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.http.converter.HttpMessageConverter;
-
-import com.fasterxml.jackson.databind.SerializationFeature;
 
 /**
  * Configuration properties to configure {@link HttpMessageConverter}s.
  *
  * @author Dave Syer
  * @author Piotr Maj
- * @author Sebastien Deleuze
- * @deprecated in favor of {@link JacksonProperties}
  */
 @ConfigurationProperties(prefix = "http.mappers", ignoreUnknownFields = false)
-@Deprecated
 public class HttpMapperProperties {
 
-	private final Log logger = LogFactory.getLog(HttpMapperProperties.class);
+	private boolean jsonPrettyPrint;
 
-	private Boolean jsonPrettyPrint;
+	private boolean jsonSortKeys;
 
-	private Boolean jsonSortKeys;
-
-	public void setJsonPrettyPrint(Boolean jsonPrettyPrint) {
-		this.logger.warn(getDeprecationMessage("http.mappers.json-pretty-print",
-				SerializationFeature.INDENT_OUTPUT));
+	public void setJsonPrettyPrint(boolean jsonPrettyPrint) {
 		this.jsonPrettyPrint = jsonPrettyPrint;
 	}
 
-	public Boolean isJsonPrettyPrint() {
+	public boolean isJsonPrettyPrint() {
 		return this.jsonPrettyPrint;
 	}
 
-	public void setJsonSortKeys(Boolean jsonSortKeys) {
-		this.logger.warn(getDeprecationMessage("http.mappers.json-sort-keys",
-				SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS));
+	public void setJsonSortKeys(boolean jsonSortKeys) {
 		this.jsonSortKeys = jsonSortKeys;
 	}
 
-	public Boolean isJsonSortKeys() {
+	public boolean isJsonSortKeys() {
 		return this.jsonSortKeys;
-	}
-
-	private String getDeprecationMessage(String property,
-			SerializationFeature alternativeFeature) {
-		return String.format("%s is deprecated. If you are using Jackson,"
-				+ " spring.jackson.serialization.%s=true should be used instead.",
-				property, alternativeFeature.name());
 	}
 
 }

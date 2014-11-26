@@ -25,15 +25,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.http.MimeTypes;
-import org.eclipse.jetty.server.AbstractConnector;
 import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.SslConnectionFactory;
 import org.eclipse.jetty.server.handler.ErrorHandler;
+import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletMapping;
@@ -121,9 +117,10 @@ public class JettyEmbeddedServletContainerFactory extends
 		if (getSsl() != null) {
 			SslContextFactory sslContextFactory = new SslContextFactory();
 			configureSsl(sslContextFactory, getSsl());
-			AbstractConnector connector = getSslServerConnectorFactory().getConnector(
-					server, sslContextFactory, port);
-			server.setConnectors(new Connector[] { connector });
+
+			SslSocketConnector sslConnector = new SslSocketConnector(sslContextFactory);
+			sslConnector.setPort(port);
+			server.setConnectors(new Connector[] { sslConnector });
 		}
 
 		for (JettyServerCustomizer customizer : getServerCustomizers()) {
@@ -131,13 +128,6 @@ public class JettyEmbeddedServletContainerFactory extends
 		}
 
 		return getJettyEmbeddedServletContainer(server);
-	}
-
-	private SslServerConnectorFactory getSslServerConnectorFactory() {
-		if (ClassUtils.isPresent("org.eclipse.jetty.server.ssl.SslSocketConnector", null)) {
-			return new Jetty8SslServerConnectorFactory();
-		}
-		return new Jetty9SslServerConnectorFactory();
 	}
 
 	/**
@@ -252,11 +242,11 @@ public class JettyEmbeddedServletContainerFactory extends
 		if (root != null) {
 			try {
 				if (!root.isDirectory()) {
-					Resource resource = Resource.newResource("jar:" + root.toURI() + "!");
-					handler.setBaseResource(resource);
+					handler.setBaseResource(Resource.newResource("jar:" + root.toURI()
+							+ "!"));
 				}
 				else {
-					handler.setBaseResource(Resource.newResource(root.getCanonicalFile()));
+					handler.setBaseResource(Resource.newResource(root));
 				}
 			}
 			catch (Exception ex) {
@@ -466,59 +456,6 @@ public class JettyEmbeddedServletContainerFactory extends
 				}
 			}
 		}
-	}
-
-	/**
-	 * Factory to create the SSL {@link ServerConnector}.
-	 */
-	private static interface SslServerConnectorFactory {
-
-		AbstractConnector getConnector(Server server,
-				SslContextFactory sslContextFactory, int port);
-
-	}
-
-	/**
-	 * {@link SslServerConnectorFactory} for Jetty 9.
-	 */
-	private static class Jetty9SslServerConnectorFactory implements
-			SslServerConnectorFactory {
-
-		@Override
-		public ServerConnector getConnector(Server server,
-				SslContextFactory sslContextFactory, int port) {
-			ServerConnector serverConnector = new ServerConnector(server,
-					new SslConnectionFactory(sslContextFactory,
-							HttpVersion.HTTP_1_1.asString()), new HttpConnectionFactory());
-			serverConnector.setPort(port);
-			return serverConnector;
-		}
-	}
-
-	/**
-	 * {@link SslServerConnectorFactory} for Jetty 8.
-	 */
-	private static class Jetty8SslServerConnectorFactory implements
-			SslServerConnectorFactory {
-
-		@Override
-		public AbstractConnector getConnector(Server server,
-				SslContextFactory sslContextFactory, int port) {
-			try {
-				Class<?> connectorClass = Class
-						.forName("org.eclipse.jetty.server.ssl.SslSocketConnector");
-				AbstractConnector connector = (AbstractConnector) connectorClass
-						.getConstructor(SslContextFactory.class).newInstance(
-								sslContextFactory);
-				connector.getClass().getMethod("setPort", int.class)
-						.invoke(connector, port);
-				return connector;
-			}
-			catch (Exception ex) {
-				throw new IllegalStateException(ex);
-			}
-		}
-
 	}
 
 }
