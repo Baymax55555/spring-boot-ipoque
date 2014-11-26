@@ -8,8 +8,6 @@
 .classpath
 .project
 .settings
-.metadata
-.factorypath
 bin
 build
 lib/
@@ -26,8 +24,5 @@ settings.xml
 activemq-data
 overridedb.*
 *.iml
-*.ipr
-*.iws
 .idea
 *.jar
-.DS_Store

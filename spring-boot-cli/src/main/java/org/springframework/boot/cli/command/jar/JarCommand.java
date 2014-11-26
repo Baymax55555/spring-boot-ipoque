@@ -42,7 +42,6 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.transform.ASTTransformation;
-import org.springframework.boot.cli.app.SpringApplicationLauncher;
 import org.springframework.boot.cli.command.Command;
 import org.springframework.boot.cli.command.OptionParsingCommand;
 import org.springframework.boot.cli.command.jar.ResourceMatcher.MatchedResource;
@@ -208,7 +207,6 @@ public class JarCommand extends OptionParsingCommand {
 
 		private void addCliClasses(JarWriter writer) throws IOException {
 			addClass(writer, PackagedSpringApplicationLauncher.class);
-			addClass(writer, SpringApplicationLauncher.class);
 			Resource[] resources = new PathMatchingResourcePatternResolver()
 					.getResources("org/springframework/boot/groovy/**");
 			for (Resource resource : resources) {
