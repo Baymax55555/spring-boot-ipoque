@@ -17,20 +17,15 @@
 package org.springframework.boot.actuate.endpoint.mvc;
 
 import java.lang.reflect.Method;
-import java.security.Principal;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.condition.PatternsRequestCondition;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -55,13 +50,11 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 public class EndpointHandlerMapping extends RequestMappingHandlerMapping implements
 		ApplicationContextAware {
 
-	private final Set<MvcEndpoint> endpoints;
+	private final Set<? extends MvcEndpoint> endpoints;
 
 	private String prefix = "";
 
 	private boolean disabled = false;
-
-	private Set<HandlerMethod> principalHandlers = new HashSet<HandlerMethod>();
 
 	/**
 	 * Create a new {@link EndpointHandlerMapping} instance. All {@link Endpoint}s will be
@@ -134,31 +127,7 @@ public class EndpointHandlerMapping extends RequestMappingHandlerMapping impleme
 				mapping.getHeadersCondition(), mapping.getConsumesCondition(),
 				mapping.getProducesCondition(), mapping.getCustomCondition());
 
-		if (handlesPrincipal(method)) {
-			this.principalHandlers.add(new HandlerMethod(handler, method));
-		}
-
 		super.registerHandlerMethod(handler, method, modified);
-	}
-
-	public boolean isPrincipalHandler(HttpServletRequest request) {
-		HandlerExecutionChain handler;
-		try {
-			handler = getHandler(request);
-		}
-		catch (Exception e) {
-			return false;
-		}
-		return (handler != null && this.principalHandlers.contains(handler.getHandler()));
-	}
-
-	private boolean handlesPrincipal(Method method) {
-		for (Class<?> type : method.getParameterTypes()) {
-			if (Principal.class.equals(type)) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	/**
@@ -175,13 +144,6 @@ public class EndpointHandlerMapping extends RequestMappingHandlerMapping impleme
 	 */
 	public String getPrefix() {
 		return this.prefix;
-	}
-
-	/**
-	 * @return the path used in mappings
-	 */
-	public String getPath(String endpoint) {
-		return this.prefix + endpoint;
 	}
 
 	/**
@@ -202,7 +164,7 @@ public class EndpointHandlerMapping extends RequestMappingHandlerMapping impleme
 	 * Return the endpoints
 	 */
 	public Set<? extends MvcEndpoint> getEndpoints() {
-		return new HashSet<MvcEndpoint>(this.endpoints);
+		return this.endpoints;
 	}
 
 }

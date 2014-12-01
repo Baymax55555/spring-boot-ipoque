@@ -18,8 +18,6 @@ package org.springframework.boot.autoconfigure.condition;
 
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -34,7 +32,6 @@ import org.springframework.web.context.support.StandardServletEnvironment;
  * @see ConditionalOnWebApplication
  * @see ConditionalOnNotWebApplication
  */
-@Order(Ordered.HIGHEST_PRECEDENCE + 20)
 class OnWebApplicationCondition extends SpringBootCondition {
 
 	private static final String WEB_CONTEXT_CLASS = "org.springframework.web.context."

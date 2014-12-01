@@ -32,10 +32,6 @@ import org.springframework.http.HttpStatus;
 @ConfigurationProperties(prefix = "endpoints.health")
 public class HealthMvcEndpointProperties {
 
-	/**
-	 * Mapping of health statuses to HttpStatus codes. By default, registered
-	 * health statuses map to sensible defaults (i.e. UP maps to 200).
-	 */
 	private Map<String, HttpStatus> mapping = new HashMap<String, HttpStatus>();
 
 	public Map<String, HttpStatus> getMapping() {

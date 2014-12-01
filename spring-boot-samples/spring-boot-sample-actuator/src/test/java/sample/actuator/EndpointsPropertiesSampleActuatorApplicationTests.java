@@ -69,8 +69,5 @@ public class EndpointsPropertiesSampleActuatorApplicationTests {
 		assertEquals(HttpStatus.OK, entity.getStatusCode());
 		assertTrue("Wrong body: " + entity.getBody(),
 				entity.getBody().contains("\"status\":\"UP\""));
-		System.err.println(entity.getBody());
-		assertTrue("Wrong body: " + entity.getBody(),
-				entity.getBody().contains("\"hello\":\"world\""));
 	}
 }

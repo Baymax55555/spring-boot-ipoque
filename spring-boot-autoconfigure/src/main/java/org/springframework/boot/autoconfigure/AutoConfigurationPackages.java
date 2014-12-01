@@ -17,7 +17,6 @@
 package org.springframework.boot.autoconfigure;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -25,8 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.ConstructorArgumentValues;
-import org.springframework.beans.factory.config.ConstructorArgumentValues.ValueHolder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
@@ -42,7 +39,6 @@ import org.springframework.util.StringUtils;
  *
  * @author Phillip Webb
  * @author Dave Syer
- * @author Oliver Gierke
  */
 public abstract class AutoConfigurationPackages {
 
@@ -79,46 +75,21 @@ public abstract class AutoConfigurationPackages {
 	}
 
 	/**
-	 * Programmatically registers the auto-configuration package names. Subsequent
-	 * invocations will add the given package names to those that have already been
-	 * registered. You can use this method to manually define the base packages that will
-	 * be used for a given {@link BeanDefinitionRegistry}. Generally it's recommended that
-	 * you don't call this method directly, but instead rely on the default convention
-	 * where the package name is set from your {@code @EnableAutoConfiguration}
-	 * configuration class or classes.
+	 * Programmatically set the auto-configuration package names. You can use this method
+	 * to manually define the base packages that will be used for a given
+	 * {@link BeanDefinitionRegistry}. Generally it's recommended that you don't call this
+	 * method directly, but instead rely on the default convention where the package name
+	 * is set from your {@code @EnableAutoConfiguration} configuration class.
 	 * @param registry the bean definition registry
-	 * @param packageNames the package names to set
+	 * @param packageNames the pacakge names to set
 	 */
-	public static void register(BeanDefinitionRegistry registry, String... packageNames) {
-
-		if (registry.containsBeanDefinition(BEAN)) {
-			BeanDefinition beanDefinition = registry.getBeanDefinition(BEAN);
-			ConstructorArgumentValues constructorArguments = beanDefinition
-					.getConstructorArgumentValues();
-			constructorArguments.addIndexedArgumentValue(0,
-					augmentBasePackages(constructorArguments, packageNames));
-		}
-		else {
-			GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
-			beanDefinition.setBeanClass(BasePackages.class);
-			beanDefinition.getConstructorArgumentValues().addIndexedArgumentValue(0,
-					packageNames);
-			beanDefinition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
-			registry.registerBeanDefinition(BEAN, beanDefinition);
-		}
-	}
-
-	private static String[] augmentBasePackages(
-			ConstructorArgumentValues constructorArguments, String[] packageNames) {
-
-		ValueHolder valueHolder = constructorArguments.getIndexedArgumentValue(0,
-				List.class);
-
-		List<String> packages = new ArrayList<String>(
-				Arrays.asList((String[]) valueHolder.getValue()));
-		packages.addAll(Arrays.asList(packageNames));
-
-		return packages.toArray(new String[packages.size()]);
+	public static void set(BeanDefinitionRegistry registry, String... packageNames) {
+		GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
+		beanDefinition.setBeanClass(BasePackages.class);
+		beanDefinition.getConstructorArgumentValues().addIndexedArgumentValue(0,
+				packageNames);
+		beanDefinition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+		registry.registerBeanDefinition(BEAN, beanDefinition);
 	}
 
 	/**
@@ -131,7 +102,7 @@ public abstract class AutoConfigurationPackages {
 		@Override
 		public void registerBeanDefinitions(AnnotationMetadata metadata,
 				BeanDefinitionRegistry registry) {
-			register(registry, ClassUtils.getPackageName(metadata.getClassName()));
+			set(registry, ClassUtils.getPackageName(metadata.getClassName()));
 		}
 
 	}
