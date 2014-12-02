@@ -27,7 +27,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "spring.jms")
 public class JmsProperties {
 
+	/**
+	 * Specify if the default destination type is topic.
+	 */
 	private boolean pubSubDomain = false;
+
+	/**
+	 * Connection factory JNDI name. When set, takes precedence to others connection
+	 * factory auto-configurations.
+	 */
+	private String jndiName;
 
 	public boolean isPubSubDomain() {
 		return this.pubSubDomain;
@@ -35,6 +44,14 @@ public class JmsProperties {
 
 	public void setPubSubDomain(boolean pubSubDomain) {
 		this.pubSubDomain = pubSubDomain;
+	}
+
+	public String getJndiName() {
+		return this.jndiName;
+	}
+
+	public void setJndiName(String jndiName) {
+		this.jndiName = jndiName;
 	}
 
 }

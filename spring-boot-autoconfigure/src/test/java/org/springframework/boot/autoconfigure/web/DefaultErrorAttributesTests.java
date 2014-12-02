@@ -119,6 +119,18 @@ public class DefaultErrorAttributesTests {
 	}
 
 	@Test
+	public void nullMessage() throws Exception {
+		this.request
+				.setAttribute("javax.servlet.error.exception", new RuntimeException());
+		this.request.setAttribute("javax.servlet.error.message", "Test");
+		Map<String, Object> attributes = this.errorAttributes.getErrorAttributes(
+				this.requestAttributes, false);
+		assertThat(attributes.get("exception"),
+				equalTo((Object) RuntimeException.class.getName()));
+		assertThat(attributes.get("message"), equalTo((Object) "Test"));
+	}
+
+	@Test
 	public void unwrapServletException() throws Exception {
 		RuntimeException ex = new RuntimeException("Test");
 		ServletException wrapped = new ServletException(new ServletException(ex));
@@ -130,6 +142,19 @@ public class DefaultErrorAttributesTests {
 		assertThat(attributes.get("exception"),
 				equalTo((Object) RuntimeException.class.getName()));
 		assertThat(attributes.get("message"), equalTo((Object) "Test"));
+	}
+
+	@Test
+	public void getError() throws Exception {
+		Error error = new OutOfMemoryError("Test error");
+		this.request.setAttribute("javax.servlet.error.exception", error);
+		Map<String, Object> attributes = this.errorAttributes.getErrorAttributes(
+				this.requestAttributes, false);
+		assertThat(this.errorAttributes.getError(this.requestAttributes),
+				sameInstance((Object) error));
+		assertThat(attributes.get("exception"),
+				equalTo((Object) OutOfMemoryError.class.getName()));
+		assertThat(attributes.get("message"), equalTo((Object) "Test error"));
 	}
 
 	@Test
