@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 the original author or authors.
+ * Copyright 2012-2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.xml.AbstractXmlHttpMessageConverter;
+import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
 import org.springframework.util.ClassUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
@@ -49,6 +50,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupp
  * @see #getConverters()
  */
 public class HttpMessageConverters implements Iterable<HttpMessageConverter<?>> {
+
+	private static final List<Class<?>> NON_REPLACING_CONVERTERS;
+	static {
+		List<Class<?>> nonReplacingConverters = new ArrayList<Class<?>>();
+		addClassIfExists(nonReplacingConverters, "org.springframework.hateoas.mvc."
+				+ "TypeConstrainedMappingJackson2HttpMessageConverter");
+		NON_REPLACING_CONVERTERS = Collections.unmodifiableList(nonReplacingConverters);
+	}
 
 	private final List<HttpMessageConverter<?>> converters;
 
@@ -94,8 +103,7 @@ public class HttpMessageConverters implements Iterable<HttpMessageConverter<?>> 
 				Iterator<HttpMessageConverter<?>> iterator = processing.iterator();
 				while (iterator.hasNext()) {
 					HttpMessageConverter<?> candidate = iterator.next();
-					if (ClassUtils.isAssignableValue(defaultConverter.getClass(),
-							candidate)) {
+					if (isReplacement(defaultConverter, candidate)) {
 						combined.add(candidate);
 						iterator.remove();
 					}
@@ -106,6 +114,16 @@ public class HttpMessageConverters implements Iterable<HttpMessageConverter<?>> 
 		combined.addAll(0, processing);
 		combined = postProcessConverters(combined);
 		this.converters = Collections.unmodifiableList(combined);
+	}
+
+	private boolean isReplacement(HttpMessageConverter<?> defaultConverter,
+			HttpMessageConverter<?> candidate) {
+		for (Class<?> nonRelacingConverter : NON_REPLACING_CONVERTERS) {
+			if (nonRelacingConverter.isInstance(candidate)) {
+				return false;
+			}
+		}
+		return ClassUtils.isAssignableValue(defaultConverter.getClass(), candidate);
 	}
 
 	/**
@@ -141,7 +159,8 @@ public class HttpMessageConverters implements Iterable<HttpMessageConverter<?>> 
 		for (Iterator<HttpMessageConverter<?>> iterator = converters.iterator(); iterator
 				.hasNext();) {
 			HttpMessageConverter<?> converter = iterator.next();
-			if (converter instanceof AbstractXmlHttpMessageConverter) {
+			if ((converter instanceof AbstractXmlHttpMessageConverter)
+					|| (converter instanceof MappingJackson2XmlHttpMessageConverter)) {
 				xml.add(converter);
 				iterator.remove();
 			}
@@ -161,6 +180,15 @@ public class HttpMessageConverters implements Iterable<HttpMessageConverter<?>> 
 	 */
 	public List<HttpMessageConverter<?>> getConverters() {
 		return this.converters;
+	}
+
+	private static void addClassIfExists(List<Class<?>> list, String className) {
+		try {
+			list.add(Class.forName(className));
+		}
+		catch (ClassNotFoundException ex) {
+			// Ignore
+		}
 	}
 
 }
