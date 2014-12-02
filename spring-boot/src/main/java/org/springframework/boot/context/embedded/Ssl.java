@@ -25,9 +25,6 @@ package org.springframework.boot.context.embedded;
  */
 public class Ssl {
 
-	/**
-	 * Client authentication mode ("want", "need").
-	 */
 	private ClientAuth clientAuth;
 
 	private String[] ciphers;
@@ -36,14 +33,8 @@ public class Ssl {
 
 	private String keyPassword;
 
-	/**
-	 * Path to the key store (typically a jks file).
-	 */
 	private String keyStore;
 
-	/**
-	 * Login password of the key store.
-	 */
 	private String keyStorePassword;
 
 	private String keyStoreType;
@@ -58,9 +49,6 @@ public class Ssl {
 
 	private String trustStoreProvider;
 
-	/**
-	 * SSL protocol to use.
-	 */
 	private String protocol = "TLS";
 
 	public ClientAuth getClientAuth() {
@@ -170,5 +158,4 @@ public class Ssl {
 	public enum ClientAuth {
 		WANT, NEED;
 	}
-
 }
