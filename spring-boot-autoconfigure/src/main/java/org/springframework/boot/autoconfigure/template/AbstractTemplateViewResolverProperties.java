@@ -22,84 +22,58 @@ import org.springframework.util.Assert;
 import org.springframework.web.servlet.view.AbstractTemplateViewResolver;
 
 /**
- * Abstract base class for {@link ConfigurationProperties} for
- * {@link AbstractTemplateViewResolver view resolvers}.
+ * Base class for {@link ConfigurationProperties} of a
+ * {@link AbstractTemplateViewResolver}.
  *
  * @author Andy Wilkinson
  * @since 1.1.0
  */
-public abstract class AbstractTemplateViewResolverProperties {
+public abstract class AbstractTemplateViewResolverProperties extends
+		AbstractViewResolverProperties {
 
+	/**
+	 * Prefix that gets prepended to view names when building a URL.
+	 */
 	private String prefix;
 
+	/**
+	 * Suffix that gets appended to view names when building a URL.
+	 */
 	private String suffix;
 
-	private boolean cache;
-
-	private String contentType = "text/html";
-
-	private String charSet = "UTF-8";
-
-	private String[] viewNames;
-
-	private boolean checkTemplateLocation = true;
-
+	/**
+	 * Name of the RequestContext attribute for all views.
+	 */
 	private String requestContextAttribute;
 
+	/**
+	 * Set whether all request attributes should be added to the model prior to merging
+	 * with the template.
+	 */
 	private boolean exposeRequestAttributes = false;
 
+	/**
+	 * Set whether all HttpSession attributes should be added to the model prior to
+	 * merging with the template.
+	 */
 	private boolean exposeSessionAttributes = false;
 
+	/**
+	 * Set whether HttpServletRequest attributes are allowed to override (hide) controller
+	 * generated model attributes of the same name.
+	 */
 	private boolean allowRequestOverride = false;
 
+	/**
+	 * Set whether to expose a RequestContext for use by Spring's macro library, under the
+	 * name "springMacroRequestContext".
+	 */
 	private boolean exposeSpringMacroHelpers = true;
 
 	protected AbstractTemplateViewResolverProperties(String defaultPrefix,
 			String defaultSuffix) {
 		this.prefix = defaultPrefix;
 		this.suffix = defaultSuffix;
-	}
-
-	public void setCheckTemplateLocation(boolean checkTemplateLocation) {
-		this.checkTemplateLocation = checkTemplateLocation;
-	}
-
-	public boolean isCheckTemplateLocation() {
-		return this.checkTemplateLocation;
-	}
-
-	public String[] getViewNames() {
-		return this.viewNames;
-	}
-
-	public void setViewNames(String[] viewNames) {
-		this.viewNames = viewNames;
-	}
-
-	public boolean isCache() {
-		return this.cache;
-	}
-
-	public void setCache(boolean cache) {
-		this.cache = cache;
-	}
-
-	public String getContentType() {
-		return this.contentType
-				+ (this.contentType.contains(";charset=") ? "" : ";charset="
-						+ this.charSet);
-	}
-
-	public void setContentType(String contentType) {
-		this.contentType = contentType;
-	}
-
-	public String getCharSet() {
-		return this.charSet;
-	}
-
-	public void setCharSet(String charSet) {
-		this.charSet = charSet;
 	}
 
 	public String getPrefix() {
