@@ -82,6 +82,13 @@ public class RepackageMojo extends AbstractDependencyFilterMojo {
 	private String finalName;
 
 	/**
+	 * Skip the execution.
+	 * @since 1.2
+	 */
+	@Parameter(property = "skip", defaultValue = "false")
+	private boolean skip;
+
+	/**
 	 * Classifier to add to the artifact generated. If given, the artifact will be
 	 * attached. If this is not given, it will merely be written to the output directory
 	 * according to the finalName. Attaching the artifact allows to deploy it alongside to
@@ -121,6 +128,10 @@ public class RepackageMojo extends AbstractDependencyFilterMojo {
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if (this.project.getPackaging().equals("pom")) {
 			getLog().debug("repackage goal could not be applied to pom project.");
+			return;
+		}
+		if (this.skip) {
+			getLog().debug("skipping repackaging as per configuration.");
 			return;
 		}
 
@@ -180,8 +191,37 @@ public class RepackageMojo extends AbstractDependencyFilterMojo {
 	}
 
 	public static enum LayoutType {
-		JAR(new Layouts.Jar()), WAR(new Layouts.War()), ZIP(new Layouts.Expanded()), DIR(
-				new Layouts.Expanded()), NONE(new Layouts.None());
+
+		/**
+		 * Jar Layout
+		 */
+		JAR(new Layouts.Jar()),
+
+		/**
+		 * War Layout
+		 */
+		WAR(new Layouts.War()),
+
+		/**
+		 * Zip Layout
+		 */
+		ZIP(new Layouts.Expanded()),
+
+		/**
+		 * Dir Layout
+		 */
+		DIR(new Layouts.Expanded()),
+
+		/**
+		 * Module Layout
+		 */
+		MODULE(new Layouts.Module()),
+
+		/**
+		 * No Layout
+		 */
+		NONE(new Layouts.None());
+
 		private final Layout layout;
 
 		public Layout layout() {
