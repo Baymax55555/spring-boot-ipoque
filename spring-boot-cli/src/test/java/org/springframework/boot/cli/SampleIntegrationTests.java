@@ -19,13 +19,12 @@ package org.springframework.boot.cli;
 import java.io.File;
 import java.net.URI;
 
+import org.codehaus.plexus.util.FileUtils;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -153,12 +152,6 @@ public class SampleIntegrationTests {
 	public void deviceSample() throws Exception {
 		this.cli.run("device.groovy");
 		assertEquals("Hello Normal Device!", this.cli.getHttpOutput());
-	}
-
-	@Test
-	public void caching() throws Exception {
-		this.cli.run("caching.groovy");
-		assertThat(this.cli.getOutput(), containsString("Hello World"));
 	}
 
 }

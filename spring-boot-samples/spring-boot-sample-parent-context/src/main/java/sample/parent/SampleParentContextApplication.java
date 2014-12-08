@@ -17,13 +17,16 @@
 package sample.parent;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
 
-@SpringBootApplication
+@Configuration
+@EnableAutoConfiguration
 @EnableConfigurationProperties(ServiceProperties.class)
+@ComponentScan
 public class SampleParentContextApplication {
 
 	public static void main(String[] args) throws Exception {
