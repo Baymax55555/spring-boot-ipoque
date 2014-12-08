@@ -96,7 +96,6 @@ public class DispatcherServletAutoConfiguration {
 
 	}
 
-	@Order(Ordered.LOWEST_PRECEDENCE - 10)
 	private static class DefaultDispatcherServletCondition extends SpringBootCondition {
 
 		@Override
