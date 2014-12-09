@@ -175,11 +175,11 @@ placeholders in `application.properties`, e.g.
 	server.port=${port:8080}
 ----
 
-TIP: If you are inheriting from the `spring-boot-starter-parent` POM, the default filter
-token of the `maven-resources-plugins` has been changed from `+${*}+` to `@` (i.e.
-`@maven.token@` instead of `${maven.token}`) to prevent conflicts with Spring-style
-placeholders. If you have enabled maven filtering for the `application.properties`
-directly, you may want to also change the default filter token to use
+TIP: If you are inheriting from the `spring-boot-starter-parent` POM, or if have enabled
+maven filtering for the `application.properties` directly, you may want to change the
+default filter token from `+${*}+` since it conflicts with those placeholders.
+You can either use `+@*@+` (i.e. `@maven.token@` instead of `${maven.token}`) or you can
+configure the `maven-resources-plugin` to use
 http://maven.apache.org/plugins/maven-resources-plugin/resources-mojo.html#delimiters[other delimiters].
 
 NOTE: In this specific case the port binding will work in a PaaS environment like Heroku
@@ -425,7 +425,7 @@ nuclear option is to add your own `TomcatEmbeddedServletContainerFactory`.
 [[howto-enable-multiple-connectors-in-tomcat]]
 === Enable Multiple Connectors with Tomcat
 Add a `org.apache.catalina.connector.Connector` to the
-`TomcatEmbeddedServletContainerFactory` which can allow multiple connectors, e.g. HTTP and
+`TomcatEmbeddedServletContainerFactory` which can allow multiple connectors, e.g. an HTTP and
 HTTPS connector:
 
 [source,java,indent=0,subs="verbatim,quotes,attributes"]
@@ -560,76 +560,16 @@ of ways. Or the nuclear option is to add your own `JettyEmbeddedServletContainer
 
 
 
-[[howto-use-undertow-instead-of-tomcat]]
-=== Use Undertow instead of Tomcat
-Using Undertow instead of Tomcat is very similar to <<howto-use-jetty-instead-of-tomcat,
-using Jetty instead of Tomcat>>. You need to exclude the Tomcat dependencies and include
-the Undertow starter instead.
-
-Example in Maven:
-
-[source,xml,indent=0,subs="verbatim,quotes,attributes"]
-----
-	<dependency>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-web</artifactId>
-		<exclusions>
-			<exclusion>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-starter-tomcat</artifactId>
-			</exclusion>
-		</exclusions>
-	</dependency>
-	<dependency>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-undertow</artifactId>
-	</dependency>
-----
-
-Example in Gradle:
-
-[source,groovy,indent=0,subs="verbatim,quotes,attributes"]
-----
-	configurations {
-		compile.exclude module: "spring-boot-starter-tomcat"
-	}
-
-	dependencies {
-		compile("org.springframework.boot:spring-boot-starter-web:{spring-boot-version}")
-		compile("org.springframework.boot:spring-boot-starter-undertow:{spring-boot-version}")
-		// ...
-	}
-----
-
-
-[[howto-configure-undertow]]
-=== Configure Undertow
-Generally you can follow the advice from
-_<<howto-discover-build-in-options-for-external-properties>>_ about
-`@ConfigurationProperties` (`ServerProperties` and `ServerProperties.Undertow` are the
-main ones here), but also look at
-`EmbeddedServletContainerCustomizer`. Once you have access to the
-`UndertowEmbeddedServletContainerFactory` you can use an `UndertowBuilderCustomizer` to
-modify Undertow's configuration to meet your needs. Or the nuclear option is to add your
-own `UndertowEmbeddedServletContainerFactory`.
-
-
-
 [[howto-use-tomcat-8]]
-[[howto-use-tomcat-7]]
-=== Use Tomcat 7
-Tomcat 7 works with Spring Boot, but the default is to use Tomcat 8. If you cannot use
-Tomcat 8 (for example, because you are using Java 1.6) you will need to change your
-classpath to reference Tomcat 7 and Servlet API 3.0.
-
-If you are using the starter poms and parent you can just change the version properties,
-e.g. for a simple webapp or service:
+=== Use Tomcat 8
+Tomcat 8 works with Spring Boot, but the default is to use Tomcat 7 (so we can support
+Java 1.6 out of the box). You should only need to change the classpath to use
+Tomcat 8 for it to work. For example, using the starter poms in Maven:
 
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
 	<properties>
-		<tomcat.version>7.0.56</tomcat.version>
-		<servlet-api.version>3.0.1</servlet-api.version>
+		<tomcat.version>8.0.8</tomcat.version>
 	</properties>
 	<dependencies>
 		...
@@ -641,25 +581,25 @@ e.g. for a simple webapp or service:
 	</dependencies>
 ----
 
+change the classpath to use Tomcat 8 for it to work.
 
 
-[[howto-use-jetty-8]]
-=== Use Jetty 8
-Jetty 8 works with Spring Boot, but the default is to use Jetty 9. If you cannot use
-Jetty 9 (for example, because you are using Java 1.6) you will need to change your
-classpath to reference Jetty 8 and Servlet API 3.0. You will also need to exclude
-Jetty's WebSocket-related dependencies.
 
-If you are using the starter poms and parent you can just add the Jetty starter with
-the required WebSocket exclusion and change the version properties, e.g. for a simple
-webapp or service:
+[[howto-use-jetty-9]]
+=== Use Jetty 9
+Jetty 9 works with Spring Boot, but the default is to use Jetty 8 (so we can support
+Java 1.6 out of the box). You should only need to change the classpath to use Jetty 9
+for it to work.
+
+If you are using the starter poms and parent you can just add the Jetty starter and
+change the version properties, e.g. for a simple webapp or service:
 
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
 	<properties>
-		<jetty.version>8.1.15.v20140411</jetty.version>
-		<jetty-jsp.version>2.2.0.v201112011158</jetty-jsp.version>
-		<servlet-api.version>3.0.1</servlet-api.version>
+		<java.version>1.7</java.version>
+		<jetty.version>9.1.0.v20131115</jetty.version>
+		<servlet-api.version>3.1.0</servlet-api.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -675,12 +615,6 @@ webapp or service:
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-jetty</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>org.eclipse.jetty.websocket</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 	</dependencies>
 ----
@@ -732,40 +666,15 @@ default as long as Jackson2 is on the classpath. For example:
 
 As long as `MyThing` can be serialized by Jackson2 (e.g. a normal POJO or Groovy object)
 then `http://localhost:8080/thing` will serve a JSON representation of it by default.
-Sometimes in a browser you might see XML responses because browsers tend to send accept
-headers that prefer XML.
+Sometimes in a browser you might see XML responses (but by default only if `MyThing` was
+a JAXB object) because browsers tend to send accept headers that prefer XML.
 
 
 
 [[howto-write-an-xml-rest-service]]
 === Write an XML REST service
-If you have the Jackson XML extension (`jackson-dataformat-xml`) on the classpath, it will
-be used to render XML responses and the very same example as we used for JSON would work.
-To use it, add the following dependency to your project:
-
-[source,xml,indent=0,subs="verbatim,quotes,attributes"]
-----
-	<dependency>
-		<groupId>com.fasterxml.jackson.dataformat</groupId>
-		<artifactId>jackson-dataformat-xml</artifactId>
-	</dependency>
-----
-
-You may also want to add a dependency on Woodstox. It's faster than the default Stax
-implementation provided by the JDK and also adds pretty print support and improved
-namespace handling:
-
-[source,xml,indent=0,subs="verbatim,quotes,attributes"]
-----
-	<dependency>
-		<groupId>org.codehaus.woodstox</groupId>
-		<artifactId>woodstox-core-asl</artifactId>
-	</dependency>
-----
-
-If Jackson's XML extension is not available, JAXB (provided by default in the JDK) will
-be used, with the additional requirement to have `MyThing` annotated as
-`@XmlRootElement`:
+Since JAXB is in the JDK the same example as we used for JSON would work, as long as the
+`MyThing` was annotated as `@XmlRootElement`:
 
 [source,java,indent=0,subs="verbatim,quotes,attributes"]
 ----
@@ -784,57 +693,19 @@ To get the server to render XML instead of JSON you might have to send an
 [[howto-customize-the-jackson-objectmapper]]
 === Customize the Jackson ObjectMapper
 Spring MVC (client and server side) uses `HttpMessageConverters` to negotiate content
-conversion in an HTTP exchange. If Jackson is on the classpath you already get the
-default converter(s) provided by `Jackson2ObjectMapperBuilder`.
+conversion in an HTTP exchange. If Jackson is on the classpath you already get a default
+converter with a vanilla `ObjectMapper`. Spring Boot has some features to make it easier
+to customize this behavior.
 
-The `ObjectMapper` (or `XmlMapper` for Jackson XML converter) instance created by default
-have the following customized properties:
+The smallest change that might work is to just add beans of type
+`com.fasterxml.jackson.databind.Module` to your context. They will be registered with the
+default `ObjectMapper` and then injected into the default message converter. To replace
+the default `ObjectMapper` completely, define a `@Bean` of that type and mark it as
+`@Primary`.
 
-* `MapperFeature.DEFAULT_VIEW_INCLUSION` is disabled
-* `DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES` is disabled
-
-Spring Boot has also some features to make it easier to customize this behavior.
-
-You can configure the `ObjectMapper` and `XmlMapper` instances using the environment.
-Jackson provides an extensive suite of simple on/off features that can be used to
-configure various aspects of its processing. These features are described in five enums in
-Jackson which map onto properties in the environment:
-
-|===
-|Jackson enum|Environment property
-
-|`com.fasterxml.jackson.databind.DeserializationFeature`
-|`spring.jackson.deserialization.<feature_name>=true\|false`
-
-|`com.fasterxml.jackson.core.JsonGenerator.Feature`
-|`spring.jackson.generator.<feature_name>=true\|false`
-
-|`com.fasterxml.jackson.databind.MapperFeature`
-|`spring.jackson.mapper.<feature_name>=true\|false`
-
-|`com.fasterxml.jackson.core.JsonParser.Feature`
-|`spring.jackson.parser.<feature_name>=true\|false`
-
-|`com.fasterxml.jackson.databind.SerializationFeature`
-|`spring.jackson.serialization.<feature_name>=true\|false`
-|===
-
-For example, to enable pretty print, set `spring.jackson.serialization.indent_output=true`.
-Note that, thanks to the use of <<boot-features-external-config-relaxed-binding,
-relaxed binding>>, the case of `indent_output` doesn't have to match the case of the
-corresponding enum constant which is `INDENT_OUTPUT`.
-
-If you want to replace the default `ObjectMapper` completely, define a `@Bean` of that
-type and mark it as `@Primary`.
-
-Defining a `@Bean` of type `Jackson2ObjectMapperBuilder` will allow you to customize both
-default `ObjectMapper` and `XmlMapper` (used in `MappingJackson2HttpMessageConverter` and
-`MappingJackson2XmlHttpMessageConverter` respectively).
-
-Another way to customize Jackson is to add beans of type
-`com.fasterxml.jackson.databind.Module` to your context. They will be registered with every
-bean of type `ObjectMapper`, providing a global mechanism for contributing custom modules
-when you add new features to your application.
+In addition, if your context contains any beans of type `ObjectMapper` then all of the
+`Module` beans will be registered with all of the mappers. So there is a global mechanism
+for contributing custom modules when you add new features to your application.
 
 Finally, if you provide any `@Beans` of type `MappingJackson2HttpMessageConverter` then
 they will replace the default value in the MVC configuration. Also, a convenience bean is
@@ -886,8 +757,8 @@ The multipart support is helpful when you want to receive multipart encoded file
 a `@RequestParam`-annotated parameter of type `MultipartFile` in a Spring MVC controller
 handler method.
 
-See the {sc-spring-boot-autoconfigure}/web/MultipartAutoConfiguration.{sc-ext}[`MultipartAutoConfiguration`]
-source for more details.
+See the {sc-spring-boot-autoconfigure}/web/MultipartAutoConfiguration.{sc-ext}[`MultipartAutoConfiguration`] s
+ource for more details.
 
 
 
@@ -1051,15 +922,14 @@ If Groovy is on the classpath you should be able to configure Logback with
 
 [[howto-configure-log4j-for-logging]]
 === Configure Log4j for logging
-Spring Boot also supports either http://logging.apache.org/log4j/1.2[Log4j] or
-http://logging.apache.org/log4j/2.x[Log4j 2] for logging configuration, but only if one
-of them is on the classpath. If you are using the starter poms for assembling
-dependencies that means you have to exclude Logback and then include your chosen version
-of Log4j instead. If you aren't using the starter poms then you need to provide
-`commons-logging` (at least) in addition to your chosen version of Log4j.
+Spring Boot supports http://logging.apache.org/log4j[Log4j] for logging
+configuration, but it has to be on the classpath. If you are using the starter poms for
+assembling dependencies that means you have to exclude logback and then include log4j
+instead. If you aren't using the starter poms then you need to provide `commons-logging`
+(at least) in addition to Log4j.
 
-The simplest path is probably through the starter poms, even though it requires some
-jiggling with excludes, .e.g. in Maven:
+The simplest path to using Log4j is probably through the starter poms, even though it
+requires some jiggling with excludes, e.g. in Maven:
 
 [source,xml,indent=0,subs="verbatim,quotes,attributes"]
 ----
@@ -1083,13 +953,10 @@ jiggling with excludes, .e.g. in Maven:
 	</dependency>
 ----
 
-To use Log4j 2, simply depend on `spring-boot-starter-log4j2` rather than
-`spring-boot-starter-log4j`.
-
-NOTE: The use of one of the Log4j starters gathers together the dependencies for
-common logging requirements (e.g. including having Tomcat use `java.util.logging` but
-configuring the output using Log4j or Log4j 2). See the Actuator Log4j or Log4j 2
-samples for more detail and to see it in action.
+NOTE: The use of the log4j starter gathers together the dependencies for common logging
+requirements (e.g. including having Tomcat use `java.util.logging` but configuring the
+output using Log4j). See the Actuator Log4j Sample for more detail and to see it in
+action.
 
 
 
@@ -1155,7 +1022,7 @@ JDBC or JPA (then that one will be picked up by any `@Autowired` injections).
 [[howto-use-spring-data-repositories]]
 === Use Spring Data repositories
 Spring Data can create implementations for you of `@Repository` interfaces of various
-flavors. Spring Boot will handle all of that for you as long as those `@Repositories`
+flavours. Spring Boot will handle all of that for you as long as those `@Repositories`
 are included in the same package (or a sub-package) of your `@EnableAutoConfiguration`
 class.
 
@@ -1518,16 +1385,17 @@ http://docs.spring.io/spring-security/site/docs/current/reference/htmlsingle/#jc
 
 Spring Security also provides a convenient `AuthenticationManagerBuilder` which can be
 used to build an `AuthenticationManager` with common options. The recommended way to
-use this in a webapp is to inject it into a void method in a
+use this in a webapp is to inject it into a callback method in a
 `WebSecurityConfigurerAdapter`, e.g.
 
 [source,java,indent=0,subs="verbatim,quotes,attributes"]
 ----
 	@Configuration
+	@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
 	public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-		@Autowired
-		public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+		@Override
+		public void configure(AuthenticationManagerBuilder auth) throws Exception {
 				auth.inMemoryAuthentication()
 					.withUser("barry").password("password").roles("USER"); // ... etc.
 		}
@@ -1652,32 +1520,6 @@ general mechanism to ensure that would be safe for a running application anyway,
 would only ever be a development time trick probably).
 
 
-[[howto-reload-springloaded-maven]]
-==== Configuring Spring Loaded for use with Maven
-To use Spring Loaded with the Maven command line, just add it as a dependency in the
-Spring Boot plugin declaration, e.g.
-
-[source,xml,indent=0]
-----
-	<plugin>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-maven-plugin</artifactId>
-		<dependencies>
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>springloaded</artifactId>
-				<version>1.2.0.RELEASE</version>
-			</dependency>
-		</dependencies>
-	</plugin>
-----
-
-This normally works pretty well with Eclipse and IntelliJ as long as they have their
-build configuration aligned with the Maven defaults (Eclipse m2e does this out of the
-box).
-
-
-
 [[howto-reload-springloaded-gradle-and-intellij]]
 ==== Configuring Spring Loaded for use with Gradle and IntelliJ
 You need to jump through a few hoops if you want to use Spring Loaded in combination with
@@ -1689,7 +1531,7 @@ To configure IntelliJ correctly you can use the `idea` Gradle plugin:
 [source,groovy,indent=0,subs="verbatim,attributes"]
 ----
 	buildscript {
-		repositories { jcenter() }
+		repositories { mavenCentral() }
 		dependencies {
 			classpath "org.springframework.boot:spring-boot-gradle-plugin:{spring-boot-version}"
 			classpath 'org.springframework:springloaded:1.2.0.RELEASE'
@@ -2154,109 +1996,3 @@ context.
 
 Applications that are not already Spring applications might be convertible to a Spring
 Boot application, and the guidance above might help, but your mileage may vary.
-
-
-
-[[howto-weblogic]]
-===  Deploying a WAR to Weblogic
-To deploy a Spring Boot application to Weblogic you must ensure that your servlet
-initializer *directly* implements `WebApplicationInitializer` (even if you extend from a
-base class that already implements it).
-
-A typical initializer for Weblogic would be something like this:
-
-[source,java,indent=0,subs="verbatim,quotes,attributes"]
-----
-	import org.springframework.boot.autoconfigure.SpringBootApplication;
-	import org.springframework.boot.context.web.SpringBootServletInitializer;
-	import org.springframework.web.WebApplicationInitializer;
-
-	@SpringBootApplication
-	public class MyApplication extends SpringBootServletInitializer implements WebApplicationInitializer {
-
-	}
-----
-
-If you use logback, you will also need to tell Weblogic to prefer the packaged version
-rather than the version that pre-installed with the server. You can do this by adding a
-`WEB-INF/weblogic.xml` file with the following contents:
-
-[source,xml,indent=0]
-----
-<?xml version="1.0" encoding="UTF-8"?>
-<wls:weblogic-web-app
-	xmlns:wls="http://xmlns.oracle.com/weblogic/weblogic-web-app"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
-		http://java.sun.com/xml/ns/javaee/ejb-jar_3_0.xsd
-		http://xmlns.oracle.com/weblogic/weblogic-web-app
-		http://xmlns.oracle.com/weblogic/weblogic-web-app/1.4/weblogic-web-app.xsd">
-	<wls:container-descriptor>
-		<wls:prefer-application-packages>
-			<wls:package-name>org.slf4j</wls:package-name>
-		</wls:prefer-application-packages>
-	</wls:container-descriptor>
-</wls:weblogic-web-app>
-----
-
-
-
-[[howto-servlet-2-5]]
-===  Deploying a WAR in an Old (Servlet 2.5) Container
-Spring Boot uses Servet 3.0 APIs to initialize the `ServletContext` (register `Servlets`
-etc.)  so you can't use the same application out of the box in a Servlet 2.5 container.
-It *is* however possible to run a Spring Boot application on an older container with some
-special tools. If you include `org.springframework.boot:spring-boot-legacy` as a
-dependency (https://github.com/scratches/spring-boot-legacy[maintained separately] to the
-core of Spring Boot and currently available at 1.0.0.RELEASE), all you should need to do
-is create a `web.xml` and declare a context listener to create the application context and
-your filters and servlets. The context listener is a special purpose one for Spring Boot,
-but the rest of it is normal for a Spring application in Servlet 2.5. Example:
-
-[source,xml,indent=0]
-----
-	<?xml version="1.0" encoding="UTF-8"?>
-	<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee"
-		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
-
-		<context-param>
-			<param-name>contextConfigLocation</param-name>
-			<param-value>demo.Application</param-value>
-		</context-param>
-
-		<listener>
-			<listener-class>org.springframework.boot.legacy.context.web.SpringBootContextLoaderListener</listener-class>
-		</listener>
-
-		<filter>
-			<filter-name>metricFilter</filter-name>
-			<filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
-		</filte>r
-
-		<filter-mapping>
-			<filter-name>metricFilter</filter-name>
-			<url-pattern>/*</url-pattern>
-		</filter-mapping>
-
-		<servlet>
-			<servlet-name>appServlet</servlet-name>
-			<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
-			<init-param>
-				<param-name>contextAttribute</param-name>
-				<param-value>org.springframework.web.context.WebApplicationContext.ROOT</param-value>
-			</init-param>
-			<load-on-startup>1</load-on-startup>
-		</servlet>
-
-		<servlet-mapping>
-			<servlet-name>appServlet</servlet-name>
-			<url-pattern>/</url-pattern>
-		</servlet-mapping>
-
-	</web-app>
-----
-
-In this example we are using a single application context (the one created by the context
-listener) and attaching it to the `DispatcherServlet` using an init parameter. This is
-normal in a Spring Boot application (you normally only have one application context).
