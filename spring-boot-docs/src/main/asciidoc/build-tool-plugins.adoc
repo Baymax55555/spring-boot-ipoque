@@ -347,7 +347,7 @@ named "`providedRuntime`", e.g:
 	}
 
 	repositories {
-		mavenCentral()
+		jcenter()
 		maven { url "http://repo.spring.io/libs-snapshot" }
 	}
 
