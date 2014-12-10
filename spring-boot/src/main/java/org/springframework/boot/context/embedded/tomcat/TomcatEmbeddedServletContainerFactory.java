@@ -82,7 +82,7 @@ import org.springframework.util.StringUtils;
 public class TomcatEmbeddedServletContainerFactory extends
 		AbstractEmbeddedServletContainerFactory implements ResourceLoaderAware {
 
-	private static final String DEFAULT_PROTOCOL = "org.apache.coyote.http11.Http11NioProtocol";
+	public static final String DEFAULT_PROTOCOL = "org.apache.coyote.http11.Http11NioProtocol";
 
 	private File baseDirectory;
 
@@ -143,10 +143,13 @@ public class TomcatEmbeddedServletContainerFactory extends
 		tomcat.setConnector(connector);
 		tomcat.getHost().setAutoDeploy(false);
 		tomcat.getEngine().setBackgroundProcessorDelay(-1);
+
 		for (Connector additionalConnector : this.additionalTomcatConnectors) {
 			tomcat.getService().addConnector(additionalConnector);
 		}
+
 		prepareContext(tomcat.getHost(), initializers);
+		this.logger.info("Server initialized with port: " + getPort());
 		return getTomcatEmbeddedServletContainer(tomcat);
 	}
 
@@ -602,14 +605,15 @@ public class TomcatEmbeddedServletContainerFactory extends
 		private Object createNativePage(ErrorPage errorPage) {
 			Object nativePage = null;
 			try {
-				if (ClassUtils.isPresent(
-						"org.apache.tomcat.util.descriptor.web.ErrorPage", null)) {
-					nativePage = new org.apache.tomcat.util.descriptor.web.ErrorPage();
+				if (ClassUtils.isPresent("org.apache.catalina.deploy.ErrorPage", null)) {
+					nativePage = new org.apache.catalina.deploy.ErrorPage();
 				}
-				else if (ClassUtils.isPresent("org.apache.catalina.deploy.ErrorPage",
-						null)) {
-					nativePage = BeanUtils.instantiate(ClassUtils.forName(
-							"org.apache.catalina.deploy.ErrorPage", null));
+				else {
+					if (ClassUtils.isPresent(
+							"org.apache.tomcat.util.descriptor.web.ErrorPage", null)) {
+						nativePage = BeanUtils.instantiate(ClassUtils.forName(
+								"org.apache.tomcat.util.descriptor.web.ErrorPage", null));
+					}
 				}
 			}
 			catch (ClassNotFoundException ex) {
@@ -624,9 +628,8 @@ public class TomcatEmbeddedServletContainerFactory extends
 		public void addToContext(Context context) {
 			Assert.state(this.nativePage != null,
 					"Neither Tomcat 7 nor 8 detected so no native error page exists");
-			if (ClassUtils.isPresent("org.apache.tomcat.util.descriptor.web.ErrorPage",
-					null)) {
-				org.apache.tomcat.util.descriptor.web.ErrorPage errorPage = (org.apache.tomcat.util.descriptor.web.ErrorPage) this.nativePage;
+			if (ClassUtils.isPresent("org.apache.catalina.deploy.ErrorPage", null)) {
+				org.apache.catalina.deploy.ErrorPage errorPage = (org.apache.catalina.deploy.ErrorPage) this.nativePage;
 				errorPage.setLocation(this.location);
 				errorPage.setErrorCode(this.errorCode);
 				errorPage.setExceptionType(this.exceptionType);

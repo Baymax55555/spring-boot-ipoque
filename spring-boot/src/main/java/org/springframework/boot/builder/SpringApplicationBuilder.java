@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.beans.factory.support.BeanNameGenerator;
-import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextInitializer;
@@ -120,6 +119,7 @@ public class SpringApplicationBuilder {
 	 * @return an application context created from the current state
 	 */
 	public ConfigurableApplicationContext run(String... args) {
+
 		if (this.parent != null) {
 			// If there is a parent don't register a shutdown hook
 			if (!this.registerShutdownHookApplied) {
@@ -129,26 +129,22 @@ public class SpringApplicationBuilder {
 			initializers(new ParentContextApplicationContextInitializer(
 					this.parent.run(args)));
 		}
+
 		if (this.running.get()) {
 			// If already created we just return the existing context
 			return this.context;
 		}
+
 		if (this.running.compareAndSet(false, true)) {
 			synchronized (this.running) {
 				// If not already running copy the sources over and then run.
-				this.context = build().run(args);
+				this.application.setSources(this.sources);
+				this.context = this.application.run(args);
 			}
 		}
-		return this.context;
-	}
 
-	/**
-	 * Returns a fully configured {@link SpringApplication} that is ready to run.
-	 * @return the fully configured {@link SpringApplication}.
-	 */
-	public SpringApplication build() {
-		this.application.setSources(this.sources);
-		return this.application;
+		return this.context;
+
 	}
 
 	/**
@@ -158,6 +154,7 @@ public class SpringApplicationBuilder {
 	 * @return the child application builder
 	 */
 	public SpringApplicationBuilder child(Object... sources) {
+
 		SpringApplicationBuilder child = new SpringApplicationBuilder();
 		child.sources(sources);
 
@@ -178,6 +175,7 @@ public class SpringApplicationBuilder {
 		this.application.setSources(this.sources);
 
 		return child;
+
 	}
 
 	/**
@@ -292,16 +290,6 @@ public class SpringApplicationBuilder {
 	 */
 	public SpringApplicationBuilder logStartupInfo(boolean logStartupInfo) {
 		this.application.setLogStartupInfo(logStartupInfo);
-		return this;
-	}
-
-	/**
-	 * Sets the {@link Banner} instance which will be used to print the banner when no
-	 * static banner file is provided.
-	 * @param banner The banner to use
-	 */
-	public SpringApplicationBuilder banner(Banner banner) {
-		this.application.setBanner(banner);
 		return this;
 	}
 
