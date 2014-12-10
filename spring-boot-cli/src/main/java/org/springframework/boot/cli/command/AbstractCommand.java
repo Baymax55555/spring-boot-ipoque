@@ -68,9 +68,4 @@ public abstract class AbstractCommand implements Command {
 		return Collections.emptyList();
 	}
 
-	@Override
-	public Collection<HelpExample> getExamples() {
-		return null;
-	}
-
 }

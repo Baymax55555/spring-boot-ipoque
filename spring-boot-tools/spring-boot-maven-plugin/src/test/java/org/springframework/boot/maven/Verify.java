@@ -27,7 +27,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -53,10 +52,6 @@ public class Verify {
 
 	public static void verifyZip(File file) throws Exception {
 		new ZipArchiveVerification(file).verify();
-	}
-
-	public static void verifyModule(File file) throws Exception {
-		new ModuleArchiveVerification(file).verify();
 	}
 
 	public static class ArchiveVerifier {
@@ -238,30 +233,6 @@ public class Verify {
 					.getValue("Start-Class"));
 			assertEquals("Foo", manifest.getMainAttributes().getValue("Not-Used"));
 		}
-	}
-
-	private static class ModuleArchiveVerification extends AbstractArchiveVerification {
-
-		public ModuleArchiveVerification(File file) {
-			super(file);
-		}
-
-		@Override
-		protected void verifyZipEntries(ArchiveVerifier verifier) throws Exception {
-			super.verifyZipEntries(verifier);
-			verifier.assertHasEntryNameStartingWith("lib/spring-context");
-			verifier.assertHasEntryNameStartingWith("lib/spring-core");
-			verifier.assertHasNoEntryNameStartingWith("lib/javax.servlet-api-3");
-			assertFalse("Unpacked launcher classes", verifier.hasEntry("org/"
-					+ "springframework/boot/loader/JarLauncher.class"));
-			assertTrue("Own classes", verifier.hasEntry("org/"
-					+ "test/SampleModule.class"));
-		}
-
-		@Override
-		protected void verifyManifest(Manifest manifest) throws Exception {
-		}
-
 	}
 
 }
