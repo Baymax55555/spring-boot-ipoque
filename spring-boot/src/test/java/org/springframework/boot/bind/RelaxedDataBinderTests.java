@@ -53,6 +53,7 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -444,6 +445,28 @@ public class RelaxedDataBinderTests {
 		doTestBindCaseInsensitiveEnums(target);
 	}
 
+	@Test
+	public void testBindWithoutAlais() throws Exception {
+		VanillaTarget target = new VanillaTarget();
+		MutablePropertyValues properties = new MutablePropertyValues();
+		properties.add("flub", "a");
+		properties.add("foo", "b");
+		new RelaxedDataBinder(target).bind(properties);
+		assertThat(target.getFooBaz(), nullValue());
+		assertThat(target.getFoo(), equalTo("b"));
+	}
+
+	@Test
+	public void testBindWithAlias() throws Exception {
+		VanillaTarget target = new VanillaTarget();
+		MutablePropertyValues properties = new MutablePropertyValues();
+		properties.add("flub", "a");
+		properties.add("foo", "b");
+		new RelaxedDataBinder(target).withAlias("flub", "fooBaz").bind(properties);
+		assertThat(target.getFooBaz(), equalTo("a"));
+		assertThat(target.getFoo(), equalTo("b"));
+	}
+
 	private void doTestBindCaseInsensitiveEnums(VanillaTarget target) throws Exception {
 		BindingResult result = bind(target, "bingo: THIS");
 		assertThat(result.getErrorCount(), equalTo(0));
@@ -456,6 +479,18 @@ public class RelaxedDataBinderTests {
 		result = bind(target, "bingo: that");
 		assertThat(result.getErrorCount(), equalTo(0));
 		assertThat(target.getBingo(), equalTo(Bingo.THAT));
+
+		result = bind(target, "bingo: the-other");
+		assertThat(result.getErrorCount(), equalTo(0));
+		assertThat(target.getBingo(), equalTo(Bingo.THE_OTHER));
+
+		result = bind(target, "bingo: the_other");
+		assertThat(result.getErrorCount(), equalTo(0));
+		assertThat(target.getBingo(), equalTo(Bingo.THE_OTHER));
+
+		result = bind(target, "bingo: The_Other");
+		assertThat(result.getErrorCount(), equalTo(0));
+		assertThat(target.getBingo(), equalTo(Bingo.THE_OTHER));
 	}
 
 	private BindingResult bind(Object target, String values) throws Exception {
@@ -592,7 +627,7 @@ public class RelaxedDataBinderTests {
 		private Map<Bingo, Object> nested;
 
 		public Map<Bingo, Object> getNested() {
-			return nested;
+			return this.nested;
 		}
 
 		public void setNested(Map<Bingo, Object> nested) {
@@ -777,7 +812,7 @@ public class RelaxedDataBinderTests {
 	}
 
 	static enum Bingo {
-		THIS, or, THAT
+		THIS, or, THAT, THE_OTHER
 	}
 
 	public static class ValidatedTarget {
