@@ -23,13 +23,11 @@ import java.util.List;
 
 import org.springframework.boot.cli.compiler.GroovyCompiler;
 import org.springframework.boot.groovy.DelegateTestRunner;
-import org.springframework.util.ReflectionUtils;
 
 /**
  * Compile and run groovy based tests.
  *
  * @author Phillip Webb
- * @author Graeme Rocher
  */
 public class TestRunner {
 
@@ -38,8 +36,6 @@ public class TestRunner {
 	private final String[] sources;
 
 	private final GroovyCompiler compiler;
-
-	private volatile Throwable threadException;
 
 	/**
 	 * Create a new {@link TestRunner} instance.
@@ -62,19 +58,7 @@ public class TestRunner {
 		// Run in new thread to ensure that the context classloader is setup
 		RunThread runThread = new RunThread(sources);
 		runThread.start();
-		runThread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-			@Override
-			public void uncaughtException(Thread t, Throwable ex) {
-				TestRunner.this.threadException = ex;
-			}
-		});
-
 		runThread.join();
-		if (this.threadException != null) {
-			TestFailedException ex = new TestFailedException(this.threadException);
-			this.threadException = null;
-			throw ex;
-		}
 	}
 
 	/**
@@ -147,25 +131,15 @@ public class TestRunner {
 					System.out.println("No tests found");
 				}
 				else {
-					ClassLoader contextClassLoader = Thread.currentThread()
-							.getContextClassLoader();
-					Class<?> delegateClass = contextClassLoader
+					Class<?> delegateClass = Thread.currentThread()
+							.getContextClassLoader()
 							.loadClass(DelegateTestRunner.class.getName());
-					Class<?> resultClass = contextClassLoader
-							.loadClass("org.junit.runner.Result");
-					Method runMethod = delegateClass.getMethod("run", Class[].class,
-							resultClass);
-					Object result = resultClass.newInstance();
-					runMethod.invoke(null, this.testClasses, result);
-					boolean wasSuccessful = (Boolean) resultClass.getMethod(
-							"wasSuccessful").invoke(result);
-					if (!wasSuccessful) {
-						throw new RuntimeException("Tests Failed.");
-					}
+					Method runMethod = delegateClass.getMethod("run", Class[].class);
+					runMethod.invoke(null, new Object[] { this.testClasses });
 				}
 			}
 			catch (Exception ex) {
-				ReflectionUtils.rethrowRuntimeException(ex);
+				ex.printStackTrace();
 			}
 		}
 	}
