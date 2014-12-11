@@ -42,12 +42,6 @@ defaults. The parent project provides the following features:
   http://maven.apache.org/surefire/maven-surefire-plugin/[surefire],
   https://github.com/ktoso/maven-git-commit-id-plugin[Git commit ID],
   http://maven.apache.org/plugins/maven-shade-plugin/[shade]).
-* Sensible resource filtering for `application.properties` and `application.yml`
-
-On the last point: since the default config files files accept
-Spring style placeholders (`${...}`) the Maven filtering is changed to
-use `@..@` placeholders (you can override that with a Maven property
-`resource.delimiter`).
 
 
 
@@ -147,7 +141,7 @@ Maven, there is no "`super parent`" to import to share some configuration.
 ----
 	apply plugin: 'java'
 
-	repositories { jcenter() }
+	repositories { mavenCentral() }
 	dependencies {
 		compile("org.springframework.boot:spring-boot-starter-web:{spring-boot-version}")
 	}
@@ -162,7 +156,7 @@ for "`blessed`" dependencies>>:
 [source,groovy,indent=0,subs="attributes"]
 ----
 	buildscript {
-		repositories { jcenter() }
+		repositories { mavenCentral() }
 		dependencies {
 			classpath("org.springframework.boot:spring-boot-gradle-plugin:{spring-boot-version}")
 		}
@@ -171,7 +165,7 @@ for "`blessed`" dependencies>>:
 	apply plugin: 'java'
 	apply plugin: 'spring-boot'
 
-	repositories { jcenter() }
+	repositories { mavenCentral() }
 	dependencies {
 		compile("org.springframework.boot:spring-boot-starter-web")
 		testCompile("org.springframework.boot:spring-boot-starter-test")
@@ -222,9 +216,6 @@ The following application starters are provided by Spring Boot under the
 |`spring-boot-starter`
 |The core Spring Boot starter, including auto-configuration support, logging and YAML.
 
-|`spring-boot-starter-actuator`
-|Production ready features to help you monitor and manage your application.
-
 |`spring-boot-starter-amqp`
 |Support for the "`Advanced Message Queuing Protocol`" via `spring-rabbit`.
 
@@ -233,10 +224,6 @@ The following application starters are provided by Spring Boot under the
 
 |`spring-boot-starter-batch`
 |Support for "`Spring Batch`" including HSQLDB database.
-
-|`spring-boot-starter-cloud-connectors`
-|Support for "`Spring Cloud Connectors`" which simplifies connecting to services in cloud
-platforms like Cloud Foundry and Heroku.
 
 |`spring-boot-starter-data-elasticsearch`
 |Support for the Elasticsearch search and analytics engine including
@@ -271,19 +258,7 @@ and Hibernate.
 |Support for common `spring-integration` modules.
 
 |`spring-boot-starter-jdbc`
-|Support for JDBC databases.
-
-|`spring-boot-starter-jersey`
-|Support for the Jersey RESTful Web Services framework.
-
-|`spring-boot-starter-jta-atomikos`
-|Support for JTA distributed transactions via Atomikos.
-
-|`spring-boot-starter-jta-bitronix`
-|Support for JTA distributed transactions via Bitronix.
-
-|`spring-boot-starter-mail`
-|Support for `javax.mail`.
+|JDBC Database support.
 
 |`spring-boot-starter-mobile`
 |Support for `spring-mobile`
@@ -317,7 +292,7 @@ and Hibernate.
 |Support for full-stack web development, including Tomcat and `spring-webmvc`.
 
 |`spring-boot-starter-websocket`
-|Support for WebSocket development.
+|Support for websocket development with Tomcat.
 
 |`spring-boot-starter-ws`
 |Support for Spring Web Services
@@ -355,9 +330,6 @@ swap specific technical facets.
 
 |`spring-boot-starter-tomcat`
 |Import Spring Boot's default HTTP engine (Tomcat).
-
-|`spring-boot-starter-undertow`
-|Imports the Undertow HTTP engine (to be used as an alternative to Tomcat)
 |===
 
 TIP: For a list of additional community contributed starter POMs, see the
@@ -378,8 +350,8 @@ best practices that help.
 When a class doesn't include a `package` declaration it is considered to be in the
 "`default package`". The use of the "`default package`" is generally discouraged, and
 should be avoided. It can cause particular problems for Spring Boot applications that
-use `@ComponentScan`, `@EntityScan` or `@SpringBootApplication` annotations, since every
-class from every jar, will be read.
+use `@ComponentScan` or `@EntityScan` annotations, since every class from every jar,
+will be read.
 
 TIP: We recommend that you follow Java's recommended package naming conventions
 and use a reversed domain name (for example, `com.example.project`).
@@ -395,8 +367,7 @@ example, if you are writing a JPA application, the package of the
 `@EnableAutoConfiguration` annotated class will be used to search for `@Entity` items.
 
 Using a root package also allows the `@ComponentScan` annotation to be used without
-needing to specify a `basePackage` attribute. You can also use the
-`@SpringBootApplication` annotation if your main class is in the root package.
+needing to specify a `basePackage` attribute.
 
 Here is a typical layout:
 
@@ -481,8 +452,8 @@ application based on the jar dependencies that you have added. For example, If
 `HSQLDB` is on your classpath, and you have not manually configured any database
 connection beans, then we will auto-configure an in-memory database.
 
-You need to opt-in to auto-configuration by adding the `@EnableAutoConfiguration` or
-`@SpringBootApplication` annotations to one of your `@Configuration` classes.
+You need to opt-in to auto-configuration by adding the `@EnableAutoConfiguration`
+annotation to one of your `@Configuration` classes.
 
 TIP: You should only ever add one `@EnableAutoConfiguration` annotation. We generally
 recommend that you add it to your primary `@Configuration` class.
@@ -559,38 +530,6 @@ required `RiskAssessor` bean.
 TIP: Notice how using constructor injection allows the `riskAssessor` field to be marked
 as `final`, indicating that it cannot be subsequently changed.
 
-
-
-[[using-boot-using-springbootapplication-annotation]]
-== Using the @SpringBootApplication annotation
-Many Spring Boot developers always have their main class annotated with `@Configuration`,
-`@EnableAutoConfiguration` and `@ComponentScan`. Since these annotations are so frequently
-used together (especially if you follow the <<using-boot-structuring-your-code, best practices>>
-above), Spring Boot provides a convenient `@SpringBootApplication` alternative.
-
-The `@SpringBootApplication` annotation is equivalent to using `@Configuration`,
-`@EnableAutoConfiguration` and `@ComponentScan` with their default attributes:
-
-
-[source,java,indent=0]
-----
-	package com.example.myproject;
-
-	import org.springframework.boot.SpringApplication;
-	import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-	@SpringBootApplication // same as @Configuration @EnableAutoConfiguration @ComponentScan
-	public class Application {
-
-		public static void main(String[] args) {
-			SpringApplication.run(Application.class, args);
-		}
-
-	}
-----
-
-
-
 [[using-boot-running-your-application]]
 == Running your application
 One of the biggest advantages of packaging your application as jar and using an embedded
@@ -653,7 +592,7 @@ resources for instant "`hot`" reload.
 	$ mvn spring-boot:run
 ----
 
-You might also want to use the useful operating system environment variable:
+Useful operating system environment variable:
 
 [indent=0,subs="attributes"]
 ----
@@ -676,7 +615,7 @@ the `spring-boot-plugin`
 	$ gradle bootRun
 ----
 
-You might also want to use this useful operating system environment variable:
+Useful operating system environment variable:
 
 [indent=0,subs="attributes"]
 ----

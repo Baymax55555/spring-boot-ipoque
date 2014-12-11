@@ -20,17 +20,11 @@ import java.io.FileNotFoundException;
 import java.net.SocketException;
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.boot.actuate.endpoint.Endpoint;
-import org.springframework.boot.actuate.endpoint.mvc.EndpointHandlerMapping;
-import org.springframework.boot.actuate.endpoint.mvc.EndpointHandlerMappingCustomizer;
 import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.DispatcherServletAutoConfiguration;
@@ -56,18 +50,14 @@ import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Controller;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.SocketUtils;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -132,10 +122,6 @@ public class EndpointWebMvcAutoConfigurationTests {
 		assertContent("/endpoint", ports.get().server, null);
 		assertContent("/controller", ports.get().management, null);
 		assertContent("/endpoint", ports.get().management, "endpointoutput");
-		List<?> interceptors = (List<?>) ReflectionTestUtils.getField(
-				this.applicationContext.getBean(EndpointHandlerMapping.class),
-				"interceptors");
-		assertEquals(1, interceptors.size());
 		this.applicationContext.close();
 		assertAllClosed();
 	}
@@ -364,38 +350,6 @@ public class EndpointWebMvcAutoConfigurationTests {
 			return properties;
 		}
 
-		@Bean
-		public EndpointHandlerMappingCustomizer mappingCustomizer() {
-			return new EndpointHandlerMappingCustomizer() {
-
-				@Override
-				public void customize(EndpointHandlerMapping mapping) {
-					mapping.setInterceptors(new Object[] { interceptor() });
-				}
-
-			};
-		}
-
-		@Bean
-		protected TestInterceptor interceptor() {
-			return new TestInterceptor();
-		}
-
-		protected static class TestInterceptor extends HandlerInterceptorAdapter {
-			private int count = 0;
-
-			@Override
-			public void postHandle(HttpServletRequest request,
-					HttpServletResponse response, Object handler,
-					ModelAndView modelAndView) throws Exception {
-				this.count++;
-			}
-
-			public int getCount() {
-				return this.count;
-			}
-		}
-
 	}
 
 	@Configuration
@@ -471,7 +425,6 @@ public class EndpointWebMvcAutoConfigurationTests {
 		public EmbeddedServletContainer getServletContainer() {
 			return this.servletContainer;
 		}
-
 	}
 
 }

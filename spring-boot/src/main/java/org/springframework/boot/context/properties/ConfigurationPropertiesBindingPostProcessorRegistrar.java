@@ -49,5 +49,4 @@ public class ConfigurationPropertiesBindingPostProcessorRegistrar implements
 			registry.registerBeanDefinition(METADATA_BEAN_NAME, meta.getBeanDefinition());
 		}
 	}
-
 }
