@@ -23,12 +23,16 @@ import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.jmx.EndpointMBeanExporter;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.util.StringUtils;
 
 /**
@@ -49,16 +53,13 @@ public class EndpointMBeanExportAutoConfiguration {
 	@Bean
 	public EndpointMBeanExporter endpointMBeanExporter(MBeanServer server) {
 		EndpointMBeanExporter mbeanExporter = new EndpointMBeanExporter();
-
 		String domain = this.properties.getDomain();
 		if (StringUtils.hasText(domain)) {
 			mbeanExporter.setDomain(domain);
 		}
 		mbeanExporter.setServer(server);
-
 		mbeanExporter.setEnsureUniqueRuntimeObjectNames(this.properties.isUniqueNames());
 		mbeanExporter.setObjectNameStaticProperties(this.properties.getStaticNames());
-
 		return mbeanExporter;
 	}
 
@@ -66,5 +67,22 @@ public class EndpointMBeanExportAutoConfiguration {
 	@ConditionalOnMissingBean(MBeanServer.class)
 	public MBeanServer mbeanServer() {
 		return new JmxAutoConfiguration().mbeanServer();
+	}
+
+	static class JmxCondition extends SpringBootCondition {
+
+		@Override
+		public ConditionOutcome getMatchOutcome(ConditionContext context,
+				AnnotatedTypeMetadata metadata) {
+			String endpointEnabled = context.getEnvironment().getProperty(
+					"endpoints.jmx.enabled", "true");
+			String jmxEnabled = context.getEnvironment().getProperty(
+					"spring.jmx.enabled", "true");
+			return new ConditionOutcome("true".equalsIgnoreCase(endpointEnabled)
+					&& "true".equalsIgnoreCase(jmxEnabled),
+					"JMX endpoint and JMX enabled");
+
+		}
+
 	}
 }
