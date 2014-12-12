@@ -18,22 +18,28 @@ package org.springframework.boot.actuate.autoconfigure;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.servlet.Filter;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.HierarchicalBeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.autoconfigure.ManagementSecurityAutoConfiguration.ManagementWebSecurityConfigurerAdapter;
 import org.springframework.boot.actuate.endpoint.mvc.EndpointHandlerMapping;
+import org.springframework.boot.actuate.endpoint.mvc.EndpointHandlerMappingCustomizer;
 import org.springframework.boot.actuate.endpoint.mvc.ManagementErrorEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoints;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.SearchStrategy;
 import org.springframework.boot.autoconfigure.web.ErrorAttributes;
 import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
@@ -45,6 +51,7 @@ import org.springframework.boot.context.embedded.ErrorPage;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.HandlerAdapter;
 import org.springframework.web.servlet.HandlerMapping;
@@ -60,8 +67,14 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 @Configuration
 public class EndpointWebMvcChildContextConfiguration {
 
+	private static Log logger = LogFactory
+			.getLog(EndpointWebMvcChildContextConfiguration.class);
+
 	@Value("${error.path:/error}")
 	private String errorPath = "/error";
+
+	@Autowired(required = false)
+	private List<EndpointHandlerMappingCustomizer> mappingCustomizers;
 
 	@Configuration
 	protected static class ServerCustomization implements
@@ -90,7 +103,7 @@ public class EndpointWebMvcChildContextConfiguration {
 			}
 			// Customize as per the parent context first (so e.g. the access logs go to
 			// the same place)
-			server.customize(container);
+			this.server.customize(container);
 			// Then reset the error pages
 			container.setErrorPages(Collections.<ErrorPage> emptySet());
 			// and add the management-specific bits
@@ -122,17 +135,6 @@ public class EndpointWebMvcChildContextConfiguration {
 		return adapter;
 	}
 
-	@Bean
-	public HandlerMapping handlerMapping(MvcEndpoints endpoints,
-			ListableBeanFactory beanFactory) {
-		Set<MvcEndpoint> set = new HashSet<MvcEndpoint>(endpoints.getEndpoints());
-		set.addAll(beanFactory.getBeansOfType(MvcEndpoint.class).values());
-		EndpointHandlerMapping mapping = new EndpointHandlerMapping(set);
-		// In a child context we definitely want to see the parent endpoints
-		mapping.setDetectHandlerMethodsInAncestorContexts(true);
-		return mapping;
-	}
-
 	/*
 	 * The error controller is present but not mapped as an endpoint in this context
 	 * because of the DispatcherServlet having had it's HandlerMapping explicitly
@@ -141,6 +143,71 @@ public class EndpointWebMvcChildContextConfiguration {
 	@Bean
 	public ManagementErrorEndpoint errorEndpoint(final ErrorAttributes errorAttributes) {
 		return new ManagementErrorEndpoint(this.errorPath, errorAttributes);
+	}
+
+	@Configuration
+	@ConditionalOnMissingClass(WebSecurityConfigurerAdapter.class)
+	static class EndpointHandlerMappingSimpleConfiguration {
+
+		@Autowired(required = false)
+		private List<EndpointHandlerMappingCustomizer> mappingCustomizers;
+
+		@Bean
+		public HandlerMapping handlerMapping(MvcEndpoints endpoints,
+				ListableBeanFactory beanFactory) {
+
+			EndpointHandlerMapping mapping = doCreateEndpointHandlerMapping(endpoints, beanFactory);
+			if (this.mappingCustomizers != null) {
+				for (EndpointHandlerMappingCustomizer customizer : this.mappingCustomizers) {
+					customizer.customize(mapping);
+				}
+			}
+			return mapping;
+		}
+
+		protected EndpointHandlerMapping doCreateEndpointHandlerMapping(MvcEndpoints endpoints,
+				ListableBeanFactory beanFactory) {
+			Set<MvcEndpoint> set = new HashSet<MvcEndpoint>(endpoints.getEndpoints());
+			set.addAll(beanFactory.getBeansOfType(MvcEndpoint.class).values());
+			EndpointHandlerMapping mapping = new EndpointHandlerMapping(set);
+			// In a child context we definitely want to see the parent endpoints
+			mapping.setDetectHandlerMethodsInAncestorContexts(true);
+			return mapping;
+		}
+
+	}
+
+	@Configuration
+	@ConditionalOnClass(WebSecurityConfigurerAdapter.class)
+	static class EndpointHandlerMappingSecurityConfiguration
+			extends EndpointHandlerMappingSimpleConfiguration {
+
+		@Override
+		protected EndpointHandlerMapping doCreateEndpointHandlerMapping(MvcEndpoints endpoints,
+				ListableBeanFactory beanFactory) {
+
+			EndpointHandlerMapping mapping = super.doCreateEndpointHandlerMapping(endpoints, beanFactory);
+			injectIntoSecurityFilter(beanFactory, mapping);
+			return mapping;
+		}
+
+		private void injectIntoSecurityFilter(ListableBeanFactory beanFactory,
+				EndpointHandlerMapping mapping) {
+			// The parent context has the security filter, so we need to get it injected with
+			// our EndpointHandlerMapping if we can.
+			if (BeanFactoryUtils.beanNamesForTypeIncludingAncestors(beanFactory,
+					ManagementWebSecurityConfigurerAdapter.class).length == 1) {
+				ManagementWebSecurityConfigurerAdapter bean = beanFactory
+						.getBean(ManagementWebSecurityConfigurerAdapter.class);
+				bean.setEndpointHandlerMapping(mapping);
+			}
+			else {
+				logger.warn("No single bean of type "
+						+ ManagementWebSecurityConfigurerAdapter.class.getSimpleName()
+						+ " found (this might make some endpoints inaccessible without authentication)");
+			}
+		}
+
 	}
 
 	@Configuration

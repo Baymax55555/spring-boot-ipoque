@@ -30,6 +30,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWebApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.web.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -81,6 +82,7 @@ public class VelocityAutoConfiguration {
 
 		protected void applyProperties(VelocityEngineFactory factory) {
 			factory.setResourceLoaderPath(this.properties.getResourceLoaderPath());
+			factory.setPreferFileSystemAccess(this.properties.isPreferFileSystemAccess());
 			Properties velocityProperties = new Properties();
 			velocityProperties.putAll(this.properties.getProperties());
 			factory.setVelocityProperties(velocityProperties);
@@ -123,6 +125,7 @@ public class VelocityAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean(name = "velocityViewResolver")
+		@ConditionalOnProperty(name = "spring.velocity.enabled", matchIfMissing = true)
 		public VelocityViewResolver velocityViewResolver() {
 			VelocityViewResolver resolver = new VelocityViewResolver();
 			this.properties.applyToViewResolver(resolver);

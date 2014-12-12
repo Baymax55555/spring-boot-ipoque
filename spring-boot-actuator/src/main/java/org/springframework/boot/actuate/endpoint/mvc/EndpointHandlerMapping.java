@@ -17,15 +17,22 @@
 package org.springframework.boot.actuate.endpoint.mvc;
 
 import java.lang.reflect.Method;
+import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.condition.PatternsRequestCondition;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -36,7 +43,6 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  * The semantics of {@code @RequestMapping} should be identical to a normal
  * {@code @Controller}, but the endpoints should not be annotated as {@code @Controller}
  * (otherwise they will be mapped by the normal MVC mechanisms).
- *
  * <p>
  * One of the aims of the mapping is to support endpoints that work as HTTP endpoints but
  * can still provide useful service interfaces when there is no HTTP server (and no Spring
@@ -50,11 +56,13 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 public class EndpointHandlerMapping extends RequestMappingHandlerMapping implements
 		ApplicationContextAware {
 
-	private final Set<? extends MvcEndpoint> endpoints;
+	private final Set<MvcEndpoint> endpoints;
 
 	private String prefix = "";
 
 	private boolean disabled = false;
+
+	private Set<HandlerMethod> principalHandlers = new HashSet<HandlerMethod>();
 
 	/**
 	 * Create a new {@link EndpointHandlerMapping} instance. All {@link Endpoint}s will be
@@ -90,44 +98,73 @@ public class EndpointHandlerMapping extends RequestMappingHandlerMapping impleme
 	@Override
 	protected void registerHandlerMethod(Object handler, Method method,
 			RequestMappingInfo mapping) {
-
 		if (mapping == null) {
 			return;
 		}
-
-		Set<String> defaultPatterns = mapping.getPatternsCondition().getPatterns();
-		String[] patterns = new String[defaultPatterns.isEmpty() ? 1 : defaultPatterns
-				.size()];
-
-		String path = "";
-		Object bean = handler;
-		if (bean instanceof String) {
-			bean = getApplicationContext().getBean((String) handler);
+		String[] patterns = getPatterns(handler, mapping);
+		if (handlesPrincipal(method)) {
+			this.principalHandlers.add(new HandlerMethod(handler, method));
 		}
-		if (bean instanceof MvcEndpoint) {
-			MvcEndpoint endpoint = (MvcEndpoint) bean;
-			path = endpoint.getPath();
-		}
+		super.registerHandlerMethod(handler, method, withNewPatterns(mapping, patterns));
+	}
 
-		int i = 0;
+	private String[] getPatterns(Object handler, RequestMappingInfo mapping) {
+		String path = getPath(handler);
 		String prefix = StringUtils.hasText(this.prefix) ? this.prefix + path : path;
+		Set<String> defaultPatterns = mapping.getPatternsCondition().getPatterns();
 		if (defaultPatterns.isEmpty()) {
-			patterns[0] = prefix;
+			return new String[] { prefix };
 		}
-		else {
-			for (String pattern : defaultPatterns) {
-				patterns[i] = prefix + pattern;
-				i++;
+		List<String> patterns = new ArrayList<String>(defaultPatterns);
+		for (int i = 0; i < patterns.size(); i++) {
+			patterns.set(i, prefix + patterns.get(i));
+		}
+		return patterns.toArray(new String[patterns.size()]);
+	}
+
+	private String getPath(Object handler) {
+		if (handler instanceof String) {
+			handler = getApplicationContext().getBean((String) handler);
+		}
+		if (handler instanceof MvcEndpoint) {
+			return ((MvcEndpoint) handler).getPath();
+		}
+		return "";
+	}
+
+	private boolean handlesPrincipal(Method method) {
+		for (Class<?> type : method.getParameterTypes()) {
+			if (Principal.class.equals(type)) {
+				return true;
 			}
 		}
-		PatternsRequestCondition patternsInfo = new PatternsRequestCondition(patterns);
+		return false;
+	}
 
-		RequestMappingInfo modified = new RequestMappingInfo(patternsInfo,
-				mapping.getMethodsCondition(), mapping.getParamsCondition(),
-				mapping.getHeadersCondition(), mapping.getConsumesCondition(),
-				mapping.getProducesCondition(), mapping.getCustomCondition());
+	private RequestMappingInfo withNewPatterns(RequestMappingInfo mapping,
+			String[] patternStrings) {
+		PatternsRequestCondition patterns = new PatternsRequestCondition(patternStrings);
+		return new RequestMappingInfo(patterns, mapping.getMethodsCondition(),
+				mapping.getParamsCondition(), mapping.getHeadersCondition(),
+				mapping.getConsumesCondition(), mapping.getProducesCondition(),
+				mapping.getCustomCondition());
+	}
 
-		super.registerHandlerMethod(handler, method, modified);
+	/**
+	 * Returns {@code true} if the given request is mapped to an endpoint and to a method
+	 * that includes a {@link Principal} argument.
+	 * @param request the http request
+	 * @return {@code true} if the request is
+	 */
+	public boolean isPrincipalHandler(HttpServletRequest request) {
+		try {
+			HandlerExecutionChain handlerChain = getHandler(request);
+			Object handler = (handlerChain == null ? null : handlerChain.getHandler());
+			return (handler != null && this.principalHandlers.contains(handler));
+		}
+		catch (Exception ex) {
+			return false;
+		}
 	}
 
 	/**
@@ -144,6 +181,13 @@ public class EndpointHandlerMapping extends RequestMappingHandlerMapping impleme
 	 */
 	public String getPrefix() {
 		return this.prefix;
+	}
+
+	/**
+	 * @return the path used in mappings
+	 */
+	public String getPath(String endpoint) {
+		return this.prefix + endpoint;
 	}
 
 	/**
@@ -164,7 +208,7 @@ public class EndpointHandlerMapping extends RequestMappingHandlerMapping impleme
 	 * Return the endpoints
 	 */
 	public Set<? extends MvcEndpoint> getEndpoints() {
-		return this.endpoints;
+		return new HashSet<MvcEndpoint>(this.endpoints);
 	}
 
 }
