@@ -103,6 +103,7 @@ public class ErrorPageFilter extends AbstractConfigurableEmbeddedServletContaine
 
 	private void doFilter(HttpServletRequest request, HttpServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
+
 		ErrorWrapperResponse wrapped = new ErrorWrapperResponse(response);
 		try {
 			chain.doFilter(request, wrapped);
@@ -124,6 +125,7 @@ public class ErrorPageFilter extends AbstractConfigurableEmbeddedServletContaine
 	private void handleErrorStatus(HttpServletRequest request,
 			HttpServletResponse response, int status, String message)
 			throws ServletException, IOException {
+
 		if (response.isCommitted()) {
 			handleCommittedResponse(request, null);
 			return;
@@ -137,6 +139,7 @@ public class ErrorPageFilter extends AbstractConfigurableEmbeddedServletContaine
 		response.setStatus(status);
 		setErrorAttributes(request, status, message);
 		request.getRequestDispatcher(errorPath).forward(request, response);
+
 	}
 
 	private void handleException(HttpServletRequest request,
@@ -159,15 +162,18 @@ public class ErrorPageFilter extends AbstractConfigurableEmbeddedServletContaine
 	private void forwardToErrorPage(String path, HttpServletRequest request,
 			HttpServletResponse response, Throwable ex) throws ServletException,
 			IOException {
+
 		if (logger.isErrorEnabled()) {
 			String message = "Forwarding to error page from request "
 					+ getDescription(request) + " due to exception [" + ex.getMessage()
 					+ "]";
 			logger.error(message, ex);
 		}
+
 		setErrorAttributes(request, 500, ex.getMessage());
 		request.setAttribute(ERROR_EXCEPTION, ex);
 		request.setAttribute(ERROR_EXCEPTION_TYPE, ex.getClass().getName());
+
 		response.reset();
 		response.sendError(500, ex.getMessage());
 		request.getRequestDispatcher(path).forward(request, response);
@@ -282,6 +288,7 @@ public class ErrorPageFilter extends AbstractConfigurableEmbeddedServletContaine
 		public void sendError(int status, String message) throws IOException {
 			this.status = status;
 			this.message = message;
+
 			this.errorToSend = true;
 		}
 
