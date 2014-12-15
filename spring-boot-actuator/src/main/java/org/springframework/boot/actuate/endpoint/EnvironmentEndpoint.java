@@ -16,9 +16,12 @@
 
 package org.springframework.boot.actuate.endpoint;
 
+import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.EnvironmentAware;
@@ -29,6 +32,8 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * {@link Endpoint} to expose {@link ConfigurableEnvironment environment} information.
@@ -43,7 +48,7 @@ public class EnvironmentEndpoint extends AbstractEndpoint<Map<String, Object>> i
 
 	private Environment environment;
 
-	private final Sanitizer sanitizer = new Sanitizer();
+	private String[] keysToSanitize = new String[] { "password", "secret", "key" };
 
 	/**
 	 * Create a new {@link EnvironmentEndpoint} instance.
@@ -53,7 +58,8 @@ public class EnvironmentEndpoint extends AbstractEndpoint<Map<String, Object>> i
 	}
 
 	public void setKeysToSanitize(String... keysToSanitize) {
-		this.sanitizer.setKeysToSanitize(keysToSanitize);
+		Assert.notNull(keysToSanitize, "KeysToSanitize must not be null");
+		this.keysToSanitize = keysToSanitize;
 	}
 
 	@Override
@@ -94,8 +100,8 @@ public class EnvironmentEndpoint extends AbstractEndpoint<Map<String, Object>> i
 	private void extract(String root, Map<String, PropertySource<?>> map,
 			PropertySource<?> source) {
 		if (source instanceof CompositePropertySource) {
-			for (PropertySource<?> nest : ((CompositePropertySource) source)
-					.getPropertySources()) {
+			Set<PropertySource<?>> nested = getNestedPropertySources((CompositePropertySource) source);
+			for (PropertySource<?> nest : nested) {
 				extract(source.getName() + ":", map, nest);
 			}
 		}
@@ -104,8 +110,26 @@ public class EnvironmentEndpoint extends AbstractEndpoint<Map<String, Object>> i
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	private Set<PropertySource<?>> getNestedPropertySources(CompositePropertySource source) {
+		try {
+			Field field = ReflectionUtils.findField(CompositePropertySource.class,
+					"propertySources");
+			field.setAccessible(true);
+			return (Set<PropertySource<?>>) field.get(source);
+		}
+		catch (Exception ex) {
+			return Collections.emptySet();
+		}
+	}
+
 	public Object sanitize(String name, Object object) {
-		return this.sanitizer.sanitize(name, object);
+		for (String keyToSanitize : this.keysToSanitize) {
+			if (name.toLowerCase().endsWith(keyToSanitize)) {
+				return (object == null ? null : "******");
+			}
+		}
+		return object;
 	}
 
 	@Override
