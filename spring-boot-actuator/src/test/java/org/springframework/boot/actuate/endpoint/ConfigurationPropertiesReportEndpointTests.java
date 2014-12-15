@@ -21,6 +21,8 @@ import java.util.Map;
 import org.junit.Test;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.test.EnvironmentTestUtils;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -29,6 +31,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+/**
+ * Tests for {@link ConfigurationPropertiesReportEndpoint}.
+ *
+ * @author Dave Syer
+ */
 public class ConfigurationPropertiesReportEndpointTests extends
 		AbstractEndpointTests<ConfigurationPropertiesReportEndpoint> {
 
@@ -70,12 +77,77 @@ public class ConfigurationPropertiesReportEndpointTests extends
 	@SuppressWarnings("unchecked")
 	public void testKeySanitization() throws Exception {
 		ConfigurationPropertiesReportEndpoint report = getEndpointBean();
-		report.setKeysToSanitize(new String[] { "property" });
+		report.setKeysToSanitize("property");
 		Map<String, Object> properties = report.invoke();
 		Map<String, Object> nestedProperties = (Map<String, Object>) ((Map<String, Object>) properties
 				.get("testProperties")).get("properties");
 		assertNotNull(nestedProperties);
 		assertEquals("123456", nestedProperties.get("dbPassword"));
+		assertEquals("******", nestedProperties.get("myTestProperty"));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testKeySanitizationWithCustomPattern() throws Exception {
+		ConfigurationPropertiesReportEndpoint report = getEndpointBean();
+		report.setKeysToSanitize(".*pass.*");
+		Map<String, Object> properties = report.invoke();
+		Map<String, Object> nestedProperties = (Map<String, Object>) ((Map<String, Object>) properties
+				.get("testProperties")).get("properties");
+		assertNotNull(nestedProperties);
+		assertEquals("******", nestedProperties.get("dbPassword"));
+		assertEquals("654321", nestedProperties.get("myTestProperty"));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testKeySanitizationWithCustomKeysByEnvironment() throws Exception {
+		this.context = new AnnotationConfigApplicationContext();
+		EnvironmentTestUtils.addEnvironment(this.context,
+				"endpoints.configprops.keys-to-sanitize:property");
+		this.context.register(Config.class);
+		this.context.refresh();
+		ConfigurationPropertiesReportEndpoint report = getEndpointBean();
+		Map<String, Object> properties = report.invoke();
+		Map<String, Object> nestedProperties = (Map<String, Object>) ((Map<String, Object>) properties
+				.get("testProperties")).get("properties");
+		assertNotNull(nestedProperties);
+		assertEquals("123456", nestedProperties.get("dbPassword"));
+		assertEquals("******", nestedProperties.get("myTestProperty"));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testKeySanitizationWithCustomPatternByEnvironment() throws Exception {
+		this.context = new AnnotationConfigApplicationContext();
+		EnvironmentTestUtils.addEnvironment(this.context,
+				"endpoints.configprops.keys-to-sanitize: .*pass.*");
+		this.context.register(Config.class);
+		this.context.refresh();
+		ConfigurationPropertiesReportEndpoint report = getEndpointBean();
+		Map<String, Object> properties = report.invoke();
+		Map<String, Object> nestedProperties = (Map<String, Object>) ((Map<String, Object>) properties
+				.get("testProperties")).get("properties");
+		assertNotNull(nestedProperties);
+		assertEquals("******", nestedProperties.get("dbPassword"));
+		assertEquals("654321", nestedProperties.get("myTestProperty"));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void testKeySanitizationWithCustomPatternAndKeyByEnvironment()
+			throws Exception {
+		this.context = new AnnotationConfigApplicationContext();
+		EnvironmentTestUtils.addEnvironment(this.context,
+				"endpoints.configprops.keys-to-sanitize: .*pass.*, property");
+		this.context.register(Config.class);
+		this.context.refresh();
+		ConfigurationPropertiesReportEndpoint report = getEndpointBean();
+		Map<String, Object> properties = report.invoke();
+		Map<String, Object> nestedProperties = (Map<String, Object>) ((Map<String, Object>) properties
+				.get("testProperties")).get("properties");
+		assertNotNull(nestedProperties);
+		assertEquals("******", nestedProperties.get("dbPassword"));
 		assertEquals("******", nestedProperties.get("myTestProperty"));
 	}
 

@@ -22,20 +22,19 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.springframework.boot.cli.compiler.AstUtils;
 import org.springframework.boot.cli.compiler.CompilerAutoConfiguration;
 import org.springframework.boot.cli.compiler.DependencyCustomizer;
-import org.springframework.boot.groovy.EnableRabbitMessaging;
 
 /**
  * {@link CompilerAutoConfiguration} for Spring Rabbit.
  *
  * @author Greg Turnquist
+ * @author Stephane Nicoll
  */
 public class RabbitCompilerAutoConfiguration extends CompilerAutoConfiguration {
 
 	@Override
 	public boolean matches(ClassNode classNode) {
-		// Slightly weird detection algorithm because there is no @Enable annotation for
-		// Integration
-		return AstUtils.hasAtLeastOneAnnotation(classNode, "EnableRabbitMessaging");
+		return AstUtils.hasAtLeastOneAnnotation(classNode, "EnableRabbit")
+				|| AstUtils.hasAtLeastOneAnnotation(classNode, "EnableRabbitMessaging");
 	}
 
 	@Override
@@ -46,13 +45,16 @@ public class RabbitCompilerAutoConfiguration extends CompilerAutoConfiguration {
 	}
 
 	@Override
+	@SuppressWarnings("deprecation")
 	public void applyImports(ImportCustomizer imports) throws CompilationFailedException {
-		imports.addStarImports("org.springframework.amqp.rabbit.core",
+		imports.addStarImports("org.springframework.amqp.rabbit.annotation",
+				"org.springframework.amqp.rabbit.core",
+				"org.springframework.amqp.rabbit.config",
 				"org.springframework.amqp.rabbit.connection",
 				"org.springframework.amqp.rabbit.listener",
 				"org.springframework.amqp.rabbit.listener.adapter",
 				"org.springframework.amqp.core").addImports(
-				EnableRabbitMessaging.class.getCanonicalName());
+				org.springframework.boot.groovy.EnableRabbitMessaging.class.getName());
 	}
 
 }
