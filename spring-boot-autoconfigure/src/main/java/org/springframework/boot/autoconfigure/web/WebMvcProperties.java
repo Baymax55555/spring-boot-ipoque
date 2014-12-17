@@ -28,11 +28,26 @@ import org.springframework.validation.DefaultMessageCodesResolver;
 @ConfigurationProperties("spring.mvc")
 public class WebMvcProperties {
 
+	/**
+	 * Formatting strategy for message codes (PREFIX_ERROR_CODE, POSTFIX_ERROR_CODE).
+	 */
 	private DefaultMessageCodesResolver.Format messageCodesResolverFormat;
 
+	/**
+	 * Locale to use.
+	 */
 	private String locale;
 
+	/**
+	 * Date format to use (e.g. dd/MM/yyyy)
+	 */
 	private String dateFormat;
+
+	/**
+	 * If the the content of the "default" model should be ignored during redirect
+	 * scenarios.
+	 */
+	private boolean ignoreDefaultModelOnRedirect = true;
 
 	public DefaultMessageCodesResolver.Format getMessageCodesResolverFormat() {
 		return this.messageCodesResolverFormat;
@@ -57,6 +72,14 @@ public class WebMvcProperties {
 
 	public void setDateFormat(String dateFormat) {
 		this.dateFormat = dateFormat;
+	}
+
+	public boolean isIgnoreDefaultModelOnRedirect() {
+		return this.ignoreDefaultModelOnRedirect;
+	}
+
+	public void setIgnoreDefaultModelOnRedirect(boolean ignoreDefaultModelOnRedirect) {
+		this.ignoreDefaultModelOnRedirect = ignoreDefaultModelOnRedirect;
 	}
 
 }
