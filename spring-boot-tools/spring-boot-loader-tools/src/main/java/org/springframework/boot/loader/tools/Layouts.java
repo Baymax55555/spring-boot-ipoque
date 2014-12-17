@@ -17,12 +17,9 @@
 package org.springframework.boot.loader.tools;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Common {@link Layout}s.
@@ -73,12 +70,6 @@ public class Layouts {
 		public String getClassesLocation() {
 			return "";
 		}
-
-		@Override
-		public boolean isExecutable() {
-			return true;
-		}
-
 	}
 
 	/**
@@ -94,7 +85,7 @@ public class Layouts {
 	}
 
 	/**
-	 * No layout.
+	 * Executable expanded archive layout.
 	 */
 	public static class None extends Jar {
 
@@ -102,12 +93,6 @@ public class Layouts {
 		public String getLauncherClassName() {
 			return null;
 		}
-
-		@Override
-		public boolean isExecutable() {
-			return false;
-		}
-
 	}
 
 	/**
@@ -119,6 +104,7 @@ public class Layouts {
 		static {
 			Map<LibraryScope, String> map = new HashMap<LibraryScope, String>();
 			map.put(LibraryScope.COMPILE, "WEB-INF/lib/");
+			map.put(LibraryScope.CUSTOM, "WEB-INF/lib/");
 			map.put(LibraryScope.RUNTIME, "WEB-INF/lib/");
 			map.put(LibraryScope.PROVIDED, "WEB-INF/lib-provided/");
 			SCOPE_DESTINATIONS = Collections.unmodifiableMap(map);
@@ -138,46 +124,6 @@ public class Layouts {
 		public String getClassesLocation() {
 			return "WEB-INF/classes/";
 		}
-
-		@Override
-		public boolean isExecutable() {
-			return true;
-		}
-
-	}
-
-	/**
-	 * Module layout (designed to be used as a "plug-in")
-	 */
-	public static class Module implements Layout {
-
-		private static final Set<LibraryScope> LIB_DESTINATION_SCOPES = new HashSet<LibraryScope>(
-				Arrays.asList(LibraryScope.COMPILE, LibraryScope.RUNTIME,
-						LibraryScope.CUSTOM));
-
-		@Override
-		public String getLauncherClassName() {
-			return null;
-		}
-
-		@Override
-		public String getLibraryDestination(String libraryName, LibraryScope scope) {
-			if (LIB_DESTINATION_SCOPES.contains(scope)) {
-				return "lib/";
-			}
-			return null;
-		}
-
-		@Override
-		public String getClassesLocation() {
-			return "";
-		}
-
-		@Override
-		public boolean isExecutable() {
-			return false;
-		}
-
 	}
 
 }
