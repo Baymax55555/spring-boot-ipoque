@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-import org.springframework.boot.cli.app.SpringApplicationLauncher;
 import org.springframework.boot.cli.compiler.GroovyCompiler;
 import org.springframework.boot.cli.util.ResourceUtils;
 
@@ -145,8 +144,12 @@ public class SpringApplicationRunner {
 		@Override
 		public void run() {
 			try {
-				this.applicationContext = new SpringApplicationLauncher(
-						getContextClassLoader()).launch(this.compiledSources,
+				// User reflection to load and call Spring
+				Class<?> application = getContextClassLoader().loadClass(
+						"org.springframework.boot.SpringApplication");
+				Method method = application.getMethod("run", Object[].class,
+						String[].class);
+				this.applicationContext = method.invoke(null, this.compiledSources,
 						SpringApplicationRunner.this.args);
 			}
 			catch (Exception ex) {

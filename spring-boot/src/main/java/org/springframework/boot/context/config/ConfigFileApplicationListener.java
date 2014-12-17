@@ -128,7 +128,7 @@ public class ConfigFileApplicationListener implements
 		if (event instanceof ApplicationPreparedEvent) {
 			onApplicationPreparedEvent((ApplicationPreparedEvent) event);
 		}
-	}
+	};
 
 	private void onApplicationEnvironmentPreparedEvent(
 			ApplicationEnvironmentPreparedEvent event) {
@@ -344,7 +344,9 @@ public class ConfigFileApplicationListener implements
 
 		private void load(String location, String name, String profile)
 				throws IOException {
+
 			String group = "profile=" + (profile == null ? "" : profile);
+
 			if (!StringUtils.hasText(name)) {
 				// Try to load directly from the location
 				loadIntoGroup(group, location, profile);

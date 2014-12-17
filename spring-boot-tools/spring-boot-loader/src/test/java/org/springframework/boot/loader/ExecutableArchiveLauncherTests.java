@@ -29,7 +29,7 @@ import org.springframework.boot.loader.archive.Archive.Entry;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link ExecutableArchiveLauncher}
@@ -71,7 +71,9 @@ public class ExecutableArchiveLauncherTests {
 	public void javaAgentJarsAreExcludedFromClasspath() throws Exception {
 		URL javaAgent = new File("my-agent.jar").getCanonicalFile().toURI().toURL();
 		final URL one = new URL("file:one");
-		given(this.javaAgentDetector.isJavaAgentJar(javaAgent)).willReturn(true);
+
+		when(this.javaAgentDetector.isJavaAgentJar(javaAgent)).thenReturn(true);
+
 		doWithTccl(new URLClassLoader(new URL[] { javaAgent, one }),
 				new Callable<Void>() {
 

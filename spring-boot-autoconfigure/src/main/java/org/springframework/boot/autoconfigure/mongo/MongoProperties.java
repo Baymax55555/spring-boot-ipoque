@@ -42,44 +42,18 @@ public class MongoProperties {
 
 	private static final int DEFAULT_PORT = 27017;
 
-	/**
-	 * Mongo server host.
-	 */
 	private String host;
 
-	/**
-	 * Mongo server port.
-	 */
 	private Integer port = null;
 
-	/**
-	 * Mmongo database URI. When set, host and port are ignored.
-	 */
 	private String uri = "mongodb://localhost/test";
 
-	/**
-	 * Database name.
-	 */
 	private String database;
 
-	/**
-	 * Authentication database name.
-	 */
-	private String authenticationDatabase;
-
-	/**
-	 * GridFS database name.
-	 */
 	private String gridFsDatabase;
 
-	/**
-	 * Login user of the mongo server.
-	 */
 	private String username;
 
-	/**
-	 * Login password of the mongo server.
-	 */
 	private char[] password;
 
 	public String getHost() {
@@ -96,14 +70,6 @@ public class MongoProperties {
 
 	public void setDatabase(String database) {
 		this.database = database;
-	}
-
-	public String getAuthenticationDatabase() {
-		return this.authenticationDatabase;
-	}
-
-	public void setAuthenticationDatabase(String authenticationDatabase) {
-		this.authenticationDatabase = authenticationDatabase;
 	}
 
 	public String getUsername() {
@@ -165,12 +131,12 @@ public class MongoProperties {
 	public MongoClient createMongoClient(MongoClientOptions options)
 			throws UnknownHostException {
 		try {
-			if (hasCustomAddress() || hasCustomCredentials()) {
+			if (customAddress() || customCredentials()) {
 				if (options == null) {
 					options = MongoClientOptions.builder().build();
 				}
 				List<MongoCredential> credentials = null;
-				if (hasCustomCredentials()) {
+				if (customCredentials()) {
 					credentials = Arrays.asList(MongoCredential.createMongoCRCredential(
 							this.username, getMongoClientDatabase(), this.password));
 				}
@@ -187,11 +153,11 @@ public class MongoProperties {
 		}
 	}
 
-	private boolean hasCustomAddress() {
+	private boolean customAddress() {
 		return this.host != null || this.port != null;
 	}
 
-	private boolean hasCustomCredentials() {
+	private boolean customCredentials() {
 		return this.username != null && this.password != null;
 	}
 
