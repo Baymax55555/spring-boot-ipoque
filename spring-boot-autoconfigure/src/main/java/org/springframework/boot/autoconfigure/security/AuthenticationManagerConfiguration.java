@@ -22,15 +22,16 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -74,7 +75,7 @@ public class AuthenticationManagerConfiguration extends
 			.getLog(AuthenticationManagerConfiguration.class);
 
 	@Autowired
-	private List<SecurityPrerequisite> dependencies;
+	private List<SecurityPrequisite> dependencies;
 
 	@Autowired
 	private SecurityProperties security;
@@ -109,27 +110,20 @@ public class AuthenticationManagerConfiguration extends
 
 	@Component
 	protected static class AuthenticationManagerConfigurationListener implements
-			SmartInitializingSingleton {
+			ApplicationListener<ContextRefreshedEvent> {
 
 		@Autowired
 		private AuthenticationEventPublisher authenticationEventPublisher;
 
-		@Autowired
-		private ApplicationContext context;
-
 		@Override
-		public void afterSingletonsInstantiated() {
-			if (this.context.getBeanNamesForType(AuthenticationManager.class).length == 0) {
+		public void onApplicationEvent(ContextRefreshedEvent event) {
+			ApplicationContext context = event.getApplicationContext();
+			if (context.getBeanNamesForType(AuthenticationManager.class).length == 0) {
 				return;
 			}
-			AuthenticationManager manager = this.context
-					.getBean(AuthenticationManager.class);
+			AuthenticationManager manager = context.getBean(AuthenticationManager.class);
 			if (manager instanceof ProviderManager) {
 				((ProviderManager) manager)
-						.setAuthenticationEventPublisher(this.authenticationEventPublisher);
-			}
-			else if (manager instanceof LazyAuthenticationManager) {
-				((LazyAuthenticationManager) manager)
 						.setAuthenticationEventPublisher(this.authenticationEventPublisher);
 			}
 		}
@@ -140,6 +134,7 @@ public class AuthenticationManagerConfiguration extends
 	 * We must add {@link BootDefaultingAuthenticationConfigurerAdapter} in the init phase
 	 * of the last {@link GlobalAuthenticationConfigurerAdapter}. The reason is that the
 	 * typical flow is something like:
+	 *
 	 * <ul>
 	 * <li>A
 	 * {@link GlobalAuthenticationConfigurerAdapter#init(AuthenticationManagerBuilder)}
@@ -178,20 +173,26 @@ public class AuthenticationManagerConfiguration extends
 				this.defaultAuth = auth;
 				return;
 			}
+
 			User user = AuthenticationManagerConfiguration.this.security.getUser();
 			if (user.isDefaultPassword()) {
 				logger.info("\n\nUsing default security password: " + user.getPassword()
 						+ "\n\n");
 			}
+
 			this.defaultAuth = new AuthenticationManagerBuilder(
 					AuthenticationManagerConfiguration.this.objectPostProcessor);
+
 			Set<String> roles = new LinkedHashSet<String>(user.getRole());
+
 			this.parent = this.defaultAuth.inMemoryAuthentication()
 					.withUser(user.getName()).password(user.getPassword())
 					.roles(roles.toArray(new String[roles.size()])).and().and().build();
+
 			// Defer actually setting the parent on the AuthenticationManagerBuilder
 			// because it makes it "configured" and we are only in the init() phase
 			// here.
+
 		}
 	}
 
@@ -199,30 +200,14 @@ public class AuthenticationManagerConfiguration extends
 
 		private AuthenticationManagerBuilder builder;
 
-		private AuthenticationManager authenticationManager;
-
-		private AuthenticationEventPublisher authenticationEventPublisher;
-
 		public LazyAuthenticationManager(AuthenticationManagerBuilder builder) {
 			this.builder = builder;
-		}
-
-		public void setAuthenticationEventPublisher(
-				AuthenticationEventPublisher authenticationEventPublisher) {
-			this.authenticationEventPublisher = authenticationEventPublisher;
 		}
 
 		@Override
 		public Authentication authenticate(Authentication authentication)
 				throws AuthenticationException {
-			if (this.authenticationManager == null) {
-				this.authenticationManager = this.builder.getOrBuild();
-				if (this.authenticationManager instanceof ProviderManager) {
-					((ProviderManager) this.authenticationManager)
-							.setAuthenticationEventPublisher(this.authenticationEventPublisher);
-				}
-			}
-			return this.authenticationManager.authenticate(authentication);
+			return this.builder.getOrBuild().authenticate(authentication);
 		}
 
 	}

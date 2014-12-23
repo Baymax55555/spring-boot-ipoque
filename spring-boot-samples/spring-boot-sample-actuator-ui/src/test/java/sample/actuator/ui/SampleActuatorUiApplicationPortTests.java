@@ -20,7 +20,9 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
@@ -43,6 +45,9 @@ import static org.junit.Assert.assertEquals;
 @IntegrationTest({ "server.port=0", "management.port:0" })
 @DirtiesContext
 public class SampleActuatorUiApplicationPortTests {
+
+	@Autowired
+	private SecurityProperties security;
 
 	@Value("${local.server.port}")
 	private int port = 9010;
