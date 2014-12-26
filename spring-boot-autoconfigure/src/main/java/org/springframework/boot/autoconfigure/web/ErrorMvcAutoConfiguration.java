@@ -30,8 +30,8 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.SearchStrategy;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
@@ -70,13 +70,19 @@ import org.springframework.web.util.HtmlUtils;
 // available
 @AutoConfigureBefore(WebMvcAutoConfiguration.class)
 @Configuration
-public class ErrorMvcAutoConfiguration implements EmbeddedServletContainerCustomizer {
+public class ErrorMvcAutoConfiguration implements EmbeddedServletContainerCustomizer,
+		Ordered {
 
 	@Value("${error.path:/error}")
 	private String errorPath = "/error";
 
 	@Autowired
 	private ServerProperties properties;
+
+	@Override
+	public int getOrder() {
+		return 0;
+	}
 
 	@Bean
 	@ConditionalOnMissingBean(value = ErrorAttributes.class, search = SearchStrategy.CURRENT)
@@ -97,7 +103,7 @@ public class ErrorMvcAutoConfiguration implements EmbeddedServletContainerCustom
 	}
 
 	@Configuration
-	@ConditionalOnExpression("${error.whitelabel.enabled:true}")
+	@ConditionalOnProperty(prefix = "error.whitelabel", name = "enabled", matchIfMissing = true)
 	@Conditional(ErrorTemplateMissingCondition.class)
 	protected static class WhitelabelErrorViewConfiguration {
 
@@ -126,6 +132,9 @@ public class ErrorMvcAutoConfiguration implements EmbeddedServletContainerCustom
 
 	}
 
+	/**
+	 * {@link SpringBootCondition} that matches when no error template view is detected.
+	 */
 	private static class ErrorTemplateMissingCondition extends SpringBootCondition {
 
 		@Override
