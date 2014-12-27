@@ -18,8 +18,6 @@ package org.springframework.boot.logging;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.StringUtils;
-import org.springframework.util.SystemPropertyUtils;
 
 /**
  * Abstract base class for {@link LoggingSystem} implementations.
@@ -31,82 +29,37 @@ public abstract class AbstractLoggingSystem extends LoggingSystem {
 
 	private final ClassLoader classLoader;
 
-	public AbstractLoggingSystem(ClassLoader classLoader) {
+	private final String[] paths;
+
+	public AbstractLoggingSystem(ClassLoader classLoader, String... paths) {
 		this.classLoader = classLoader;
-	}
-
-	@Override
-	public void beforeInitialize() {
-	}
-
-	@Override
-	public void initialize(String configLocation, LogFile logFile) {
-		if (StringUtils.hasLength(configLocation)) {
-			// Load a specific configuration
-			configLocation = SystemPropertyUtils.resolvePlaceholders(configLocation);
-			loadConfiguration(configLocation, logFile);
-		}
-		else {
-			String selfInitializationConfig = getSelfInitializationConfig();
-			if (selfInitializationConfig == null) {
-				// No self initialization has occurred, use defaults
-				loadDefaults(logFile);
-			}
-			else if (logFile != null) {
-				// Self initialization has occurred but the file has changed, reload
-				loadConfiguration(selfInitializationConfig, logFile);
-			}
-			else {
-				reinitialize();
-			}
-		}
-	}
-
-	/**
-	 * Return any self initialization config that has been applied. By default this method
-	 * checks {@link #getStandardConfigLocations()} and assumes that any file that exists
-	 * will have been applied.
-	 */
-	protected String getSelfInitializationConfig() {
-		for (String location : getStandardConfigLocations()) {
-			ClassPathResource resource = new ClassPathResource(location, this.classLoader);
-			if (resource.exists()) {
-				return "classpath:" + location;
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Return the standard config locations for this system.
-	 * @see #getSelfInitializationConfig()
-	 */
-	protected abstract String[] getStandardConfigLocations();
-
-	/**
-	 * Load sensible defaults for the logging system.
-	 * @param logFile the file to load or {@code null} if no log file is to be written
-	 */
-	protected abstract void loadDefaults(LogFile logFile);
-
-	/**
-	 * Load a specific configuration.
-	 * @param location the location of the configuration to load (never {@code null})
-	 * @param logFile the file to load or {@code null} if no log file is to be written
-	 */
-	protected abstract void loadConfiguration(String location, LogFile logFile);
-
-	/**
-	 * Reinitialize the logging system if required. Called when
-	 * {@link #getSelfInitializationConfig()} is used and the log file hasn't changed. May
-	 * be used to reload configuration (for example to pickup additional System
-	 * properties).
-	 */
-	protected void reinitialize() {
+		this.paths = paths.clone();
 	}
 
 	protected final ClassLoader getClassLoader() {
 		return this.classLoader;
+	}
+
+	@Override
+	public void beforeInitialize() {
+		initializeWithSensibleDefaults();
+	}
+
+	@Override
+	public void initialize() {
+		for (String path : this.paths) {
+			ClassPathResource resource = new ClassPathResource(path, this.classLoader);
+			if (resource.exists()) {
+				initialize("classpath:" + path);
+				return;
+			}
+		}
+		// Fallback to the non-prefixed value
+		initialize(getPackagedConfigFile(this.paths[this.paths.length - 1]));
+	}
+
+	protected void initializeWithSensibleDefaults() {
+		initialize(getPackagedConfigFile("basic-" + this.paths[this.paths.length - 1]));
 	}
 
 	protected final String getPackagedConfigFile(String fileName) {
