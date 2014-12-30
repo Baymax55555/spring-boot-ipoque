@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
@@ -105,12 +106,21 @@ public class RequestMappingEndpoint extends AbstractEndpoint<Map<String, Object>
 					.getBeansOfType(AbstractUrlHandlerMapping.class);
 			for (String name : mappings.keySet()) {
 				AbstractUrlHandlerMapping mapping = mappings.get(name);
-				Map<String, Object> handlers = mapping.getHandlerMap();
+				Map<String, Object> handlers = getHandlerMap(mapping);
 				for (String key : handlers.keySet()) {
 					result.put(key, Collections.singletonMap("bean", name));
 				}
 			}
 		}
+	}
+
+	private Map<String, Object> getHandlerMap(AbstractUrlHandlerMapping mapping) {
+		if (AopUtils.isCglibProxy(mapping)) {
+			// If the AbstractUrlHandlerMapping is a cglib proxy we can't call
+			// the final getHandlerMap() method.
+			return Collections.emptyMap();
+		}
+		return mapping.getHandlerMap();
 	}
 
 	protected void extractHandlerMappings(
