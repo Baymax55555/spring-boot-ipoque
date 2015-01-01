@@ -17,7 +17,7 @@
 package org.springframework.boot.autoconfigure.web;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -39,6 +39,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -72,6 +73,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupp
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
 import org.springframework.web.servlet.i18n.FixedLocaleResolver;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 import org.springframework.web.servlet.view.BeanNameViewResolver;
@@ -201,14 +203,14 @@ public class WebMvcAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean(LocaleResolver.class)
-		@ConditionalOnProperty(prefix = "spring.mvc.", value = "locale")
+		@ConditionalOnProperty(prefix = "spring.mvc", name = "locale")
 		public LocaleResolver localeResolver() {
 			return new FixedLocaleResolver(
 					StringUtils.parseLocaleString(this.mvcProperties.getLocale()));
 		}
 
 		@Bean
-		@ConditionalOnProperty(prefix = "spring.mvc.", value = "date-format")
+		@ConditionalOnProperty(prefix = "spring.mvc", name = "date-format")
 		public Formatter<Date> dateFormatter() {
 			return new DateFormatter(this.mvcProperties.getDateFormat());
 		}
@@ -286,7 +288,9 @@ public class WebMvcAutoConfiguration {
 		}
 
 		@Configuration
-		public static class FaviconConfiguration {
+		public static class FaviconConfiguration implements ResourceLoaderAware {
+
+			private ResourceLoader resourceLoader;
 
 			@Bean
 			public SimpleUrlHandlerMapping faviconHandlerMapping() {
@@ -297,13 +301,28 @@ public class WebMvcAutoConfiguration {
 				return mapping;
 			}
 
+			@Override
+			public void setResourceLoader(ResourceLoader resourceLoader) {
+				this.resourceLoader = resourceLoader;
+			}
+
 			@Bean
 			public ResourceHttpRequestHandler faviconRequestHandler() {
 				ResourceHttpRequestHandler requestHandler = new ResourceHttpRequestHandler();
-				requestHandler.setLocations(Arrays
-						.<Resource> asList(new ClassPathResource("/")));
+				requestHandler.setLocations(getLocations());
 				return requestHandler;
 			}
+
+			private List<Resource> getLocations() {
+				List<Resource> locations = new ArrayList<Resource>(
+						CLASSPATH_RESOURCE_LOCATIONS.length + 1);
+				for (String location : CLASSPATH_RESOURCE_LOCATIONS) {
+					locations.add(this.resourceLoader.getResource(location));
+				}
+				locations.add(new ClassPathResource("/"));
+				return Collections.unmodifiableList(locations);
+			}
+
 		}
 
 	}
@@ -313,6 +332,18 @@ public class WebMvcAutoConfiguration {
 	 */
 	@Configuration
 	public static class EnableWebMvcConfiguration extends DelegatingWebMvcConfiguration {
+
+		@Autowired(required = false)
+		private WebMvcProperties mvcProperties;
+
+		@Bean
+		@Override
+		public RequestMappingHandlerAdapter requestMappingHandlerAdapter() {
+			RequestMappingHandlerAdapter adapter = super.requestMappingHandlerAdapter();
+			adapter.setIgnoreDefaultModelOnRedirect(this.mvcProperties == null ? true
+					: this.mvcProperties.isIgnoreDefaultModelOnRedirect());
+			return adapter;
+		}
 
 		@Bean
 		@Primary
