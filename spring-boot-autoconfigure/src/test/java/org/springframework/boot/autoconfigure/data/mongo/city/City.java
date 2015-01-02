@@ -19,12 +19,11 @@ package org.springframework.boot.autoconfigure.data.mongo.city;
 import java.io.Serializable;
 
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.springframework.data.mongodb.core.mapping.Document;
-
-@Document
+@Entity
 public class City implements Serializable {
 
 	private static final long serialVersionUID = 1L;

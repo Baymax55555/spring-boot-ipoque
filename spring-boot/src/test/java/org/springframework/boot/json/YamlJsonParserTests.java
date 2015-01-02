@@ -21,11 +21,10 @@ package org.springframework.boot.json;
  *
  * @author Dave Syer
  */
-public class YamlJsonParserTests extends AbstractJsonParserTests {
+public class YamlJsonParserTests extends SimpleJsonParserTests {
 
 	@Override
 	protected JsonParser getParser() {
 		return new YamlJsonParser();
 	}
-
 }

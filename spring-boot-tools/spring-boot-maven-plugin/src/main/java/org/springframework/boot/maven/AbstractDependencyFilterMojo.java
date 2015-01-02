@@ -33,19 +33,9 @@ import org.apache.maven.shared.artifact.filter.collection.FilterArtifacts;
  * A base mojo filtering the dependencies of the project.
  *
  * @author Stephane Nicoll
- * @author David Turanski
  * @since 1.1
  */
 public abstract class AbstractDependencyFilterMojo extends AbstractMojo {
-
-	/**
-	 * Collection of artifact definitions to include. The {@link Include} element defines
-	 * a {@code groupId} and {@code artifactId} mandatory properties and an optional
-	 * {@code classifier} property.
-	 * @since 1.2
-	 */
-	@Parameter
-	private List<Include> includes;
 
 	/**
 	 * Collection of artifact definitions to exclude. The {@link Exclude} element defines
@@ -72,10 +62,6 @@ public abstract class AbstractDependencyFilterMojo extends AbstractMojo {
 
 	protected void setExcludes(List<Exclude> excludes) {
 		this.excludes = excludes;
-	}
-
-	protected void setIncludes(List<Include> includes) {
-		this.includes = includes;
 	}
 
 	protected void setExcludeGroupIds(String excludeGroupIds) {
@@ -111,10 +97,7 @@ public abstract class AbstractDependencyFilterMojo extends AbstractMojo {
 				cleanFilterConfig(this.excludeArtifactIds)));
 		filters.addFilter(new MatchingGroupIdFilter(
 				cleanFilterConfig(this.excludeGroupIds)));
-		if (this.includes != null && !this.includes.isEmpty()) {
-			filters.addFilter(new IncludeFilter(this.includes));
-		}
-		if (this.excludes != null && !this.excludes.isEmpty()) {
+		if (this.excludes != null) {
 			filters.addFilter(new ExcludeFilter(this.excludes));
 		}
 		return filters;
