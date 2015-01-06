@@ -25,9 +25,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContainerInitializer;
@@ -77,15 +75,12 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  * @author Brock Mills
  * @author Stephane Nicoll
- * @author Andy Wilkinson
  * @see #setPort(int)
  * @see #setContextLifecycleListeners(Collection)
  * @see TomcatEmbeddedServletContainer
  */
 public class TomcatEmbeddedServletContainerFactory extends
 		AbstractEmbeddedServletContainerFactory implements ResourceLoaderAware {
-
-	private static final Set<Class<?>> NO_CLASSES = Collections.emptySet();
 
 	public static final String DEFAULT_PROTOCOL = "org.apache.coyote.http11.Http11NioProtocol";
 
@@ -148,10 +143,13 @@ public class TomcatEmbeddedServletContainerFactory extends
 		tomcat.setConnector(connector);
 		tomcat.getHost().setAutoDeploy(false);
 		tomcat.getEngine().setBackgroundProcessorDelay(-1);
+
 		for (Connector additionalConnector : this.additionalTomcatConnectors) {
 			tomcat.getService().addConnector(additionalConnector);
 		}
+
 		prepareContext(tomcat.getHost(), initializers);
+		this.logger.info("Server initialized with port: " + getPort());
 		return getTomcatEmbeddedServletContainer(tomcat);
 	}
 
@@ -327,12 +325,13 @@ public class TomcatEmbeddedServletContainerFactory extends
 	 */
 	protected void configureContext(Context context,
 			ServletContextInitializer[] initializers) {
-		TomcatStarter starter = new TomcatStarter(initializers);
+		ServletContextInitializerLifecycleListener starter = new ServletContextInitializerLifecycleListener(
+				initializers);
 		if (context instanceof TomcatEmbeddedContext) {
 			// Should be true
 			((TomcatEmbeddedContext) context).setStarter(starter);
 		}
-		context.addServletContainerInitializer(starter, NO_CLASSES);
+		context.addLifecycleListener(starter);
 		for (LifecycleListener lifecycleListener : this.contextLifecycleListeners) {
 			context.addLifecycleListener(lifecycleListener);
 		}
@@ -606,14 +605,15 @@ public class TomcatEmbeddedServletContainerFactory extends
 		private Object createNativePage(ErrorPage errorPage) {
 			Object nativePage = null;
 			try {
-				if (ClassUtils.isPresent(
-						"org.apache.tomcat.util.descriptor.web.ErrorPage", null)) {
-					nativePage = new org.apache.tomcat.util.descriptor.web.ErrorPage();
+				if (ClassUtils.isPresent("org.apache.catalina.deploy.ErrorPage", null)) {
+					nativePage = new org.apache.catalina.deploy.ErrorPage();
 				}
-				else if (ClassUtils.isPresent("org.apache.catalina.deploy.ErrorPage",
-						null)) {
-					nativePage = BeanUtils.instantiate(ClassUtils.forName(
-							"org.apache.catalina.deploy.ErrorPage", null));
+				else {
+					if (ClassUtils.isPresent(
+							"org.apache.tomcat.util.descriptor.web.ErrorPage", null)) {
+						nativePage = BeanUtils.instantiate(ClassUtils.forName(
+								"org.apache.tomcat.util.descriptor.web.ErrorPage", null));
+					}
 				}
 			}
 			catch (ClassNotFoundException ex) {
@@ -628,9 +628,8 @@ public class TomcatEmbeddedServletContainerFactory extends
 		public void addToContext(Context context) {
 			Assert.state(this.nativePage != null,
 					"Neither Tomcat 7 nor 8 detected so no native error page exists");
-			if (ClassUtils.isPresent("org.apache.tomcat.util.descriptor.web.ErrorPage",
-					null)) {
-				org.apache.tomcat.util.descriptor.web.ErrorPage errorPage = (org.apache.tomcat.util.descriptor.web.ErrorPage) this.nativePage;
+			if (ClassUtils.isPresent("org.apache.catalina.deploy.ErrorPage", null)) {
+				org.apache.catalina.deploy.ErrorPage errorPage = (org.apache.catalina.deploy.ErrorPage) this.nativePage;
 				errorPage.setLocation(this.location);
 				errorPage.setErrorCode(this.errorCode);
 				errorPage.setExceptionType(this.exceptionType);
