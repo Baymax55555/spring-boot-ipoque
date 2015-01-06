@@ -86,11 +86,9 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 
 	private ConversionService conversionService;
 
-	private final DefaultConversionService defaultConversionService = new DefaultConversionService();
+	private DefaultConversionService defaultConversionService;
 
 	private BeanFactory beanFactory;
-
-	private final boolean initialized = false;
 
 	private ResourceLoader resourceLoader = new DefaultResourceLoader();
 
@@ -272,7 +270,8 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 		PropertiesConfigurationFactory<Object> factory = new PropertiesConfigurationFactory<Object>(
 				target);
 		if (annotation != null && annotation.locations().length != 0) {
-			factory.setPropertySources(loadPropertySources(annotation.locations()));
+			factory.setPropertySources(loadPropertySources(annotation.locations(),
+					annotation.merge()));
 		}
 		else {
 			factory.setPropertySources(this.propertySources);
@@ -311,7 +310,8 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 		return this.validator;
 	}
 
-	private PropertySources loadPropertySources(String[] locations) {
+	private PropertySources loadPropertySources(String[] locations,
+			boolean mergeDefaultSources) {
 		try {
 			PropertySourcesLoader loader = new PropertySourcesLoader();
 			for (String location : locations) {
@@ -324,7 +324,13 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 				}
 				loader.load(resource);
 			}
-			return loader.getPropertySources();
+			MutablePropertySources loaded = loader.getPropertySources();
+			if (mergeDefaultSources) {
+				for (PropertySource<?> propertySource : this.propertySources) {
+					loaded.addLast(propertySource);
+				}
+			}
+			return loaded;
 		}
 		catch (IOException ex) {
 			throw new IllegalStateException(ex);
@@ -332,11 +338,13 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 	}
 
 	private ConversionService getDefaultConversionService() {
-		if (!this.initialized) {
+		if (this.defaultConversionService == null) {
+			DefaultConversionService conversionService = new DefaultConversionService();
 			for (Converter<?, ?> converter : ((ListableBeanFactory) this.beanFactory)
 					.getBeansOfType(Converter.class, false, false).values()) {
-				this.defaultConversionService.addConverter(converter);
+				conversionService.addConverter(converter);
 			}
+			this.defaultConversionService = conversionService;
 		}
 		return this.defaultConversionService;
 	}

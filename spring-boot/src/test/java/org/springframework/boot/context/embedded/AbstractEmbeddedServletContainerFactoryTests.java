@@ -57,6 +57,7 @@ import org.springframework.util.SocketUtils;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.concurrent.ListenableFuture;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.notNullValue;
@@ -274,10 +275,8 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 
 	@Test
 	public void documentRoot() throws Exception {
-		FileCopyUtils.copy("test",
-				new FileWriter(this.temporaryFolder.newFile("test.txt")));
 		AbstractEmbeddedServletContainerFactory factory = getFactory();
-		factory.setDocumentRoot(this.temporaryFolder.getRoot());
+		addTestTxtFile(factory);
 		this.container = factory.getEmbeddedServletContainer();
 		this.container.start();
 		assertThat(getResponse(getLocalUrl("/test.txt")), equalTo("test"));
@@ -312,71 +311,63 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 
 	@Test
 	public void basicSsl() throws Exception {
-		FileCopyUtils.copy("test",
-				new FileWriter(this.temporaryFolder.newFile("test.txt")));
+		testBasicSslWithKeyStore("src/test/resources/test.jks");
+	}
 
+	@Test
+	public void sslGetScheme() throws Exception { // gh-2232
 		AbstractEmbeddedServletContainerFactory factory = getFactory();
-		factory.setDocumentRoot(this.temporaryFolder.getRoot());
-
-		Ssl ssl = new Ssl();
-		ssl.setKeyStore("src/test/resources/test.jks");
-		ssl.setKeyStorePassword("secret");
-		ssl.setKeyPassword("password");
-		factory.setSsl(ssl);
-
-		this.container = factory.getEmbeddedServletContainer();
+		factory.setSsl(getSsl(null, "password", "src/test/resources/test.jks"));
+		this.container = factory.getEmbeddedServletContainer(new ServletRegistrationBean(
+				new ExampleServlet(true), "/hello"));
 		this.container.start();
-
 		SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(
 				new SSLContextBuilder().loadTrustMaterial(null,
 						new TrustSelfSignedStrategy()).build());
-
 		HttpClient httpClient = HttpClients.custom().setSSLSocketFactory(socketFactory)
 				.build();
-
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(
 				httpClient);
+		assertThat(getResponse(getLocalUrl("https", "/hello"), requestFactory),
+				containsString("scheme=https"));
+	}
 
+	protected final void testBasicSslWithKeyStore(String keyStore) throws Exception {
+		AbstractEmbeddedServletContainerFactory factory = getFactory();
+		addTestTxtFile(factory);
+		factory.setSsl(getSsl(null, "password", keyStore));
+		this.container = factory.getEmbeddedServletContainer();
+		this.container.start();
+		SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(
+				new SSLContextBuilder().loadTrustMaterial(null,
+						new TrustSelfSignedStrategy()).build());
+		HttpClient httpClient = HttpClients.custom().setSSLSocketFactory(socketFactory)
+				.build();
+		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(
+				httpClient);
 		assertThat(getResponse(getLocalUrl("https", "/test.txt"), requestFactory),
 				equalTo("test"));
 	}
 
 	@Test
 	public void pkcs12KeyStoreAndTrustStore() throws Exception {
-		FileCopyUtils.copy("test",
-				new FileWriter(this.temporaryFolder.newFile("test.txt")));
-
 		AbstractEmbeddedServletContainerFactory factory = getFactory();
-		factory.setDocumentRoot(this.temporaryFolder.getRoot());
-
-		Ssl ssl = new Ssl();
-		ssl.setKeyStore("src/test/resources/test.p12");
-		ssl.setKeyStorePassword("secret");
-		ssl.setKeyStoreType("pkcs12");
-		ssl.setTrustStore("src/test/resources/test.p12");
-		ssl.setTrustStorePassword("secret");
-		ssl.setTrustStoreType("pkcs12");
-		ssl.setClientAuth(ClientAuth.NEED);
-		factory.setSsl(ssl);
-
+		addTestTxtFile(factory);
+		factory.setSsl(getSsl(ClientAuth.NEED, null, "src/test/resources/test.p12",
+				"src/test/resources/test.p12"));
 		this.container = factory.getEmbeddedServletContainer();
 		this.container.start();
-
 		KeyStore keyStore = KeyStore.getInstance("pkcs12");
 		keyStore.load(new FileInputStream(new File("src/test/resources/test.p12")),
 				"secret".toCharArray());
-
 		SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(
 				new SSLContextBuilder()
 						.loadTrustMaterial(null, new TrustSelfSignedStrategy())
 						.loadKeyMaterial(keyStore, "secret".toCharArray()).build());
-
 		HttpClient httpClient = HttpClients.custom().setSSLSocketFactory(socketFactory)
 				.build();
-
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(
 				httpClient);
-
 		assertThat(getResponse(getLocalUrl("https", "/test.txt"), requestFactory),
 				equalTo("test"));
 	}
@@ -384,39 +375,23 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 	@Test
 	public void sslNeedsClientAuthenticationSucceedsWithClientCertificate()
 			throws Exception {
-		FileCopyUtils.copy("test",
-				new FileWriter(this.temporaryFolder.newFile("test.txt")));
-
 		AbstractEmbeddedServletContainerFactory factory = getFactory();
-		factory.setDocumentRoot(this.temporaryFolder.getRoot());
-
-		Ssl ssl = new Ssl();
-		ssl.setKeyStore("src/test/resources/test.jks");
-		ssl.setKeyStorePassword("secret");
-		ssl.setKeyPassword("password");
-		ssl.setClientAuth(ClientAuth.NEED);
-		ssl.setTrustStore("src/test/resources/test.jks");
-		ssl.setTrustStorePassword("secret");
-		factory.setSsl(ssl);
-
+		addTestTxtFile(factory);
+		factory.setSsl(getSsl(ClientAuth.NEED, "password", "src/test/resources/test.jks",
+				"src/test/resources/test.jks"));
 		this.container = factory.getEmbeddedServletContainer();
 		this.container.start();
-
 		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 		keyStore.load(new FileInputStream(new File("src/test/resources/test.jks")),
 				"secret".toCharArray());
-
 		SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(
 				new SSLContextBuilder()
 						.loadTrustMaterial(null, new TrustSelfSignedStrategy())
 						.loadKeyMaterial(keyStore, "password".toCharArray()).build());
-
 		HttpClient httpClient = HttpClients.custom().setSSLSocketFactory(socketFactory)
 				.build();
-
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(
 				httpClient);
-
 		assertThat(getResponse(getLocalUrl("https", "/test.txt"), requestFactory),
 				equalTo("test"));
 	}
@@ -424,73 +399,40 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 	@Test(expected = IOException.class)
 	public void sslNeedsClientAuthenticationFailsWithoutClientCertificate()
 			throws Exception {
-		FileCopyUtils.copy("test",
-				new FileWriter(this.temporaryFolder.newFile("test.txt")));
-
 		AbstractEmbeddedServletContainerFactory factory = getFactory();
-		factory.setDocumentRoot(this.temporaryFolder.getRoot());
-
-		Ssl ssl = new Ssl();
-		ssl.setKeyStore("src/test/resources/test.jks");
-		ssl.setKeyStorePassword("secret");
-		ssl.setKeyPassword("password");
-		ssl.setClientAuth(ClientAuth.NEED);
-		ssl.setTrustStore("src/test/resources/test.jks");
-		ssl.setTrustStorePassword("secret");
-		factory.setSsl(ssl);
-
+		addTestTxtFile(factory);
+		factory.setSsl(getSsl(ClientAuth.NEED, "password", "src/test/resources/test.jks"));
 		this.container = factory.getEmbeddedServletContainer();
 		this.container.start();
-
 		SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(
 				new SSLContextBuilder().loadTrustMaterial(null,
 						new TrustSelfSignedStrategy()).build());
-
 		HttpClient httpClient = HttpClients.custom().setSSLSocketFactory(socketFactory)
 				.build();
-
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(
 				httpClient);
-
 		getResponse(getLocalUrl("https", "/test.txt"), requestFactory);
 	}
 
 	@Test
 	public void sslWantsClientAuthenticationSucceedsWithClientCertificate()
 			throws Exception {
-		FileCopyUtils.copy("test",
-				new FileWriter(this.temporaryFolder.newFile("test.txt")));
-
 		AbstractEmbeddedServletContainerFactory factory = getFactory();
-		factory.setDocumentRoot(this.temporaryFolder.getRoot());
-
-		Ssl ssl = new Ssl();
-		ssl.setKeyStore("src/test/resources/test.jks");
-		ssl.setKeyStorePassword("secret");
-		ssl.setKeyPassword("password");
-		ssl.setClientAuth(ClientAuth.WANT);
-		ssl.setTrustStore("src/test/resources/test.jks");
-		ssl.setTrustStorePassword("secret");
-		factory.setSsl(ssl);
-
+		addTestTxtFile(factory);
+		factory.setSsl(getSsl(ClientAuth.WANT, "password", "src/test/resources/test.jks"));
 		this.container = factory.getEmbeddedServletContainer();
 		this.container.start();
-
 		KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 		keyStore.load(new FileInputStream(new File("src/test/resources/test.jks")),
 				"secret".toCharArray());
-
 		SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(
 				new SSLContextBuilder()
 						.loadTrustMaterial(null, new TrustSelfSignedStrategy())
 						.loadKeyMaterial(keyStore, "password".toCharArray()).build());
-
 		HttpClient httpClient = HttpClients.custom().setSSLSocketFactory(socketFactory)
 				.build();
-
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(
 				httpClient);
-
 		assertThat(getResponse(getLocalUrl("https", "/test.txt"), requestFactory),
 				equalTo("test"));
 	}
@@ -498,41 +440,60 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 	@Test
 	public void sslWantsClientAuthenticationSucceedsWithoutClientCertificate()
 			throws Exception {
-		FileCopyUtils.copy("test",
-				new FileWriter(this.temporaryFolder.newFile("test.txt")));
-
 		AbstractEmbeddedServletContainerFactory factory = getFactory();
-		factory.setDocumentRoot(this.temporaryFolder.getRoot());
-
-		Ssl ssl = new Ssl();
-		ssl.setKeyStore("src/test/resources/test.jks");
-		ssl.setKeyStorePassword("secret");
-		ssl.setKeyPassword("password");
-		ssl.setClientAuth(ClientAuth.WANT);
-		ssl.setTrustStore("src/test/resources/test.jks");
-		ssl.setTrustStorePassword("secret");
-		factory.setSsl(ssl);
-
+		addTestTxtFile(factory);
+		factory.setSsl(getSsl(ClientAuth.WANT, "password", "src/test/resources/test.jks"));
 		this.container = factory.getEmbeddedServletContainer();
 		this.container.start();
-
 		SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(
 				new SSLContextBuilder().loadTrustMaterial(null,
 						new TrustSelfSignedStrategy()).build());
-
 		HttpClient httpClient = HttpClients.custom().setSSLSocketFactory(socketFactory)
 				.build();
-
 		HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(
 				httpClient);
-
 		assertThat(getResponse(getLocalUrl("https", "/test.txt"), requestFactory),
 				equalTo("test"));
+	}
+
+	private Ssl getSsl(ClientAuth clientAuth, String keyPassword, String keyStore) {
+		return getSsl(clientAuth, keyPassword, keyStore, null);
+	}
+
+	private Ssl getSsl(ClientAuth clientAuth, String keyPassword, String keyStore,
+			String trustStore) {
+		Ssl ssl = new Ssl();
+		ssl.setClientAuth(clientAuth);
+		if (keyPassword != null) {
+			ssl.setKeyPassword(keyPassword);
+		}
+		if (keyStore != null) {
+			ssl.setKeyStore(keyStore);
+			ssl.setKeyStorePassword("secret");
+			ssl.setKeyStoreType(getStoreType(keyStore));
+		}
+		if (trustStore != null) {
+			ssl.setTrustStore(trustStore);
+			ssl.setTrustStorePassword("secret");
+			ssl.setTrustStoreType(getStoreType(trustStore));
+		}
+		return ssl;
+	}
+
+	private String getStoreType(String keyStore) {
+		return (keyStore.endsWith(".p12") ? "pkcs12" : null);
 	}
 
 	@Test
 	public void defaultSessionTimeout() throws Exception {
 		assertThat(getFactory().getSessionTimeout(), equalTo(30 * 60));
+	}
+
+	private void addTestTxtFile(AbstractEmbeddedServletContainerFactory factory)
+			throws IOException {
+		FileCopyUtils.copy("test",
+				new FileWriter(this.temporaryFolder.newFile("test.txt")));
+		factory.setDocumentRoot(this.temporaryFolder.getRoot());
 	}
 
 	protected String getLocalUrl(String resourcePath) {
@@ -585,10 +546,11 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 
 	protected abstract AbstractEmbeddedServletContainerFactory getFactory();
 
-	private ServletContextInitializer exampleServletRegistration() {
+	protected ServletContextInitializer exampleServletRegistration() {
 		return new ServletRegistrationBean(new ExampleServlet(), "/hello");
 	}
 
+	@SuppressWarnings("serial")
 	private ServletContextInitializer errorServletRegistration() {
 		ServletRegistrationBean bean = new ServletRegistrationBean(new ExampleServlet() {
 			@Override
@@ -601,6 +563,7 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 		return bean;
 	}
 
+	@SuppressWarnings("serial")
 	private static class InitCountingServlet extends GenericServlet {
 
 		private int initCount;
@@ -619,4 +582,5 @@ public abstract class AbstractEmbeddedServletContainerFactoryTests {
 			return this.initCount;
 		}
 	};
+
 }
