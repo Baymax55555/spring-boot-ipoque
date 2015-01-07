@@ -19,7 +19,6 @@ package org.springframework.boot.loader;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -55,11 +54,6 @@ public abstract class ExecutableArchiveLauncher extends Launcher {
 		this.javaAgentDetector = javaAgentDetector;
 	}
 
-	ExecutableArchiveLauncher(Archive archive) {
-		this.javaAgentDetector = new InputArgumentsJavaAgentDetector();
-		this.archive = archive;
-	}
-
 	protected final Archive getArchive() {
 		return this.archive;
 	}
@@ -93,7 +87,9 @@ public abstract class ExecutableArchiveLauncher extends Launcher {
 				}
 			}
 		}
-		Collections.addAll(copy, urls);
+		for (URL url : urls) {
+			copy.add(url);
+		}
 		return super.createClassLoader(copy.toArray(new URL[copy.size()]));
 	}
 

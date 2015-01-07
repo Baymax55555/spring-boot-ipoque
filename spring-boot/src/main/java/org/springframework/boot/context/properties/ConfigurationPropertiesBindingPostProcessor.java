@@ -86,9 +86,11 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 
 	private ConversionService conversionService;
 
-	private DefaultConversionService defaultConversionService;
+	private final DefaultConversionService defaultConversionService = new DefaultConversionService();
 
 	private BeanFactory beanFactory;
+
+	private final boolean initialized = false;
 
 	private ResourceLoader resourceLoader = new DefaultResourceLoader();
 
@@ -270,8 +272,7 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 		PropertiesConfigurationFactory<Object> factory = new PropertiesConfigurationFactory<Object>(
 				target);
 		if (annotation != null && annotation.locations().length != 0) {
-			factory.setPropertySources(loadPropertySources(annotation.locations(),
-					annotation.merge()));
+			factory.setPropertySources(loadPropertySources(annotation.locations()));
 		}
 		else {
 			factory.setPropertySources(this.propertySources);
@@ -296,28 +297,8 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 			factory.bindPropertiesToTarget();
 		}
 		catch (Exception ex) {
-			String targetClass = "[unknown]";
-			if (target != null) {
-				ClassUtils.getShortName(target.getClass());
-			}
-			throw new BeanCreationException(beanName, "Could not bind properties to "
-					+ targetClass + " (" + getAnnotationDetails(annotation) + ")", ex);
+			throw new BeanCreationException(beanName, "Could not bind properties", ex);
 		}
-	}
-
-	private String getAnnotationDetails(ConfigurationProperties annotation) {
-		if (annotation == null) {
-			return "";
-		}
-		StringBuilder details = new StringBuilder();
-		details.append("target=").append(
-				(StringUtils.hasLength(annotation.value()) ? annotation.value()
-						: annotation.prefix()));
-		details.append(", ignoreInvalidFields=").append(annotation.ignoreInvalidFields());
-		details.append(", ignoreUnknownFields=").append(annotation.ignoreUnknownFields());
-		details.append(", ignoreNestedProperties=").append(
-				annotation.ignoreNestedProperties());
-		return details.toString();
 	}
 
 	private Validator determineValidator(Object bean) {
@@ -330,8 +311,7 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 		return this.validator;
 	}
 
-	private PropertySources loadPropertySources(String[] locations,
-			boolean mergeDefaultSources) {
+	private PropertySources loadPropertySources(String[] locations) {
 		try {
 			PropertySourcesLoader loader = new PropertySourcesLoader();
 			for (String location : locations) {
@@ -344,13 +324,7 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 				}
 				loader.load(resource);
 			}
-			MutablePropertySources loaded = loader.getPropertySources();
-			if (mergeDefaultSources) {
-				for (PropertySource<?> propertySource : this.propertySources) {
-					loaded.addLast(propertySource);
-				}
-			}
-			return loaded;
+			return loader.getPropertySources();
 		}
 		catch (IOException ex) {
 			throw new IllegalStateException(ex);
@@ -358,13 +332,11 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 	}
 
 	private ConversionService getDefaultConversionService() {
-		if (this.defaultConversionService == null) {
-			DefaultConversionService conversionService = new DefaultConversionService();
+		if (!this.initialized) {
 			for (Converter<?, ?> converter : ((ListableBeanFactory) this.beanFactory)
 					.getBeansOfType(Converter.class, false, false).values()) {
-				conversionService.addConverter(converter);
+				this.defaultConversionService.addConverter(converter);
 			}
-			this.defaultConversionService = conversionService;
 		}
 		return this.defaultConversionService;
 	}
