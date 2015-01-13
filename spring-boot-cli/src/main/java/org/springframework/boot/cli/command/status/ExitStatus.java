@@ -95,9 +95,4 @@ public final class ExitStatus {
 		return new ExitStatus(this.code, this.name, true);
 	}
 
-	@Override
-	public String toString() {
-		return getName() + ":" + getCode();
-	}
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -44,7 +45,6 @@ import org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter;
 import org.springframework.orm.jpa.support.OpenEntityManagerInViewInterceptor;
 import org.springframework.orm.jpa.vendor.AbstractJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.jta.JtaTransactionManager;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
@@ -71,9 +71,6 @@ public abstract class JpaBaseConfiguration implements BeanFactoryAware {
 
 	@Autowired
 	private JpaProperties jpaProperties;
-
-	@Autowired(required = false)
-	private JtaTransactionManager jtaTransactionManager;
 
 	@Bean
 	@ConditionalOnMissingBean(PlatformTransactionManager.class)
@@ -106,24 +103,14 @@ public abstract class JpaBaseConfiguration implements BeanFactoryAware {
 	@Primary
 	@ConditionalOnMissingBean
 	public LocalContainerEntityManagerFactoryBean entityManagerFactory(
-			EntityManagerFactoryBuilder factoryBuilder) {
-		Map<String, Object> vendorProperties = getVendorProperties();
-		customizeVendorProperties(vendorProperties);
-		return factoryBuilder.dataSource(this.dataSource).packages(getPackagesToScan())
-				.properties(vendorProperties).jta(isJta()).build();
+			EntityManagerFactoryBuilder factory) {
+		return factory.dataSource(this.dataSource).packages(getPackagesToScan())
+				.properties(getVendorProperties()).build();
 	}
 
 	protected abstract AbstractJpaVendorAdapter createJpaVendorAdapter();
 
-	protected abstract Map<String, Object> getVendorProperties();
-
-	/**
-	 * Customize vendor properties before they are used. Allows for post processing (for
-	 * example to configure JTA specific settings).
-	 * @param vendorProperties the vendor properties to customize
-	 */
-	protected void customizeVendorProperties(Map<String, Object> vendorProperties) {
-	}
+	protected abstract Map<String, String> getVendorProperties();
 
 	protected EntityManagerFactoryBuilder.EntityManagerFactoryBeanCallback getVendorCallback() {
 		return null;
@@ -137,18 +124,8 @@ public abstract class JpaBaseConfiguration implements BeanFactoryAware {
 		return NO_PACKAGES;
 	}
 
-	/**
-	 * @return the jtaTransactionManager or {@code null}
-	 */
-	protected JtaTransactionManager getJtaTransactionManager() {
-		return this.jtaTransactionManager;
-	}
-
-	/**
-	 * Returns if a JTA {@link PlatformTransactionManager} is being used.
-	 */
-	protected final boolean isJta() {
-		return (this.jtaTransactionManager != null);
+	protected void configure(
+			LocalContainerEntityManagerFactoryBean entityManagerFactoryBean) {
 	}
 
 	@Override
@@ -158,19 +135,26 @@ public abstract class JpaBaseConfiguration implements BeanFactoryAware {
 
 	@Configuration
 	@ConditionalOnWebApplication
+	@ConditionalOnClass(WebMvcConfigurerAdapter.class)
 	@ConditionalOnMissingBean({ OpenEntityManagerInViewInterceptor.class,
 			OpenEntityManagerInViewFilter.class })
-	@ConditionalOnProperty(prefix = "spring.jpa", name = "open-in-view", havingValue = "true", matchIfMissing = true)
-	protected static class JpaWebConfiguration extends WebMvcConfigurerAdapter {
+	@ConditionalOnExpression("${spring.jpa.openInView:${spring.jpa.open_in_view:true}}")
+	protected static class JpaWebConfiguration {
 
-		@Override
-		public void addInterceptors(InterceptorRegistry registry) {
-			registry.addWebRequestInterceptor(openEntityManagerInViewInterceptor());
-		}
+		// Defined as a nested config to ensure WebMvcConfigurerAdapter is not read when
+		// not on the classpath
+		@Configuration
+		protected static class JpaWebMvcConfiguration extends WebMvcConfigurerAdapter {
 
-		@Bean
-		public OpenEntityManagerInViewInterceptor openEntityManagerInViewInterceptor() {
-			return new OpenEntityManagerInViewInterceptor();
+			@Bean
+			public OpenEntityManagerInViewInterceptor openEntityManagerInViewInterceptor() {
+				return new OpenEntityManagerInViewInterceptor();
+			}
+
+			@Override
+			public void addInterceptors(InterceptorRegistry registry) {
+				registry.addWebRequestInterceptor(openEntityManagerInViewInterceptor());
+			}
 		}
 
 	}

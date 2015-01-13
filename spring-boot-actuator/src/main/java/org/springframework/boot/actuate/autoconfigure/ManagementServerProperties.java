@@ -20,7 +20,7 @@ import java.net.InetAddress;
 
 import javax.validation.constraints.NotNull;
 
-import org.springframework.boot.autoconfigure.security.SecurityPrerequisite;
+import org.springframework.boot.autoconfigure.security.SecurityPrequisite;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -33,8 +33,8 @@ import org.springframework.util.ClassUtils;
  * @author Dave Syer
  * @see ServerProperties
  */
-@ConfigurationProperties(prefix = "management", ignoreUnknownFields = true)
-public class ManagementServerProperties implements SecurityPrerequisite {
+@ConfigurationProperties(prefix = "management", ignoreUnknownFields = false)
+public class ManagementServerProperties implements SecurityPrequisite {
 
 	private static final String SECURITY_CHECK_CLASS = "org.springframework.security.config.http.SessionCreationPolicy";
 
@@ -53,25 +53,13 @@ public class ManagementServerProperties implements SecurityPrerequisite {
 	 */
 	public static final int ACCESS_OVERRIDE_ORDER = ManagementServerProperties.BASIC_AUTH_ORDER - 1;
 
-	/**
-	 * Management endpoint HTTP port. Use the same port as the applicationby default.
-	 */
 	private Integer port;
 
-	/**
-	 * Network address that the management endpoints should bind to.
-	 */
 	private InetAddress address;
 
-	/**
-	 * Management endpoint context-path.
-	 */
 	@NotNull
 	private String contextPath = "";
 
-	/**
-	 * Add the "X-Application-Context" HTTP header in each response.
-	 */
 	private boolean addApplicationContextHeader = true;
 
 	private final Security security = maybeCreateSecurity();
@@ -126,19 +114,10 @@ public class ManagementServerProperties implements SecurityPrerequisite {
 	 */
 	public static class Security {
 
-		/**
-		 * Enable security.
-		 */
 		private boolean enabled = true;
 
-		/**
-		 * Role required to access the management endpoint.
-		 */
 		private String role = "ADMIN";
 
-		/**
-		 * Session creating policy to use (always, never, if_required, stateless).
-		 */
 		private SessionCreationPolicy sessions = SessionCreationPolicy.STATELESS;
 
 		public SessionCreationPolicy getSessions() {
