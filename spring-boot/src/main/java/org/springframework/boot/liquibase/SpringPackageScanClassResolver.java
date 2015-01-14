@@ -17,9 +17,11 @@
 package org.springframework.boot.liquibase;
 
 import java.io.IOException;
+import java.util.Set;
 
 import liquibase.servicelocator.DefaultPackageScanClassResolver;
 import liquibase.servicelocator.PackageScanClassResolver;
+import liquibase.servicelocator.PackageScanFilter;
 
 import org.apache.commons.logging.Log;
 import org.springframework.core.io.Resource;
@@ -46,15 +48,16 @@ public class SpringPackageScanClassResolver extends DefaultPackageScanClassResol
 	}
 
 	@Override
-	protected void findAllClasses(String packageName, ClassLoader loader) {
+	protected void find(PackageScanFilter test, String packageName, ClassLoader loader,
+			Set<Class<?>> classes) {
 		MetadataReaderFactory metadataReaderFactory = new CachingMetadataReaderFactory(
 				loader);
 		try {
 			Resource[] resources = scan(loader, packageName);
 			for (Resource resource : resources) {
-				Class<?> clazz = loadClass(loader, metadataReaderFactory, resource);
-				if (clazz != null) {
-					addFoundClass(clazz);
+				Class<?> candidate = loadClass(loader, metadataReaderFactory, resource);
+				if (candidate != null && test.matches(candidate)) {
+					classes.add(candidate);
 				}
 			}
 		}
@@ -77,27 +80,11 @@ public class SpringPackageScanClassResolver extends DefaultPackageScanClassResol
 			MetadataReader reader = readerFactory.getMetadataReader(resource);
 			return ClassUtils.forName(reader.getClassMetadata().getClassName(), loader);
 		}
-		catch (ClassNotFoundException ex) {
-			handleFailure(resource, ex);
-			return null;
-		}
-		catch (LinkageError ex) {
-			handleFailure(resource, ex);
-			return null;
-		}
-		catch (Throwable ex) {
+		catch (Exception ex) {
 			if (this.logger.isWarnEnabled()) {
-				this.logger.warn("Unexpected failure when loading class resource "
-						+ resource, ex);
+				this.logger.warn("Ignoring cadidate class resource " + resource, ex);
 			}
 			return null;
-		}
-	}
-
-	private void handleFailure(Resource resource, Throwable ex) {
-		if (this.logger.isDebugEnabled()) {
-			this.logger.debug("Ignoring candidate class resource " + resource
-					+ " due to " + ex);
 		}
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,15 @@
 
 package org.springframework.boot.logging.log4j;
 
-import java.io.File;
+import java.util.logging.Handler;
+import java.util.logging.LogManager;
 
 import org.apache.commons.logging.impl.Log4JLogger;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.springframework.boot.logging.AbstractLoggingSystemTests;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.boot.logging.LogLevel;
 import org.springframework.boot.test.OutputCapture;
 import org.springframework.util.StringUtils;
@@ -37,8 +38,9 @@ import static org.junit.Assert.assertTrue;
  * Tests for {@link Log4JLoggingSystem}.
  *
  * @author Phillip Webb
+ * @author Andy Wilkinson
  */
-public class Log4JLoggingSystemTests extends AbstractLoggingSystemTests {
+public class Log4JLoggingSystemTests {
 
 	@Rule
 	public OutputCapture output = new OutputCapture();
@@ -53,52 +55,40 @@ public class Log4JLoggingSystemTests extends AbstractLoggingSystemTests {
 		this.logger = new Log4JLogger(getClass().getName());
 	}
 
-	@Test
-	public void noFile() throws Exception {
-		this.loggingSystem.beforeInitialize();
-		this.logger.info("Hidden");
-		this.loggingSystem.initialize(null, null);
-		this.logger.info("Hello world");
-		String output = this.output.toString().trim();
-		assertTrue("Wrong output:\n" + output, output.contains("Hello world"));
-		assertFalse("Output not hidden:\n" + output, output.contains("Hidden"));
-		assertFalse(new File(tmpDir() + "/spring.log").exists());
-	}
-
-	@Test
-	public void withFile() throws Exception {
-		this.loggingSystem.beforeInitialize();
-		this.logger.info("Hidden");
-		this.loggingSystem.initialize(null, getLogFile(null, tmpDir()));
-		this.logger.info("Hello world");
-		String output = this.output.toString().trim();
-		assertTrue("Wrong output:\n" + output, output.contains("Hello world"));
-		assertFalse("Output not hidden:\n" + output, output.contains("Hidden"));
-		assertTrue(new File(tmpDir() + "/spring.log").exists());
+	@After
+	public void clear() {
+		this.loggingSystem.cleanUp();
+		System.clearProperty("LOG_FILE");
+		System.clearProperty("LOG_PATH");
+		System.clearProperty("PID");
 	}
 
 	@Test
 	public void testNonDefaultConfigLocation() throws Exception {
 		this.loggingSystem.beforeInitialize();
-		this.loggingSystem.initialize("classpath:log4j-nondefault.properties",
-				getLogFile(null, tmpDir()));
+		this.loggingSystem.initialize("classpath:log4j-nondefault.properties");
 		this.logger.info("Hello world");
 		String output = this.output.toString().trim();
 		assertTrue("Wrong output:\n" + output, output.contains("Hello world"));
-		assertTrue("Wrong output:\n" + output, output.contains(tmpDir() + "/spring.log"));
-		assertFalse(new File(tmpDir() + "/tmp.log").exists());
+		assertTrue("Wrong output:\n" + output, output.contains("/tmp/spring.log"));
 	}
 
 	@Test(expected = IllegalStateException.class)
 	public void testNonexistentConfigLocation() throws Exception {
 		this.loggingSystem.beforeInitialize();
-		this.loggingSystem.initialize("classpath:log4j-nonexistent.xml", null);
+		this.loggingSystem.initialize("classpath:log4j-nonexistent.xml");
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testNullConfigLocation() throws Exception {
+		this.loggingSystem.beforeInitialize();
+		this.loggingSystem.initialize(null);
 	}
 
 	@Test
 	public void setLevel() throws Exception {
 		this.loggingSystem.beforeInitialize();
-		this.loggingSystem.initialize(null, null);
+		this.loggingSystem.initialize();
 		this.logger.debug("Hello");
 		this.loggingSystem.setLogLevel("org.springframework.boot", LogLevel.DEBUG);
 		this.logger.debug("Hello");
@@ -107,15 +97,23 @@ public class Log4JLoggingSystemTests extends AbstractLoggingSystemTests {
 	}
 
 	@Test
-	@Ignore("Fails on Bamboo")
-	public void loggingThatUsesJulIsCaptured() {
+	public void bridgeHandlerLifecycle() {
+		assertFalse(bridgeHandlerInstalled());
 		this.loggingSystem.beforeInitialize();
-		this.loggingSystem.initialize(null, null);
-		java.util.logging.Logger julLogger = java.util.logging.Logger
-				.getLogger(getClass().getName());
-		julLogger.severe("Hello world");
-		String output = this.output.toString().trim();
-		assertTrue("Wrong output:\n" + output, output.contains("Hello world"));
+		assertTrue(bridgeHandlerInstalled());
+		this.loggingSystem.cleanUp();
+		assertFalse(bridgeHandlerInstalled());
+	}
+
+	private boolean bridgeHandlerInstalled() {
+		java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("");
+		Handler[] handlers = rootLogger.getHandlers();
+		for (Handler handler : handlers) {
+			if (handler instanceof SLF4JBridgeHandler) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

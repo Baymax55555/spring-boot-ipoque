@@ -74,14 +74,13 @@ public class AutoConfigurationReportLoggingInitializer implements
 	}
 
 	protected void onApplicationEvent(ApplicationEvent event) {
-		ConfigurableApplicationContext initializerApplicationContext = AutoConfigurationReportLoggingInitializer.this.applicationContext;
 		if (event instanceof ContextRefreshedEvent) {
-			if (((ApplicationContextEvent) event).getApplicationContext() == initializerApplicationContext) {
+			if (((ApplicationContextEvent) event).getApplicationContext() == AutoConfigurationReportLoggingInitializer.this.applicationContext) {
 				logAutoConfigurationReport();
 			}
 		}
 		else if (event instanceof ApplicationFailedEvent) {
-			if (((ApplicationFailedEvent) event).getApplicationContext() == initializerApplicationContext) {
+			if (((ApplicationFailedEvent) event).getApplicationContext() == AutoConfigurationReportLoggingInitializer.this.applicationContext) {
 				logAutoConfigurationReport(true);
 			}
 		}

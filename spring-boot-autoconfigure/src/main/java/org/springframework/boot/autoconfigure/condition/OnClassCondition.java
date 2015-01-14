@@ -22,8 +22,6 @@ import java.util.List;
 
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.MultiValueMap;
@@ -36,7 +34,6 @@ import org.springframework.util.StringUtils;
  * @see ConditionalOnClass
  * @see ConditionalOnMissingClass
  */
-@Order(Ordered.HIGHEST_PRECEDENCE)
 class OnClassCondition extends SpringBootCondition {
 
 	@Override
@@ -126,6 +123,6 @@ class OnClassCondition extends SpringBootCondition {
 
 		public abstract boolean matches(String className, ConditionContext context);
 
-	}
+	};
 
 }
