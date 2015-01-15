@@ -72,7 +72,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
@@ -153,19 +152,10 @@ public class SpringApplicationTests {
 		application.setWebEnvironment(false);
 		application.setShowBanner(false);
 		application.run();
-		verify(application, never()).printBanner((Environment) anyObject());
+		verify(application, never()).printBanner();
 	}
 
 	@Test
-	public void disableBannerViaProperty() throws Exception {
-		SpringApplication application = spy(new SpringApplication(ExampleConfig.class));
-		application.setWebEnvironment(false);
-		application.run("--spring.main.show_banner=false");
-		verify(application, never()).printBanner((Environment) anyObject());
-	}
-
-	@Test
-	@SuppressWarnings("deprecation")
 	public void customBanner() throws Exception {
 		SpringApplication application = spy(new SpringApplication(ExampleConfig.class));
 		application.setWebEnvironment(false);
@@ -174,7 +164,6 @@ public class SpringApplicationTests {
 	}
 
 	@Test
-	@SuppressWarnings("deprecation")
 	public void customBannerWithProperties() throws Exception {
 		SpringApplication application = spy(new SpringApplication(ExampleConfig.class));
 		application.setWebEnvironment(false);

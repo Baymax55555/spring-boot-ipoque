@@ -108,7 +108,7 @@ public class LoggingApplicationListenerTests {
 		String output = this.outputCapture.toString().trim();
 		assertTrue("Wrong output:\n" + output, output.contains("Hello world"));
 		assertFalse("Wrong output:\n" + output, output.contains("???"));
-		assertFalse(new File(tmpDir() + "/spring.log").exists());
+		assertTrue(new File(tmpDir() + "/spring.log").exists());
 	}
 
 	@Test
@@ -121,8 +121,7 @@ public class LoggingApplicationListenerTests {
 		String output = this.outputCapture.toString().trim();
 		assertTrue("Wrong output:\n" + output, output.contains("Hello world"));
 		assertFalse("Wrong output:\n" + output, output.contains("???"));
-		assertTrue("Wrong output:\n" + output, output.startsWith("LOG_FILE_IS_UNDEFINED"));
-		assertTrue("Wrong output:\n" + output, output.endsWith("BOOTBOOT"));
+		assertTrue("Wrong output:\n" + output, output.startsWith(tmpDir() + "/tmp.log"));
 	}
 
 	@Test
@@ -136,7 +135,7 @@ public class LoggingApplicationListenerTests {
 		String output = this.outputCapture.toString().trim();
 		assertTrue("Wrong output:\n" + output, output.contains("Hello world"));
 		assertFalse("Wrong output:\n" + output, output.contains("???"));
-		assertFalse(new File(tmpDir() + "/spring.log").exists());
+		assertTrue(new File(tmpDir() + "/spring.log").exists());
 	}
 
 	@Test
@@ -173,7 +172,7 @@ public class LoggingApplicationListenerTests {
 		Log logger = LogFactory.getLog(LoggingApplicationListenerTests.class);
 		logger.info("Hello world");
 		String output = this.outputCapture.toString().trim();
-		assertTrue("Wrong output:\n" + output, output.startsWith("target/foo/spring.log"));
+		assertTrue("Wrong output:\n" + output, output.startsWith("target/foo/tmp.log"));
 	}
 
 	@Test

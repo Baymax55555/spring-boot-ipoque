@@ -234,6 +234,7 @@ public class PropertiesConfigurationFactory<T> implements FactoryBean<T>,
 	}
 
 	private void doBindPropertiesToTarget() throws BindException {
+
 		RelaxedDataBinder dataBinder = (this.targetName != null ? new RelaxedDataBinder(
 				this.target, this.targetName) : new RelaxedDataBinder(this.target));
 		if (this.validator != null) {
@@ -246,38 +247,36 @@ public class PropertiesConfigurationFactory<T> implements FactoryBean<T>,
 		dataBinder.setIgnoreInvalidFields(this.ignoreInvalidFields);
 		dataBinder.setIgnoreUnknownFields(this.ignoreUnknownFields);
 		customizeBinder(dataBinder);
-		Set<String> names = getNames();
-		PropertyValues propertyValues = getPropertyValues(names);
-		dataBinder.bind(propertyValues);
-		if (this.validator != null) {
-			validate(dataBinder);
-		}
-	}
 
-	private Set<String> getNames() {
 		Set<String> names = new HashSet<String>();
+		Set<String> patterns = new HashSet<String>();
 		if (this.target != null) {
 			PropertyDescriptor[] descriptors = BeanUtils
 					.getPropertyDescriptors(this.target.getClass());
 			String prefix = (this.targetName != null ? this.targetName + "." : "");
+			String[] suffixes = new String[] { ".*", "_*" };
 			for (PropertyDescriptor descriptor : descriptors) {
 				String name = descriptor.getName();
 				if (!name.equals("class")) {
 					for (String relaxedName : new RelaxedNames(prefix + name)) {
 						names.add(relaxedName);
+						patterns.add(relaxedName);
+						for (String suffix : suffixes) {
+							patterns.add(relaxedName + suffix);
+						}
 					}
 				}
 			}
 		}
-		return names;
-	}
 
-	private PropertyValues getPropertyValues(Set<String> names) {
-		if (this.properties != null) {
-			return new MutablePropertyValues(this.properties);
+		PropertyValues propertyValues = (this.properties != null ? new MutablePropertyValues(
+				this.properties) : new PropertySourcesPropertyValues(
+				this.propertySources, patterns, names));
+		dataBinder.bind(propertyValues);
+
+		if (this.validator != null) {
+			validate(dataBinder);
 		}
-		return new PropertySourcesPropertyValues(this.propertySources,
-				new DefaultPropertyNamePatternsMatcher(names), names);
 	}
 
 	private void validate(RelaxedDataBinder dataBinder) throws BindException {
