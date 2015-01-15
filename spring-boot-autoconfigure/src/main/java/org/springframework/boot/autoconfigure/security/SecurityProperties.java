@@ -32,7 +32,7 @@ import org.springframework.util.StringUtils;
  * @author Dave Syer
  */
 @ConfigurationProperties(prefix = "security", ignoreUnknownFields = false)
-public class SecurityProperties implements SecurityPrequisite {
+public class SecurityProperties implements SecurityPrerequisite {
 
 	/**
 	 * Order before the basic authentication access control provided by Boot. This is a
@@ -55,8 +55,19 @@ public class SecurityProperties implements SecurityPrequisite {
 	 */
 	public static final int IGNORED_ORDER = Ordered.HIGHEST_PRECEDENCE;
 
+	/**
+	 * The default order of Spring Security's Filter
+	 */
+	public static final int DEFAULT_FILTER_ORDER = 0;
+
+	/**
+	 * Enable secure channel for all requests.
+	 */
 	private boolean requireSsl;
 
+	/**
+	 * Enable Cross Site Request Forgery support.
+	 */
 	// Flip this when session creation is disabled by default
 	private boolean enableCsrf = false;
 
@@ -64,11 +75,22 @@ public class SecurityProperties implements SecurityPrequisite {
 
 	private final Headers headers = new Headers();
 
+	/**
+	 * Session creation policy (always, never, if_required, stateless).
+	 */
 	private SessionCreationPolicy sessions = SessionCreationPolicy.STATELESS;
 
+	/**
+	 * Comma-separated list of paths to exclude from the default secured paths.
+	 */
 	private List<String> ignored = new ArrayList<String>();
 
 	private final User user = new User();
+
+	/**
+	 * Security filter chain order.
+	 */
+	private int filterOrder = DEFAULT_FILTER_ORDER;
 
 	public Headers getHeaders() {
 		return this.headers;
@@ -118,20 +140,43 @@ public class SecurityProperties implements SecurityPrequisite {
 		return this.ignored;
 	}
 
+	public int getFilterOrder() {
+		return this.filterOrder;
+	}
+
+	public void setFilterOrder(int filterOrder) {
+		this.filterOrder = filterOrder;
+	}
+
 	public static class Headers {
 
 		public static enum HSTS {
 			NONE, DOMAIN, ALL
 		}
 
+		/**
+		 * Enable cross site scripting (XSS) protection.
+		 */
 		private boolean xss;
 
+		/**
+		 * Enable cache control HTTP headers.
+		 */
 		private boolean cache;
 
+		/**
+		 * Enable "X-Frame-Options" header.
+		 */
 		private boolean frame;
 
+		/**
+		 * Enable "X-Content-Type-Options" header.
+		 */
 		private boolean contentType;
 
+		/**
+		 * HTTP Strict Transport Security (HSTS) mode (none, domain, all).
+		 */
 		private HSTS hsts = HSTS.ALL;
 
 		public boolean isXss() {
@@ -178,10 +223,19 @@ public class SecurityProperties implements SecurityPrequisite {
 
 	public static class Basic {
 
+		/**
+		 * Enable basic authentication.
+		 */
 		private boolean enabled = true;
 
+		/**
+		 * HTTP basic realm name.
+		 */
 		private String realm = "Spring";
 
+		/**
+		 * Comma-separated list of paths to secure.
+		 */
 		private String[] path = new String[] { "/**" };
 
 		public boolean isEnabled() {
@@ -212,10 +266,19 @@ public class SecurityProperties implements SecurityPrequisite {
 
 	public static class User {
 
+		/**
+		 * Default user name.
+		 */
 		private String name = "user";
 
+		/**
+		 * Password for the default user name.
+		 */
 		private String password = UUID.randomUUID().toString();
 
+		/**
+		 * Granted roles for the default user name.
+		 */
 		private List<String> role = new ArrayList<String>(Arrays.asList("USER"));
 
 		private boolean defaultPassword = true;
