@@ -23,23 +23,22 @@ import java.util.Map;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.slf4j.bridge.SLF4JBridgeHandler;
-import org.springframework.boot.logging.AbstractLoggingSystem;
+import org.springframework.boot.logging.LogFile;
 import org.springframework.boot.logging.LogLevel;
 import org.springframework.boot.logging.LoggingSystem;
+import org.springframework.boot.logging.Slf4JLoggingSystem;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.Log4jConfigurer;
 import org.springframework.util.StringUtils;
 
 /**
- * {@link LoggingSystem} for for <a href="http://logging.apache.org/log4j">log4j</a>.
+ * {@link LoggingSystem} for <a href="http://logging.apache.org/log4j/1.2">Log4j</a>.
  *
  * @author Phillip Webb
  * @author Dave Syer
  * @author Andy Wilkinson
  */
-public class Log4JLoggingSystem extends AbstractLoggingSystem {
+public class Log4JLoggingSystem extends Slf4JLoggingSystem {
 
 	private static final Map<LogLevel, Level> LEVELS;
 	static {
@@ -55,64 +54,48 @@ public class Log4JLoggingSystem extends AbstractLoggingSystem {
 	}
 
 	public Log4JLoggingSystem(ClassLoader classLoader) {
-		super(classLoader, "log4j.xml", "log4j.properties");
+		super(classLoader);
+	}
+
+	@Override
+	protected String[] getStandardConfigLocations() {
+		return new String[] { "log4j.xml", "log4j.properties" };
 	}
 
 	@Override
 	public void beforeInitialize() {
 		super.beforeInitialize();
-		configureJdkLoggingBridgeHandler();
+		LogManager.getRootLogger().setLevel(Level.FATAL);
 	}
 
 	@Override
-	public void initialize(String configLocation) {
-		Assert.notNull(configLocation, "ConfigLocation must not be null");
+	protected void loadDefaults(LogFile logFile) {
+		if (logFile != null) {
+			loadConfiguration(getPackagedConfigFile("log4j-file.properties"), logFile);
+		}
+		else {
+			loadConfiguration(getPackagedConfigFile("log4j.properties"), logFile);
+		}
+	}
+
+	@Override
+	protected void loadConfiguration(String location, LogFile logFile) {
+		Assert.notNull(location, "Location must not be null");
+		if (logFile != null) {
+			logFile.applyToSystemProperties();
+		}
 		try {
-			Log4jConfigurer.initLogging(configLocation);
+			Log4jConfigurer.initLogging(location);
 		}
 		catch (Exception ex) {
-			throw new IllegalStateException("Could not initialize logging from "
-					+ configLocation, ex);
+			throw new IllegalStateException("Could not initialize Log4J logging from "
+					+ location, ex);
 		}
 	}
 
 	@Override
-	public void cleanUp() {
-		removeJdkLoggingBridgeHandler();
-	}
-
-	private void configureJdkLoggingBridgeHandler() {
-		try {
-			if (bridgeHandlerIsAvailable()) {
-				removeJdkLoggingBridgeHandler();
-				SLF4JBridgeHandler.install();
-			}
-		}
-		catch (Throwable ex) {
-			// Ignore. No java.util.logging bridge is installed.
-		}
-	}
-
-	private boolean bridgeHandlerIsAvailable() {
-		return ClassUtils.isPresent("org.slf4j.bridge.SLF4JBridgeHandler",
-				getClassLoader());
-	}
-
-	private void removeJdkLoggingBridgeHandler() {
-		try {
-			if (bridgeHandlerIsAvailable()) {
-				try {
-					SLF4JBridgeHandler.removeHandlersForRootLogger();
-				}
-				catch (NoSuchMethodError ex) {
-					// Method missing in older versions of SLF4J like in JBoss AS 7.1
-					SLF4JBridgeHandler.uninstall();
-				}
-			}
-		}
-		catch (Throwable ex) {
-			// Ignore and continue
-		}
+	protected void reinitialize() {
+		loadConfiguration(getSelfInitializationConfig(), null);
 	}
 
 	@Override
