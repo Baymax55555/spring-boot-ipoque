@@ -65,7 +65,7 @@ public @interface ConditionalOnJava {
 		/**
 		 * Older than the specified {@link JavaVersion}.
 		 */
-		OLDER_THAN
+		OLDER_THAN;
 
 	}
 
@@ -138,7 +138,5 @@ public @interface ConditionalOnJava {
 			}
 			return SIX;
 		}
-
 	}
-
 }
