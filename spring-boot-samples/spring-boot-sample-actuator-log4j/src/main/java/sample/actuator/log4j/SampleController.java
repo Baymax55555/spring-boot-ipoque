@@ -42,5 +42,4 @@ public class SampleController {
 	public String foo() {
 		throw new IllegalArgumentException("Server error");
 	}
-
 }

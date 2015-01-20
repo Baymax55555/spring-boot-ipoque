@@ -73,7 +73,7 @@ public class FreeMarkerAutoConfigurationTests {
 	@Test(expected = BeanCreationException.class)
 	public void nonExistentTemplateLocation() {
 		registerAndRefreshContext("spring.freemarker.templateLoaderPath:"
-				+ "classpath:/does-not-exist/,classpath:/also-does-not-exist");
+				+ "classpath:/does-not-exist/");
 	}
 
 	@Test
@@ -81,13 +81,6 @@ public class FreeMarkerAutoConfigurationTests {
 		new File("target/test-classes/templates/empty-directory").mkdir();
 		registerAndRefreshContext("spring.freemarker.templateLoaderPath:"
 				+ "classpath:/templates/empty-directory/");
-	}
-
-	@Test
-	public void nonExistentLocationAndEmptyLocation() {
-		new File("target/test-classes/templates/empty-directory").mkdir();
-		registerAndRefreshContext("spring.freemarker.templateLoaderPath:"
-				+ "classpath:/does-not-exist/,classpath:/templates/empty-directory/");
 	}
 
 	@Test
