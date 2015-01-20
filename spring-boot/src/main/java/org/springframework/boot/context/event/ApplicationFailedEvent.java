@@ -24,7 +24,6 @@ import org.springframework.context.ConfigurableApplicationContext;
  *
  * @author Dave Syer
  */
-@SuppressWarnings("serial")
 public class ApplicationFailedEvent extends SpringApplicationEvent {
 
 	private final ConfigurableApplicationContext context;
