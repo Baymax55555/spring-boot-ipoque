@@ -20,7 +20,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -76,8 +78,12 @@ public class CliTester implements TestRule {
 
 	public String test(String... args) throws Exception {
 		Future<TestCommand> future = submitCommand(new TestCommand(), args);
-		this.commands.add(future.get(this.timeout, TimeUnit.MILLISECONDS));
-		return getOutput();
+		try {
+			this.commands.add(future.get(this.timeout, TimeUnit.MILLISECONDS));
+			return getOutput();
+		} catch (Exception ex) {
+			return getOutput();
+		}
 	}
 
 	public String grab(String... args) throws Exception {
@@ -94,6 +100,7 @@ public class CliTester implements TestRule {
 
 	private <T extends OptionParsingCommand> Future<T> submitCommand(final T command,
 			String... args) {
+		clearUrlHandler();
 		final String[] sources = getSources(args);
 		return Executors.newSingleThreadExecutor().submit(new Callable<T>() {
 			@Override
@@ -110,6 +117,21 @@ public class CliTester implements TestRule {
 				}
 			}
 		});
+	}
+
+	/**
+	 * The TomcatURLStreamHandlerFactory fails if the factory is already set, use
+	 * reflection to reset it.
+	 */
+	private void clearUrlHandler() {
+		try {
+			Field field = URL.class.getDeclaredField("factory");
+			field.setAccessible(true);
+			field.set(null, null);
+		}
+		catch (Exception ex) {
+			throw new IllegalStateException(ex);
+		}
 	}
 
 	protected String[] getSources(String... args) {
