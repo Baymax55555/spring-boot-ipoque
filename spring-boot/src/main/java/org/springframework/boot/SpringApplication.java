@@ -17,7 +17,6 @@
 package org.springframework.boot;
 
 import java.lang.reflect.Constructor;
-import java.nio.charset.Charset;
 import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +66,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StopWatch;
-import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.ConfigurableWebApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
@@ -157,6 +155,8 @@ public class SpringApplication {
 
 	private static final String SYSTEM_PROPERTY_JAVA_AWT_HEADLESS = "java.awt.headless";
 
+	private static final Banner DEFAULT_BANNER = new SpringBootBanner();
+
 	private final Log log = LogFactory.getLog(getClass());
 
 	private final Set<Object> sources = new LinkedHashSet<Object>();
@@ -168,6 +168,8 @@ public class SpringApplication {
 	private boolean logStartupInfo = true;
 
 	private boolean addCommandLineProperties = true;
+
+	private Banner banner;
 
 	private ResourceLoader resourceLoader;
 
@@ -283,7 +285,6 @@ public class SpringApplication {
 			for (SpringApplicationRunListener runListener : runListeners) {
 				runListener.environmentPrepared(environment);
 			}
-
 			if (this.showBanner) {
 				printBanner(environment);
 			}
@@ -454,12 +455,9 @@ public class SpringApplication {
 	 * @see #configureEnvironment(ConfigurableEnvironment, String[])
 	 */
 	protected void configureProfiles(ConfigurableEnvironment environment, String[] args) {
-		Set<String> profiles = new LinkedHashSet<String>();
 		environment.getActiveProfiles(); // ensure they are initialized
 		// But these ones should go first (last wins in a property key clash)
-		for (String profile : this.profiles) {
-			profiles.add(profile);
-		}
+		Set<String> profiles = new LinkedHashSet<String>(this.profiles);
 		profiles.addAll(Arrays.asList(environment.getActiveProfiles()));
 		environment.setActiveProfiles(profiles.toArray(new String[profiles.size()]));
 	}
@@ -467,7 +465,7 @@ public class SpringApplication {
 	/**
 	 * Print a custom banner message to the console, optionally extracting its location or
 	 * content from the Environment (banner.location and banner.charset). The defaults are
-	 * banner.location=classpath:banner.txt, banner.charest=UTF-8. If the banner file does
+	 * banner.location=classpath:banner.txt, banner.charset=UTF-8. If the banner file does
 	 * not exist or cannot be printed, a simple default is created.
 	 * @see #setShowBanner(boolean)
 	 * @see #printBanner()
@@ -478,19 +476,16 @@ public class SpringApplication {
 				: new DefaultResourceLoader(getClassLoader());
 		Resource resource = resourceLoader.getResource(location);
 		if (resource.exists()) {
-			try {
-				String banner = StreamUtils.copyToString(
-						resource.getInputStream(),
-						environment.getProperty("banner.charset", Charset.class,
-								Charset.forName("UTF-8")));
-				System.out.println(environment.resolvePlaceholders(banner));
-				return;
-			}
-			catch (Exception ex) {
-				this.log.warn("Banner not printable: " + resource + " (" + ex.getClass()
-						+ ": '" + ex.getMessage() + "')", ex);
-			}
+			new ResourceBanner(resource).printBanner(environment,
+					this.mainApplicationClass, System.out);
+			return;
 		}
+
+		if (this.banner != null) {
+			this.banner.printBanner(environment, this.mainApplicationClass, System.out);
+			return;
+		}
+
 		printBanner();
 	}
 
@@ -499,9 +494,11 @@ public class SpringApplication {
 	 * to provide additional or alternative banners.
 	 * @see #setShowBanner(boolean)
 	 * @see #printBanner(Environment)
+	 * @deprecated since 1.2.0 in favor of {@link #setBanner(Banner)}
 	 */
+	@Deprecated
 	protected void printBanner() {
-		Banner.write(System.out);
+		DEFAULT_BANNER.printBanner(null, this.mainApplicationClass, System.out);
 	}
 
 	/**
@@ -747,6 +744,15 @@ public class SpringApplication {
 	 */
 	public void setRegisterShutdownHook(boolean registerShutdownHook) {
 		this.registerShutdownHook = registerShutdownHook;
+	}
+
+	/**
+	 * Sets the {@link Banner} instance which will be used to print the banner when no
+	 * static banner file is provided.
+	 * @param banner The Banner instance to use
+	 */
+	public void setBanner(Banner banner) {
+		this.banner = banner;
 	}
 
 	/**

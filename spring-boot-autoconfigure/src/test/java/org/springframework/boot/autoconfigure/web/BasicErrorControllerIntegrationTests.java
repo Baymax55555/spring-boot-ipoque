@@ -16,6 +16,7 @@
 
 package org.springframework.boot.autoconfigure.web;
 
+import java.net.URI;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,19 +26,23 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.web.BasicErrorControllerIntegrationTests.TestConfiguration;
 import org.springframework.boot.autoconfigure.web.BasicErrorControllerMockMvcTests.MinimalWebConfiguration;
-import org.springframework.boot.autoconfigure.web.BasicErrorControllerMockMvcTests.TestConfiguration;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.AbstractView;
@@ -68,17 +73,32 @@ public class BasicErrorControllerIntegrationTests {
 	public void testErrorForMachineClient() throws Exception {
 		ResponseEntity<Map> entity = new TestRestTemplate().getForEntity(
 				"http://localhost:" + this.port, Map.class);
-		assertThat(entity.getBody().toString(), endsWith("status=500, "
-				+ "error=Internal Server Error, "
+		String body = entity.getBody().toString();
+		assertThat(body, endsWith("status=500, " + "error=Internal Server Error, "
 				+ "exception=java.lang.IllegalStateException, " + "message=Expected!, "
 				+ "path=/}"));
 	}
 
 	@Test
 	@SuppressWarnings("rawtypes")
-	public void testBindingExceptionForMachineClient() throws Exception {
+	public void testErrorForAnnotatedException() throws Exception {
 		ResponseEntity<Map> entity = new TestRestTemplate().getForEntity(
-				"http://localhost:" + this.port + "/bind", Map.class);
+				"http://localhost:" + this.port + "/annotated", Map.class);
+		assertThat(
+				entity.getBody().toString(),
+				endsWith("status=400, "
+						+ "error=Bad Request, "
+						+ "exception=org.springframework.boot.autoconfigure.web.BasicErrorControllerIntegrationTests$TestConfiguration$Errors$ExpectedException, "
+						+ "message=Expected!, " + "path=/annotated}"));
+	}
+
+	@Test
+	@SuppressWarnings("rawtypes")
+	public void testBindingExceptionForMachineClient() throws Exception {
+		RequestEntity request = RequestEntity
+				.get(URI.create("http://localhost:" + this.port + "/bind"))
+				.accept(MediaType.APPLICATION_JSON).build();
+		ResponseEntity<Map> entity = new TestRestTemplate().exchange(request, Map.class);
 		String resp = entity.getBody().toString();
 		assertThat(resp, containsString("Error count: 1"));
 		assertThat(resp, containsString("errors=[{"));
@@ -119,11 +139,22 @@ public class BasicErrorControllerIntegrationTests {
 				throw new IllegalStateException("Expected!");
 			}
 
+			@RequestMapping("/annotated")
+			public String annotated() {
+				throw new ExpectedException();
+			}
+
 			@RequestMapping("/bind")
-			public String bind() throws Exception {
+			public String bind(HttpServletRequest request) throws Exception {
 				BindException error = new BindException(this, "test");
 				error.rejectValue("foo", "bar.error");
 				throw error;
+			}
+
+			@ResponseStatus(value = HttpStatus.BAD_REQUEST, reason = "Expected!")
+			@SuppressWarnings("serial")
+			private static class ExpectedException extends RuntimeException {
+
 			}
 
 		}
