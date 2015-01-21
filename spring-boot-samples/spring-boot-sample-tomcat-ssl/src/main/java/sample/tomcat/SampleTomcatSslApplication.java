@@ -17,9 +17,15 @@
 package sample.tomcat;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 
-@SpringBootApplication
+@ComponentScan
+@Configuration
+@EnableAutoConfiguration
+@EnableConfigurationProperties
 public class SampleTomcatSslApplication {
 
 	public static void main(String[] args) throws Exception {
