@@ -16,12 +16,15 @@
 
 package org.springframework.boot.autoconfigure.condition;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.MultiValueMap;
@@ -34,6 +37,7 @@ import org.springframework.util.StringUtils;
  * @see ConditionalOnClass
  * @see ConditionalOnMissingClass
  */
+@Order(Ordered.HIGHEST_PRECEDENCE)
 class OnClassCondition extends SpringBootCondition {
 
 	@Override
@@ -98,9 +102,7 @@ class OnClassCondition extends SpringBootCondition {
 	private void addAll(List<String> list, List<Object> itemsToAdd) {
 		if (itemsToAdd != null) {
 			for (Object item : itemsToAdd) {
-				for (String arrayItem : (String[]) item) {
-					list.add(arrayItem.toString());
-				}
+				Collections.addAll(list, (String[]) item);
 			}
 		}
 	}
@@ -123,6 +125,6 @@ class OnClassCondition extends SpringBootCondition {
 
 		public abstract boolean matches(String className, ConditionContext context);
 
-	};
+	}
 
 }
