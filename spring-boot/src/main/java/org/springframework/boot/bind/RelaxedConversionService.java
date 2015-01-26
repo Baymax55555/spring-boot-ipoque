@@ -123,13 +123,6 @@ class RelaxedConversionService implements ConversionService {
 				}
 				source = source.trim();
 				for (T candidate : (Set<T>) EnumSet.allOf(this.enumType)) {
-					RelaxedNames names = new RelaxedNames(candidate.name()
-							.replace("_", "-").toLowerCase());
-					for (String name : names) {
-						if (name.equals(source)) {
-							return candidate;
-						}
-					}
 					if (candidate.name().equalsIgnoreCase(source)) {
 						return candidate;
 					}

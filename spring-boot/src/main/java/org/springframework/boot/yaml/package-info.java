@@ -15,10 +15,10 @@
  */
 
 /**
- * Spring Boot extensions to Spring Framework's support for parsing YAML.
+ * Support for parsing YAML.
  *
- * @see org.springframework.beans.factory.config.YamlPropertiesFactoryBean
- * @see org.springframework.beans.factory.config.YamlMapFactoryBean
+ * @see org.springframework.boot.yaml.YamlPropertiesFactoryBean
+ * @see org.springframework.boot.yaml.YamlMapFactoryBean
  */
 package org.springframework.boot.yaml;
 
