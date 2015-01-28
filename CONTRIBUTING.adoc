@@ -11,8 +11,7 @@ https://support.springsource.com/spring_committer_signup[contributor's agreement
 Signing the contributor's agreement does not grant anyone commit rights to the main
 repository, but it does mean that we can accept your contributions, and you will get an
 author credit if we do.  Active contributors might be asked to join the core team, and
-given the ability to merge pull requests. Use ``Phillip Webb'' or ``Dave Syer'' in the
-project lead field when you complete the form.
+given the ability to merge pull requests.
 
 
 
@@ -37,9 +36,6 @@ added after the original pull request but before a merge.
 * A few unit tests would help a lot as well -- someone has to do it.
 * If no-one else is using your branch, please rebase it against the current master (or
   other target branch in the main project).
-* When writing a commit message please follow http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html[these conventions],
-  if you are fixing an existing issue please add `Fixes gh-XXXX` at the end of the commit
-  message (where XXXX is the issue number).
 
 
 
@@ -163,7 +159,7 @@ from the `file` menu.
 
 
 === Importing into other IDEs
-Maven is well supported by most Java IDEs. Refer to your vendor documentation.
+Maven is well supported by most Java IDEs. Refer to you vendor documentation.
 
 
 

@@ -36,5 +36,4 @@ public class SampleController {
 	public String helloWorld() {
 		return this.cityService.getCity("Bath", "UK").getName();
 	}
-
 }

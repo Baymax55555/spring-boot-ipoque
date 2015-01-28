@@ -17,7 +17,6 @@
 package org.springframework.boot.actuate.metrics.writer;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.boot.actuate.metrics.Metric;
@@ -33,7 +32,9 @@ public class CompositeMetricWriter implements MetricWriter {
 	private final List<MetricWriter> writers = new ArrayList<MetricWriter>();
 
 	public CompositeMetricWriter(MetricWriter... writers) {
-		Collections.addAll(this.writers, writers);
+		for (MetricWriter writer : writers) {
+			this.writers.add(writer);
+		}
 	}
 
 	public CompositeMetricWriter(List<MetricWriter> writers) {
