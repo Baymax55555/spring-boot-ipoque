@@ -70,17 +70,14 @@ public class ConfigurationBeanFactoryMetaData implements BeanFactoryPostProcesso
 
 	public <A extends Annotation> A findFactoryAnnotation(String beanName, Class<A> type) {
 		Method method = findFactoryMethod(beanName);
-		if (method != null) {
-			return AnnotationUtils.findAnnotation(method, type);
-		}
-		return null;
+		return (method == null ? null : AnnotationUtils.findAnnotation(method, type));
 	}
 
 	private Method findFactoryMethod(String beanName) {
 		if (!this.beans.containsKey(beanName)) {
 			return null;
 		}
-		final AtomicReference<Method> found = new AtomicReference<Method>();
+		final AtomicReference<Method> found = new AtomicReference<Method>(null);
 		MetaData meta = this.beans.get(beanName);
 		final String factory = meta.getMethod();
 		Class<?> type = this.beanFactory.getType(meta.getBean());
@@ -89,7 +86,7 @@ public class ConfigurationBeanFactoryMetaData implements BeanFactoryPostProcesso
 			public void doWith(Method method) throws IllegalArgumentException,
 					IllegalAccessException {
 				if (method.getName().equals(factory)) {
-					found.set(method);
+					found.compareAndSet(null, method);
 				}
 			}
 		});
