@@ -16,6 +16,8 @@
 
 package org.springframework.boot.context.embedded.tomcat;
 
+import java.lang.reflect.Method;
+
 import org.apache.catalina.Container;
 import org.apache.catalina.core.StandardContext;
 import org.springframework.util.ClassUtils;
@@ -26,25 +28,14 @@ import org.springframework.util.ReflectionUtils;
  * support deferred initialization.
  *
  * @author Phillip Webb
- * @author Andy Wilkinson
  */
 class TomcatEmbeddedContext extends StandardContext {
 
-	private TomcatStarter starter;
-
-	private final boolean overrideLoadOnStart;
-
-	public TomcatEmbeddedContext() {
-		this.overrideLoadOnStart = ReflectionUtils.findMethod(StandardContext.class,
-				"loadOnStartup", Container[].class).getReturnType() == boolean.class;
-	}
+	private ServletContextInitializerLifecycleListener starter;
 
 	@Override
 	public boolean loadOnStartup(Container[] children) {
-		if (this.overrideLoadOnStart) {
-			return true;
-		}
-		return super.loadOnStartup(children);
+		return true;
 	}
 
 	public void deferredLoadOnStartup() {
@@ -58,24 +49,29 @@ class TomcatEmbeddedContext extends StandardContext {
 		if (classLoader != null) {
 			existingLoader = ClassUtils.overrideThreadContextClassLoader(classLoader);
 		}
-
-		if (this.overrideLoadOnStart) {
-			// Earlier versions of Tomcat used a version that returned void. If that
-			// version is used our overridden loadOnStart method won't have been called
-			// and the original will have already run.
+		if (ClassUtils.isPresent("org.apache.catalina.deploy.ErrorPage", null)) {
 			super.loadOnStartup(findChildren());
+		}
+		else {
+			callSuper(this, "loadOnStartup", findChildren(), Container[].class);
 		}
 		if (existingLoader != null) {
 			ClassUtils.overrideThreadContextClassLoader(existingLoader);
 		}
 	}
 
-	public void setStarter(TomcatStarter starter) {
+	public void setStarter(ServletContextInitializerLifecycleListener starter) {
 		this.starter = starter;
 	}
 
-	public TomcatStarter getStarter() {
+	public ServletContextInitializerLifecycleListener getStarter() {
 		return this.starter;
+	}
+
+	private void callSuper(Object target, String name, Object value, Class<?> type) {
+		Method method = ReflectionUtils.findMethod(target.getClass().getSuperclass(),
+				name, type);
+		ReflectionUtils.invokeMethod(method, target, value);
 	}
 
 }

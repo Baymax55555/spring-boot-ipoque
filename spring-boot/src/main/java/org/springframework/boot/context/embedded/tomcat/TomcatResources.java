@@ -22,12 +22,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-import javax.naming.directory.DirContext;
 import javax.servlet.ServletContext;
 
 import org.apache.catalina.Context;
-import org.apache.catalina.WebResourceRoot.ResourceSetType;
 import org.apache.catalina.core.StandardContext;
+import org.apache.naming.resources.FileDirContext;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 
@@ -105,57 +104,29 @@ abstract class TomcatResources {
 	 */
 	private static class Tomcat7Resources extends TomcatResources {
 
-		private final Method addResourceJarUrlMethod;
-
 		public Tomcat7Resources(Context context) {
 			super(context);
-			this.addResourceJarUrlMethod = ReflectionUtils.findMethod(context.getClass(),
-					"addResourceJarUrl", URL.class);
 		}
 
 		@Override
 		protected void addJar(String jar) {
-			URL url = getJarUlr(jar);
-			if (url != null) {
-				try {
-					this.addResourceJarUrlMethod.invoke(getContext(), url);
-				}
-				catch (Exception ex) {
-					throw new IllegalStateException(ex);
-				}
-			}
-		}
-
-		private URL getJarUlr(String jar) {
 			try {
-				return new URL(jar);
+				getContext().addResourceJarUrl(new URL(jar));
 			}
 			catch (MalformedURLException ex) {
-				// Ignore
-				return null;
+				// Ignore?
 			}
 		}
 
 		@Override
 		protected void addDir(String dir, URL url) {
 			if (getContext() instanceof ServletContext) {
-				try {
-					Class<?> fileDirContextClass = Class
-							.forName("org.apache.naming.resources.FileDirContext");
-					Method setDocBaseMethod = ReflectionUtils.findMethod(
-							fileDirContextClass, "setDocBase", String.class);
-					Object fileDirContext = fileDirContextClass.newInstance();
-					setDocBaseMethod.invoke(fileDirContext, dir);
-					Method addResourcesDirContextMethod = ReflectionUtils.findMethod(
-							StandardContext.class, "addResourcesDirContext",
-							DirContext.class);
-					addResourcesDirContextMethod.invoke(getContext(), fileDirContext);
-				}
-				catch (Exception ex) {
-					throw new IllegalStateException("Tomcat 7 reflection failed", ex);
-				}
+				FileDirContext files = new FileDirContext();
+				files.setDocBase(dir);
+				((StandardContext) getContext()).addResourcesDirContext(files);
 			}
 		}
+
 	}
 
 	/**
@@ -163,8 +134,28 @@ abstract class TomcatResources {
 	 */
 	static class Tomcat8Resources extends TomcatResources {
 
+		private Object resources;
+
+		private Method createWebResourceSetMethod;
+
+		private Enum<?> resourceJarEnum;
+
+		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public Tomcat8Resources(Context context) {
 			super(context);
+			try {
+				this.resources = ReflectionUtils.findMethod(context.getClass(),
+						"getResources").invoke(context);
+				Class resourceSetType = ClassUtils.resolveClassName(
+						"org.apache.catalina.WebResourceRoot.ResourceSetType", null);
+				this.createWebResourceSetMethod = ReflectionUtils.findMethod(
+						this.resources.getClass(), "createWebResourceSet",
+						resourceSetType, String.class, URL.class, String.class);
+				this.resourceJarEnum = Enum.valueOf(resourceSetType, "RESOURCE_JAR");
+			}
+			catch (Exception ex) {
+				throw new IllegalStateException("Tomcat 8 reflection failed", ex);
+			}
 		}
 
 		@Override
@@ -187,8 +178,7 @@ abstract class TomcatResources {
 				}
 				URL url = new URL(resource);
 				String path = "/META-INF/resources";
-				getContext().getResources().createWebResourceSet(
-						ResourceSetType.RESOURCE_JAR, "/", url, path);
+				createWebResourceSet("/", url, path);
 			}
 			catch (Exception ex) {
 				// Ignore (probably not a directory)
@@ -197,6 +187,12 @@ abstract class TomcatResources {
 
 		private boolean isInsideNestedJar(String dir) {
 			return dir.indexOf("!/") < dir.lastIndexOf("!/");
+		}
+
+		private void createWebResourceSet(String webAppMount, URL url, String path)
+				throws Exception {
+			this.createWebResourceSetMethod.invoke(this.resources, this.resourceJarEnum,
+					webAppMount, url, path);
 		}
 
 	}

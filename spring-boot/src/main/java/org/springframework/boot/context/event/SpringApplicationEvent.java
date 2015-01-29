@@ -24,7 +24,6 @@ import org.springframework.context.ApplicationEvent;
  *
  * @author Phillip Webb
  */
-@SuppressWarnings("serial")
 public abstract class SpringApplicationEvent extends ApplicationEvent {
 
 	private final String[] args;
