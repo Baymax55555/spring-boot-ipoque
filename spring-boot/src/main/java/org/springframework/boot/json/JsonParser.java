@@ -26,6 +26,7 @@ import java.util.Map;
  * @see JsonParserFactory
  * @see SimpleJsonParser
  * @see JacksonJsonParser
+ * @see GsonJsonParser
  * @see YamlJsonParser
  */
 public interface JsonParser {

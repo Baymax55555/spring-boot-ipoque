@@ -18,7 +18,6 @@ package org.springframework.boot.cloudfoundry;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -98,7 +97,7 @@ public class VcapApplicationListener implements
 	private static final String VCAP_SERVICES = "VCAP_SERVICES";
 
 	// Before ConfigFileApplicationListener so values there can use these ones
-	private int order = ConfigFileApplicationListener.DEFAULT_ORDER - 1;;
+	private int order = ConfigFileApplicationListener.DEFAULT_ORDER - 1;
 
 	private final JsonParser parser = JsonParserFactory.getJsonParser();
 
@@ -113,13 +112,11 @@ public class VcapApplicationListener implements
 
 	@Override
 	public void onApplicationEvent(ApplicationEnvironmentPreparedEvent event) {
-
 		ConfigurableEnvironment environment = event.getEnvironment();
 		if (!environment.containsProperty(VCAP_APPLICATION)
 				&& !environment.containsProperty(VCAP_SERVICES)) {
 			return;
 		}
-
 		Properties properties = new Properties();
 		addWithPrefix(properties, getPropertiesFromApplication(environment),
 				"vcap.application.");
@@ -131,12 +128,10 @@ public class VcapApplicationListener implements
 			propertySources.addAfter(
 					CommandLinePropertySource.COMMAND_LINE_PROPERTY_SOURCE_NAME,
 					new PropertiesPropertySource("vcap", properties));
-
 		}
 		else {
 			propertySources.addFirst(new PropertiesPropertySource("vcap", properties));
 		}
-
 	}
 
 	private void addWithPrefix(Properties properties, Properties other, String prefix) {
@@ -151,19 +146,7 @@ public class VcapApplicationListener implements
 		try {
 			Map<String, Object> map = this.parser.parseMap(environment.getProperty(
 					VCAP_APPLICATION, "{}"));
-			if (map != null) {
-				map = new LinkedHashMap<String, Object>(map);
-				for (String key : map.keySet()) {
-					Object value = map.get(key);
-					if (!(value instanceof String)) {
-						if (value == null) {
-							value = "";
-						}
-						map.put(key, value.toString());
-					}
-				}
-				properties.putAll(map);
-			}
+			extractPropertiesFromApplication(properties, map);
 		}
 		catch (Exception ex) {
 			logger.error("Could not parse VCAP_APPLICATION", ex);
@@ -176,26 +159,38 @@ public class VcapApplicationListener implements
 		try {
 			Map<String, Object> map = this.parser.parseMap(environment.getProperty(
 					VCAP_SERVICES, "{}"));
-			if (map != null) {
-				for (Object services : map.values()) {
-					@SuppressWarnings("unchecked")
-					List<Object> list = (List<Object>) services;
-					for (Object object : list) {
-						@SuppressWarnings("unchecked")
-						Map<String, Object> service = (Map<String, Object>) object;
-						String key = (String) service.get("name");
-						if (key == null) {
-							key = (String) service.get("label");
-						}
-						flatten(properties, service, key);
-					}
-				}
-			}
+			extractPropertiesFromServices(properties, map);
 		}
 		catch (Exception ex) {
 			logger.error("Could not parse VCAP_SERVICES", ex);
 		}
 		return properties;
+	}
+
+	private void extractPropertiesFromApplication(Properties properties,
+			Map<String, Object> map) {
+		if (map != null) {
+			flatten(properties, map, "");
+		}
+	}
+
+	private void extractPropertiesFromServices(Properties properties,
+			Map<String, Object> map) {
+		if (map != null) {
+			for (Object services : map.values()) {
+				@SuppressWarnings("unchecked")
+				List<Object> list = (List<Object>) services;
+				for (Object object : list) {
+					@SuppressWarnings("unchecked")
+					Map<String, Object> service = (Map<String, Object>) object;
+					String key = (String) service.get("name");
+					if (key == null) {
+						key = (String) service.get("label");
+					}
+					flatten(properties, service, key);
+				}
+			}
+		}
 	}
 
 	private void flatten(Properties properties, Map<String, Object> input, String path) {
