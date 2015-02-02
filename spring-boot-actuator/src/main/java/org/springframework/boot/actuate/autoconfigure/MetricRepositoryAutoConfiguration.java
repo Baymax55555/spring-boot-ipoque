@@ -21,9 +21,12 @@ import java.util.concurrent.Executor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.actuate.endpoint.MetricReaderPublicMetrics;
+import org.springframework.boot.actuate.endpoint.PublicMetrics;
 import org.springframework.boot.actuate.metrics.CounterService;
 import org.springframework.boot.actuate.metrics.GaugeService;
 import org.springframework.boot.actuate.metrics.export.Exporter;
+import org.springframework.boot.actuate.metrics.reader.MetricRegistryMetricReader;
 import org.springframework.boot.actuate.metrics.repository.InMemoryMetricRepository;
 import org.springframework.boot.actuate.metrics.repository.MetricRepository;
 import org.springframework.boot.actuate.metrics.writer.CodahaleMetricWriter;
@@ -69,7 +72,8 @@ import com.codahale.metrics.MetricRegistry;
  * In addition if Codahale's metrics library is on the classpath a {@link MetricRegistry}
  * will be created and wired up to the counter and gauge services in addition to the basic
  * repository. Users can create Codahale metrics by prefixing their metric names with the
- * appropriate type (e.g. "histogram.*", "meter.*").
+ * appropriate type (e.g. "histogram.*", "meter.*") and sending them to the standard
+ * <code>GaugeService</code> or <code>CounterService</code>.
  * </p>
  * <p>
  * By default all metric updates go to all {@link MetricWriter} instances in the
@@ -111,7 +115,7 @@ public class MetricRepositoryAutoConfiguration {
 	static class MetricRepositoryConfiguration {
 
 		@Bean
-		public InMemoryMetricRepository metricRepository() {
+		public InMemoryMetricRepository actuatorMetricRepository() {
 			return new InMemoryMetricRepository();
 		}
 
@@ -172,6 +176,13 @@ public class MetricRepositoryAutoConfiguration {
 		@ConditionalOnMissingBean(name = "primaryMetricWriter")
 		public MetricWriter primaryMetricWriter(List<MetricWriter> writers) {
 			return new CompositeMetricWriter(writers);
+		}
+
+		@Bean
+		public PublicMetrics codahalePublicMetrics(MetricRegistry metricRegistry) {
+			MetricRegistryMetricReader reader = new MetricRegistryMetricReader(
+					metricRegistry);
+			return new MetricReaderPublicMetrics(reader);
 		}
 
 	}
